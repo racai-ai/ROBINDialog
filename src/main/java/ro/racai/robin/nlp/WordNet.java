@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  * <p>An interface to a WordNet-like semantic network.
- * Currently used to check if retrieve words from different
+ * Currently used to retrieve words that form different
  * semantic relations.</p>
  */
 public interface WordNet {
