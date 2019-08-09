@@ -3,6 +3,7 @@
  */
 package ro.racai.robin.dialog;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ro.racai.robin.nlp.WordNet;
@@ -28,10 +29,22 @@ public class RDConcept {
 	private String canonicalForm;
 	
 	/**
+	 * If not null, represents an instantiation
+	 * of this concept for the use in {@link RDPredicate}.
+	 * For instance, it is the <i>209</i> in <i>sala 209</i>.
+	 */
+	private String assignedValue;
+	
+	/**
+	 * Alternate names for {@link #assignedValue}.
+	 */
+	private List<String> synonymsOfAssignedValue = new ArrayList<String>();
+	
+	/**
 	 * Alternate words for the {@link #canonicalForm}.
 	 * For instance, Romanian <i>sală</i> and <i>laborator</i>.
 	 */
-	private List<String> synonymsOfCanonicalForm;
+	private List<String> synonymsOfCanonicalForm = new ArrayList<String>();
 	
 	/**
 	 * <p>Sets the canonical form for this concept.</p>
@@ -42,6 +55,14 @@ public class RDConcept {
 	}
 	
 	/**
+	 * <p>Sets the bound value to this concept variable.</p>
+	 * @param value     the value to assign to this concept
+	 */
+	public void setValue(String value) {
+		assignedValue = value.trim().toLowerCase();
+	}
+	
+	/**
 	 * <p>Adds a synonym to this concept, by which the
 	 * concept can be identified in text.</p>
 	 * @param syn      the synonym string to be added.
@@ -49,7 +70,11 @@ public class RDConcept {
 	public void addSynonym(String syn) {
 		synonymsOfCanonicalForm.add(syn.trim().toLowerCase());
 	}
-		
+	
+	public void addSynonymValue(String syn) {
+		synonymsOfAssignedValue.add(syn.trim().toLowerCase());
+	}
+
 	/**
 	 * <p>Tests if an arbitrary word refers to this concept.</p>
 	 * @param word     the word to be tested;
@@ -122,7 +147,30 @@ public class RDConcept {
 				canonicalForm != null &&
 				rdc.canonicalForm.equalsIgnoreCase(canonicalForm)
 			) {
-				return true;
+				if (rdc.assignedValue == null && assignedValue == null) {
+					return true;
+				}
+				else if (
+					rdc.assignedValue != null &&
+					assignedValue != null
+				) {
+					if (assignedValue.equalsIgnoreCase(rdc.assignedValue)) {
+						return true;
+					}
+					else {
+						for (String v : synonymsOfAssignedValue) {
+							if (rdc.assignedValue.equalsIgnoreCase(v)) {
+								return true;
+							}
+						}
+						
+						for (String v : rdc.synonymsOfAssignedValue) {
+							if (assignedValue.equalsIgnoreCase(v)) {
+								return true;
+							}
+						}
+					}
+				}
 			}
 		}
 
