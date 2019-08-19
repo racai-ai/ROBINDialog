@@ -24,7 +24,7 @@ public abstract class RDUserIntent {
 	/**
 	 * Set this to the concept that "will give away"
 	 * this user intent. For example, in our PRECIS scenario,
-	 * this would be the <i>sală</i> concept
+	 * this would be the <i>sală</i> concept.
 	 */
 	protected RDConcept conceptHint;
 	

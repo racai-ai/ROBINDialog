@@ -3,6 +3,9 @@
  */
 package ro.racai.robin.dialog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  * <p>This is the principal information unit that the
@@ -26,5 +29,21 @@ package ro.racai.robin.dialog;
  * </ol>
  */
 public class RDPredicate {
-
+	/**
+	 * The main "name" for this predicate.
+	 * It is a lemma, usually extracted from 
+	 * the question (first informative verb). 
+	 */
+	private String actionVerb;
+		
+	/**
+	 * Alternate names for this predicate.
+	 */
+	private List<String> synonymsOfActionVerb = new ArrayList<String>();
+	
+	/**
+	 * The arguments of this predicate, in
+	 * no special order.
+	 */
+	private List<RDConcept> predicateArguments = new ArrayList<RDConcept>();
 }

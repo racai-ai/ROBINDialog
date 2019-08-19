@@ -3,6 +3,7 @@
  */
 package ro.racai.robin.nlp;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ro.racai.robin.dialog.RDConcept;
@@ -21,7 +22,7 @@ public abstract class TextProcessor {
 	public static class Token {
 		public String wform;
 		public String lemma;
-		String POS;
+		public String POS;
 		// Head of this token in the
 		// dependency tree.
 		public int head;
@@ -36,6 +37,14 @@ public abstract class TextProcessor {
 			POS = p;
 			head = h;
 			drel = dr;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return wform + "/" + lemma + "/" + POS + " <-" + drel + "- " + head;
 		}
 	}
 	
@@ -58,12 +67,13 @@ public abstract class TextProcessor {
 		 * "fi", "afla", etc.
 		 */
 		public String actionVerb;
-				
+
 		/**
+		 * Arguments of the {@link #actionVerb}.
 		 * An instantiation of a {@link RDConcept}, e.g.
 		 * "laboratorul de robotică".
 		 */
-		public String conceptInstance;
+		public List<List<Token>> predicateArguments = new ArrayList<List<Token>>();
 	}
 	
 	/**
@@ -93,8 +103,17 @@ public abstract class TextProcessor {
 	 * @param text          text to be corrected
 	 * @return              the fixed text
 	 */
-	public abstract String textCorrection(String text);
+	protected abstract String textCorrection(String text);
 	
+	/**
+	 * <p>Main method of query analysis. This method will
+	 * construct a "parse" of the text query received,
+	 * in the instance of a {@link Query} object.</p>
+	 * @param query      the text query to be mined for the
+	 *                   action verb and its arguments.
+	 * @return           the {@link Query} object or {@code null}
+	 *                   if something went wrong.
+	 */
 	public abstract Query queryAnalyzer(List<Token> query);
 	
 	/**
