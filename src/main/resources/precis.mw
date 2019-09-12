@@ -1,0 +1,86 @@
+# This is a micro-world (MW) file. It is a text file, UTF-8 encoded.
+# This is a comment.
+
+# Step 1. Define a list of "concepts" that are valid in this MW.
+# A concept is the head of a noun phrase which can be bound to different values.
+# For instance, we could have "cursul de sisteme de operare" or "laboratorul de informatică".
+# A concept is a lemma. Use the dictionary form for concepts.
+# Also define synoyms of concepts. A "synonym" of a concept in a MW could also
+# be a hypernym or hyponym of the word. We just need to know how the user can
+# refer to the concept.
+# In conclusion, define a list in which:
+# 1. The first element is canonical name of the concept;
+# 2. The rest of the elements are the alternate names of the concept.
+# Each concept has a type, defined in ro.racai.robin.dialog.CType. Define
+# the concept type using the arrow operator '->'.
+
+CONCEPT sală, laborator, cameră -> LOCATION
+CONCEPT curs, materie, seminar -> WORD
+CONCEPT conferință, workshop, uorcșop -> WORD
+CONCEPT cine -> PERSON
+CONCEPT unde -> LOCATION
+CONCEPT când -> TIME
+
+# Step 2. Define possible values of concepts in this MW.
+# A "value" is a list of words, a description of the value in your language.
+# To refer to this value in this file, we also add a value alias, as the last element,
+# using the '=' char. Use only the canonical name of the concept.
+
+REFERENCE sală 209 = S1
+REFERENCE sală 113 = S2
+REFERENCE curs laboratorul de informatică = C1
+REFERENCE curs laboratorul de SDA = C2
+REFERENCE curs laboratorul de robotică = C3
+REFERENCE curs seminarul de analiză matematică = C4
+REFERENCE curs cursul de sisteme de operare = C5
+REFERENCE curs cursul de limbaje formale și translatoare = C6
+REFERENCE curs cursul de algebră = C6
+REFERENCE conferință Workshop-ul de Robotică, UPB 2019 = W1
+
+# Step 3. Define person names and time stamps that the dialogue
+# system is aware of. You can use days, months, years, hours and minutes.
+# Time values are expected to be written as HH:MM.
+# TIME is a concept type, see ro.racai.robin.dialog.CType.
+# Here we list constants of type TIME that are valid in this universe.
+
+TIME marți, 8:00 = T1
+TIME miercuri, 9:00 = T2
+TIME joi = T3
+TIME decembrie 2020 = T4
+
+# Person values are written as First name Last name.
+# PERSON is a concept type, see ro.racai.robin.dialog.CType.
+PERSON Adriana Vlad = P1
+PERSON Magda Vlad = P2
+PERSON Nicolae Țăpuș = P3
+
+# Step 4. Define what is true in this MW; in other words, what
+# dialogue system "knows". Use predicate names and value aliases.
+# First we define predicate names. The list is similar to
+# the CONCEPT list: first element is the canonical name, the rest
+# are alternate names.
+# Each predicate will also require a "user intent"; this intent
+# is passed on to the robot management system to be acted upon.
+# The user intent is defined in class ro.racai.robin.dialog.UIntentType.
+# Use a value from there or add a new value there and then use it here.
+# Specify the user intent with the arrow operator '->'.
+
+PREDICATE ține, desfășura -> EXPLAIN_SOMETHING
+PREDICATE fi, afla -> EXPLAIN_SOMETHING
+PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
+
+# The order of the arguments does not affect predicate matching.
+# The dialogue system will try to match any of these predicates
+# the best it can from the dialogue turns.
+# Example:
+# User> Unde se ține laboratorul de informatică?
+# Dialogue manger infers the following:
+# PREDICATE: ține
+# CONCEPT: laboratorul de informatică = C1
+# Partially bound predicate: ține(C1, X, Y)
+# There is only one predicate in the Knowledge Base which can match: ține(C1, S1, T1).
+# Pepper> 209, marți 8:00
+
+TRUE ține C1 S1 T1
+TRUE fi P1 S1 T1
+TRUE ține W1 S2 T2

@@ -30,13 +30,17 @@ public abstract class TextProcessor {
 		// that holds between this token and its
 		// head.
 		public String drel;
+		// True if this token is directly linked
+		// to the action verb of the query.
+		public boolean isActionVerbDependent;
 		
-		public Token(String w, String l, String p, int h, String dr) {
+		public Token(String w, String l, String p, int h, String dr, boolean avd) {
 			wform = w;
 			lemma = l;
 			POS = p;
 			head = h;
 			drel = dr;
+			isActionVerbDependent = true;
 		}
 
 		/* (non-Javadoc)
@@ -70,8 +74,8 @@ public abstract class TextProcessor {
 
 		/**
 		 * Arguments of the {@link #actionVerb}.
-		 * An instantiation of a {@link RDConcept}, e.g.
-		 * "laboratorul de robotică".
+		 * An instantiation of an {@link RDConcept} -- to be matched
+		 * against a concept, e.g. "laboratorul de robotică".
 		 */
 		public List<List<Token>> predicateArguments = new ArrayList<List<Token>>();
 	}

@@ -6,6 +6,7 @@ package ro.racai.robin.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
+import ro.racai.robin.nlp.StringUtils;
 import ro.racai.robin.nlp.WordNet;
 
 /**
@@ -18,6 +19,8 @@ import ro.racai.robin.nlp.WordNet;
  * we could speak of <i>sala 209</i> or of <i>laboratorul de robotică</i>.
  */
 public class RDConcept {
+	private CType conceptType;
+	
 	/**
 	 * Keeps the canonical form of the concept.
 	 * For instance, Romanian <i>cameră</i>.
@@ -29,37 +32,48 @@ public class RDConcept {
 	private String canonicalForm;
 	
 	/**
-	 * If not null, represents an instantiation
-	 * of this concept for the use in {@link RDPredicate}.
-	 * For instance, it is the <i>209</i> in <i>sala 209</i>.
-	 */
-	private String assignedValue;
-	
-	/**
-	 * Alternate names for {@link #assignedValue}.
-	 */
-	private List<String> synonymsOfAssignedValue = new ArrayList<String>();
-	
-	/**
 	 * Alternate words for the {@link #canonicalForm}.
 	 * For instance, Romanian <i>sală</i> and <i>laborator</i>.
 	 */
 	private List<String> synonymsOfCanonicalForm = new ArrayList<String>();
 	
 	/**
-	 * <p>Sets the canonical form for this concept.</p>
-	 * @param form     the form to be set as canonical.
+	 * This is the reference of the concept from the micro-world.
+	 * If no reference has been assigned yet, leave this to null. 
 	 */
-	public void setCanonicalForm(String form) {
-		canonicalForm = form.trim().toLowerCase();
+	private String assignedReferece;
+	
+	private RDConcept(CType ctyp, String cform) {
+		conceptType = ctyp;
+		
+		if (StringUtils.isNullEmptyOrBlank(cform)) {
+			throw new RuntimeException("Canonical form cannot be null, empty or blank!");
+		}
+		
+		canonicalForm = cform.trim().toLowerCase();
 	}
 	
 	/**
-	 * <p>Sets the bound value to this concept variable.</p>
-	 * @param value     the value to assign to this concept
+	 * <p>Convenience static method for building a concept.</p>
+	 * @param ctyp      type of the concept defined in {@link CType};
+	 * @param cform     canonical form (lemma) for this concept, e.g. <i>sală</i>;
+	 * @param syns      synonyms for the canonical form (may be null or empty);
+	 * @param ref       the assigned (reference) value to this concept:
+	 *                  a list of space-separated words, e.g.
+	 *                  <i>laboratorul de informatică</i>.</p>
+	 * @return          an {@link RDConcept}.
 	 */
-	public void setValue(String value) {
-		assignedValue = value.trim().toLowerCase();
+	public static RDConcept Builder(CType ctyp, String cform, List<String> syns, String ref) {
+		RDConcept concept = new RDConcept(ctyp, cform);
+		
+		if (syns != null) {
+			for (String s : syns) {
+				concept.addSynonym(s);
+			}
+		}
+		
+		concept.setReference(ref);
+		return concept;
 	}
 	
 	/**
@@ -68,11 +82,23 @@ public class RDConcept {
 	 * @param syn      the synonym string to be added.
 	 */
 	public void addSynonym(String syn) {
+		if (StringUtils.isNullEmptyOrBlank(syn)) {
+			throw new RuntimeException("Synonym may not be null, empty or blank!");
+		}
+		
 		synonymsOfCanonicalForm.add(syn.trim().toLowerCase());
 	}
 	
-	public void addSynonymValue(String syn) {
-		synonymsOfAssignedValue.add(syn.trim().toLowerCase());
+	/**
+	 * <p>Sets the reference for this concept.</p>
+	 * @param value        the reference to be set
+	 */
+	public void setReference(String value) {
+		assignedReferece = value;
+	}
+	
+	public String getReference() {
+		return assignedReferece;
 	}
 
 	/**
@@ -95,26 +121,7 @@ public class RDConcept {
 		}
 		
 		if (wn != null) {
-			// Extend synonym check with WordNet
-			for (String syn : wn.getSynonyms(word)) {
-				if (word.equals(syn)) {
-					return true;
-				}
-			}
-			
-			// Use hypernyms from WordNet (only direct hypernyms)
-			for (String hyper : wn.getHypernyms(canonicalForm)) {
-				if (word.equals(hyper)) {
-					return true;
-				}
-			}
-			
-			// Use hyponyms from WordNet (only direct hyponyms)
-			for (String hypo : wn.getHyponyms(canonicalForm)) {
-				if (word.equals(hypo)) {
-					return true;
-				}
-			}
+			return wn.wordnetEquals(word, canonicalForm);
 		}
 		
 		return false;
@@ -136,40 +143,15 @@ public class RDConcept {
 		if (obj instanceof RDConcept) {
 			RDConcept rdc = (RDConcept) obj;
 			
-			if (
-				rdc.canonicalForm == null &&
-				canonicalForm == null
-			) {
-				return true;
-			}
-			else if (
-				rdc.canonicalForm != null &&
-				canonicalForm != null &&
-				rdc.canonicalForm.equalsIgnoreCase(canonicalForm)
-			) {
-				if (rdc.assignedValue == null && assignedValue == null) {
+			if (rdc.canonicalForm.equals(canonicalForm)) {
+				if (rdc.assignedReferece == null && assignedReferece == null) {
 					return true;
 				}
 				else if (
-					rdc.assignedValue != null &&
-					assignedValue != null
+					rdc.assignedReferece != null && assignedReferece != null &&
+					rdc.assignedReferece.equalsIgnoreCase(assignedReferece)
 				) {
-					if (assignedValue.equalsIgnoreCase(rdc.assignedValue)) {
-						return true;
-					}
-					else {
-						for (String v : synonymsOfAssignedValue) {
-							if (rdc.assignedValue.equalsIgnoreCase(v)) {
-								return true;
-							}
-						}
-						
-						for (String v : rdc.synonymsOfAssignedValue) {
-							if (assignedValue.equalsIgnoreCase(v)) {
-								return true;
-							}
-						}
-					}
+					return true;
 				}
 			}
 		}

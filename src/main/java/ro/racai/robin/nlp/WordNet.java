@@ -37,4 +37,14 @@ public interface WordNet {
 	 *               regardless of the meaning.
 	 */
 	public List<String> getSynonyms(String word);
+	
+	/**
+	 * <p>Does a WordNet first order neighborhood search to
+	 * see if the two parameters can be made equal.</p> 
+	 * @param w1         first word parameter
+	 * @param w2         second word parameter
+	 * @return           {@code true} if {@code w1} and {@code w2}
+	 *                   are synonyms, first order hyponyms/hypernyms
+	 */
+	public boolean wordnetEquals(String w1, String w2);
 }

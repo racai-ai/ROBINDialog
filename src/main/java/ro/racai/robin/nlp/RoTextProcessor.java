@@ -131,7 +131,7 @@ public class RoTextProcessor extends TextProcessor {
 				int head = ((Long) tk.get("_head")).intValue();
 				String deprel = (String) tk.get("_deprel");
 				
-				tokens.add(new Token(wordform, lemma, msd, head, deprel));
+				tokens.add(new Token(wordform, lemma, msd, head, deprel, false));
 			}
 		}
 		catch (ParseException pe) {
@@ -196,13 +196,14 @@ public class RoTextProcessor extends TextProcessor {
 			Token t = query.get(i);
 
 			if (t.head == actionVerbID && lexicon.isNounPOS(t.POS)) {
+				t.isActionVerbDependent = true;
+				
 				List<Integer> belowIndexes = new ArrayList<Integer>();
 				List<Integer> nounPhraseIndexes = new ArrayList<Integer>();
 				
 				belowIndexes.add(i + 1);
 				treeUnder(query, belowIndexes, nounPhraseIndexes);
 				nounPhraseIndexes.sort(new Comparator<Integer>() {
-
 					@Override
 					public int compare(Integer o1, Integer o2) {
 						return o1.compareTo(o2);
