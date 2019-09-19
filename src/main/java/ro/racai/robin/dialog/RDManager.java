@@ -4,6 +4,7 @@
 package ro.racai.robin.dialog;
 
 import ro.racai.robin.mw.MWFileReader;
+import ro.racai.robin.nlp.RoLexicon;
 import ro.racai.robin.nlp.RoTextProcessor;
 import ro.racai.robin.nlp.RoWordNet;
 import ro.racai.robin.nlp.TextProcessor.Query;
@@ -18,11 +19,17 @@ public class RDManager {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		RoTextProcessor tp = new RoTextProcessor();
-		MWFileReader mwr = new MWFileReader("src/main/resources/precis.mw");
 		RoWordNet rown = new RoWordNet();
-		RDUniverse precis = mwr.constructUniverse(rown);
-		Query q = tp.queryAnalyzer(tp.textProcessor("În ce sală se desfășoară cursul de sisteme de operare?"));
+		RoLexicon rolex = new RoLexicon();
+		RoTextProcessor tp = new RoTextProcessor(rolex);
+		MWFileReader mwr = new MWFileReader("src/main/resources/precis.mw");
+		RDUniverse precis = mwr.constructUniverse(rown, rolex);
+		Query q =
+			tp.queryAnalyzer(
+				tp.textProcessor(
+					"În ce sală se desfășoară cursul de sisteme de operare?"
+				)
+			);
 		
 		precis.resolveQuery(q);
 		

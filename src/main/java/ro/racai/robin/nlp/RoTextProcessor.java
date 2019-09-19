@@ -32,20 +32,15 @@ import org.json.simple.parser.ParseException;
  * <p>The Romanian implementation using relate.racai.ro:5000,
  * the TEPROLIN web service.</p>
  */
-/**
- * @author Radu Ion
- *
- */
 public class RoTextProcessor extends TextProcessor {
 	private static final String TEPROLIN_QUERY =
 		"http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
-	private RoLexicon lexicon;
-	
-	public RoTextProcessor() {
-		lexicon = new RoLexicon();
-	}
 
+	public RoTextProcessor(Lexicon lex) {
+		super(lex);
+	}
+	
 	/* (non-Javadoc)
 	 * @see ro.racai.robin.nlp.TextProcessor#processText(java.lang.String)
 	 */
@@ -215,7 +210,7 @@ public class RoTextProcessor extends TextProcessor {
 				List<Token> nounPhrase =
 					nounPhraseIndexes
 					.stream()
-					.filter((x) -> !lexicon.isFunctionalPOS(query.get(x - 1).POS))
+					//.filter((x) -> !lexicon.isFunctionalPOS(query.get(x - 1).POS))
 					.map((x) -> query.get(x - 1))
 					.collect(Collectors.toList());
 				

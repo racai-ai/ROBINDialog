@@ -24,7 +24,7 @@ import ro.racai.robin.dialog.RDConstant;
 import ro.racai.robin.dialog.RDPredicate;
 import ro.racai.robin.dialog.RDUniverse;
 import ro.racai.robin.dialog.UIntentType;
-import ro.racai.robin.nlp.RoWordNet;
+import ro.racai.robin.nlp.Lexicon;
 import ro.racai.robin.nlp.WordNet;
 
 /**
@@ -64,7 +64,7 @@ public class MWFileReader implements RDMicroworld {
 	 * @see ro.racai.robin.mw.RDMicroworld#constructUniverse()
 	 */
 	@Override
-	public RDUniverse constructUniverse(WordNet wn) {
+	public RDUniverse constructUniverse(WordNet wn, Lexicon lex) {
 		try {
 			BufferedReader rdr =
 				new BufferedReader(
@@ -307,7 +307,7 @@ public class MWFileReader implements RDMicroworld {
 		
 			rdr.close();
 			
-			RDUniverse universe = new RDUniverse(wn);
+			RDUniverse universe = new RDUniverse(wn, lex);
 			
 			universe.addPredicates(truePredicates);
 			

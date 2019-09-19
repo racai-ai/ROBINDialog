@@ -15,6 +15,11 @@ import ro.racai.robin.dialog.RDConcept;
  */
 public abstract class TextProcessor {
 	/**
+	 * Lexicon to use for text processing. 
+	 */
+	protected Lexicon lexicon;
+	
+	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
 	 * <p>Represents an annotated token of the input text.
 	 * The member field names are self explanatory.</p>
@@ -78,6 +83,10 @@ public abstract class TextProcessor {
 		 * against a concept, e.g. "laboratorul de robotică".
 		 */
 		public List<List<Token>> predicateArguments = new ArrayList<List<Token>>();
+	}
+	
+	public TextProcessor(Lexicon lex) {
+		lexicon = lex;
 	}
 	
 	/**

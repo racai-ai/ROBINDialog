@@ -15,6 +15,6 @@ public enum UIntentType {
 	// User wants Pepper to bring him/her something
 	BRING_ME_THAT,
 	// User wants Pepper to show him/her how to do something
-	SHOW_ME_HOW,
+	SHOW_ME_HOW
 	// and so on and so forth. Add new ones below.
 }

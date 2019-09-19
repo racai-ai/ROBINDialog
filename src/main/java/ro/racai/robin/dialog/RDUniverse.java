@@ -10,6 +10,7 @@ import ro.racai.robin.nlp.TextProcessor.Query;
 import ro.racai.robin.nlp.TextProcessor.Token;
 import ro.racai.robin.dialog.RDPredicate.PMatch;
 import ro.racai.robin.nlp.Levenshtein;
+import ro.racai.robin.nlp.Lexicon;
 import ro.racai.robin.nlp.WordNet;
 
 /**
@@ -47,16 +48,24 @@ public class RDUniverse {
 	 * "similar" words. 
 	 */
 	private WordNet wordNet;
-		
+	
+	/**
+	 * Lexicon to test for functional words
+	 * when matching descriptions.
+	 */
+	private Lexicon lexicon;
+
 	/**
 	 * <p>Universe of discourse constructor.</p>
-	 * @param wn      a WordNet instance for your language.
+	 * @param wn      a WordNet instance for your language;
+	 * @param lex     a lexicon instance for your language.
 	 */
-	public RDUniverse(WordNet wn) {
+	public RDUniverse(WordNet wn, Lexicon lex) {
 		concepts = new ArrayList<RDConcept>();
 		predicates = new ArrayList<RDPredicate>();
 		wordDistance = new Levenshtein();
 		wordNet = wn;
+		lexicon = lex;
 	}
 	
 	/**
@@ -183,13 +192,29 @@ public class RDUniverse {
 	private float descriptionSimilarity(String description, List<Token> vtokens) {
 		String[] dtokens = description.trim().toLowerCase().split("\\s+");
 		int sum = 0;
+		int dLen = 0;
+		int vLen = 0;
 		
 		for (int i = 0; i < dtokens.length; i++) {
 			int L = 1000;
 			int j = vtokens.size();
 			String wi = dtokens[i];
 			
+			if (lexicon.isFunctionalWord(wi)) {
+				// Skip functional words from match.
+				continue;
+			}
+			
+			dLen++;
+			
 			for (int jj = 0; jj < vtokens.size(); jj++) {
+				if (lexicon.isFunctionalPOS(vtokens.get(jj).POS)) {
+					// Skip functional words from match.
+					continue;
+				}
+				
+				vLen++;
+				
 				String wjj = vtokens.get(jj).wform;
 				String ljj = vtokens.get(jj).lemma;
 				
@@ -222,6 +247,9 @@ public class RDUniverse {
 			sum += (Math.abs(i - j) + 1) * (L + 1);
 		} // end i
 		
-		return (float) sum / (float) dtokens.length;
+		float dScore = (float) sum / (float) dLen;
+		float vScore = (float) sum / (float) vLen;
+		
+		return (dScore + vScore) / 2.0f;
 	}
 }

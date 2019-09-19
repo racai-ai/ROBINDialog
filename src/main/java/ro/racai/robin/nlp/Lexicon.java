@@ -29,6 +29,13 @@ public interface Lexicon {
 	public boolean isFunctionalPOS(String pos);
 	
 	/**
+	 * Checks to see if {@code word} is a functional word.
+	 * @param word       the word to be checked.
+	 * @return           {@code true} if {@code word} is a functional word.
+	 */
+	public boolean isFunctionalWord(String word);
+	
+	/**
 	 * Checks if POS is a noun POS.
 	 * @param pos        the POS to check
 	 * @return           {@code true} if {@code pos} is a noun
