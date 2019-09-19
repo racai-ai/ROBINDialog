@@ -26,7 +26,7 @@ CONCEPT când -> TIME
 # To refer to this value in this file, we also add a value alias, as the last element,
 # using the '=' char. Use only the canonical name of the concept.
 
-REFERENCE sală 209 S1
+REFERENCE sală 209 = S1
 REFERENCE sală 113 = S2
 REFERENCE curs laboratorul de informatică = C1
 REFERENCE curs laboratorul de SDA = C2
@@ -34,7 +34,7 @@ REFERENCE curs laboratorul de robotică = C3
 REFERENCE curs seminarul de analiză matematică = C4
 REFERENCE curs cursul de sisteme de operare = C5
 REFERENCE curs cursul de limbaje formale și translatoare = C6
-REFERENCE curs cursul de algebră = C6
+REFERENCE curs cursul de algebră = C7
 REFERENCE conferință Workshop-ul de Robotică, UPB 2019 = W1
 
 # Step 3. Define person names and time stamps that the dialogue
