@@ -37,11 +37,6 @@ public class RDConstant extends RDConcept {
 	 */
 	@Override
 	public void addSynonym(String syn) {}
-	
-	@Override
-	public String toString() {
-		return assignedReference;
-	}
 
 	/**
 	 * <p>A constant can be equal to an instantiated concept

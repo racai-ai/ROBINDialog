@@ -63,23 +63,23 @@ public class RDUniverse {
 	 * <p>Adds a concept built with {@link RDConcept#Builder(CType, String, List, String)} to
 	 * this universe of discourse. Note that the textual description {@link RDConcept#getReference()}
 	 * must not be null!
-	 * @param concept       the bound (instantiated) concept to be added to this universe 
+	 * @param conc       the bound (instantiated) concept to be added to this universe 
 	 */
-	public void addConcept(RDConcept concept) {
-		concepts.add(concept);
+	public void addConcept(RDConcept conc) {
+		concepts.add(conc);
 	}
 	
 	/**
 	 * <p>Adds a ``true'' predicate to this universe of discourse.
-	 * @param predicate     the predicate to add to this universe
+	 * @param pred     the predicate to add to this universe
 	 */
-	public void addPredicate(RDPredicate predicate) {
-		predicates.add(predicate);
+	public void addPredicate(RDPredicate pred) {
+		predicates.add(pred);
 	}
 	
-	public void addPredicates(List<RDPredicate> predicates) {
+	public void addPredicates(List<RDPredicate> preds) {
 		predicates.clear();
-		predicates.addAll(predicates);
+		predicates.addAll(preds);
 	}
 	
 	/**

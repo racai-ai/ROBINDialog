@@ -104,7 +104,8 @@ public class RDConcept {
 		RDConcept concept =
 			new RDConcept(
 				conceptType,
-				canonicalForm != null ? new String(canonicalForm) : null
+				canonicalForm != null ? new String(canonicalForm) : null,
+				assignedReference != null ? new String(assignedReference) : null
 			);
 
 		if (synonymsOfCanonicalForm != null) {
@@ -112,10 +113,6 @@ public class RDConcept {
 				concept.addSynonym(new String(s));
 			}
 		}
-		
-		concept.setReference(
-			assignedReference != null ? new String(assignedReference) : null
-		);
 		
 		return concept;
 	}
@@ -198,6 +195,10 @@ public class RDConcept {
 	 */
 	@Override
 	public String toString() {
+		if (!StringUtils.isNullEmptyOrBlank(assignedReference)) {
+			return assignedReference;
+		}
+		
 		return canonicalForm;
 	}
 

@@ -28,7 +28,7 @@ import org.json.simple.parser.ParseException;
  */
 public class RoWordNet implements WordNet {
 	private static final String WORDNET_QUERY =
-		"http://relate.racai.ro/index.php?path=rownws&word=#WORD#&sid=#ILI#&wn=ro";
+		"https://relate.racai.ro/index.php?path=rownws&word=#WORD#&sid=#ILI#&wn=ro";
 	private static final Logger LOGGER = Logger.getLogger(RoWordNet.class.getName());
 	private Map<String, Boolean> wnEqualsCache = new HashMap<String, Boolean>();
 	
@@ -114,7 +114,6 @@ public class RoWordNet implements WordNet {
 		query = query.replace("#WORD#", word);
 		query = query.replace("#ILI#", "");
 		
-		
 		try {
 			URL url = new URL(query);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -140,7 +139,7 @@ public class RoWordNet implements WordNet {
 				return content.toString();
 			}
 			else {
-				LOGGER.error("RELATE query error for word '" + word + "'; error code " + status); 
+				LOGGER.error("RELATE query error for word '" + word + "'; error code " + status);
 			}
 		}
 		catch (IOException ioe) {
