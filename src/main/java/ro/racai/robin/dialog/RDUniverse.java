@@ -8,6 +8,7 @@ import java.util.List;
 
 import ro.racai.robin.nlp.TextProcessor.Query;
 import ro.racai.robin.nlp.TextProcessor.Token;
+import ro.racai.robin.dialog.RDPredicate.PMatch;
 import ro.racai.robin.nlp.Levenshtein;
 import ro.racai.robin.nlp.WordNet;
 
@@ -27,15 +28,25 @@ public class RDUniverse {
 	 * Bound concepts in this universe of discourse.
 	 * Fill in this list using {@link #addConcept(RDConcept)}. 
 	 */
-	protected List<RDConcept> concepts;
+	private List<RDConcept> concepts;
 	
 	/**
 	 * Predicates that are true in this universe.
 	 * Use {@link #addPredicate()} method to fill in this list. 
 	 */
-	protected List<RDPredicate> predicates;
-	protected Levenshtein wordDistance;
-	protected WordNet wordNet;
+	private List<RDPredicate> predicates;
+		
+	/**
+	 * The word distance object used to compute
+	 * Levenshtein distances. 
+	 */
+	private Levenshtein wordDistance;
+		
+	/**
+	 * The WordNet object that is used to find
+	 * "similar" words. 
+	 */
+	private WordNet wordNet;
 		
 	/**
 	 * <p>Universe of discourse constructor.</p>
@@ -66,20 +77,35 @@ public class RDUniverse {
 		predicates.add(predicate);
 	}
 	
-	/**
-	 * <p>Returns the predicate from this universe of discourse
-	 * which best matched the query.</p>
-	 * @param query             the parsed {@link Query} object from the
-	 *                          user utterance;
-	 * @return                  an instance of the 
-	 *                          of mappings for the concept.
-	 */
-	public RDPredicate resolveQuery(Query query) {
-		// TODO: NOT READY!
-		return null;
+	public void addPredicates(List<RDPredicate> predicates) {
+		predicates.clear();
+		predicates.addAll(predicates);
 	}
 	
-	protected boolean isConceptInstance(List<Token> userTokens, RDConcept boundConcept) {
+	/**
+	 * <p>Checks each predicate from this universe of discourse
+	 * and assigns a match score.</p>
+	 * @param query             the parsed {@link Query} object from the
+	 *                          user utterance;
+	 * @return                  the predicate which best matches the query.
+	 */
+	public RDPredicate resolveQuery(Query query) {
+		RDPredicate result = null;
+		float maxScore = 0.0f;
+		
+		for (RDPredicate pred : predicates) {
+			PMatch pm = scoreQueryAgainstPredicate(query, pred);
+			
+			if (pm.pMatchScore > maxScore) {
+				result = pred;
+				maxScore = pm.pMatchScore;
+			}
+		}
+		
+		return result;
+	}
+	
+	private boolean isConceptInstance(List<Token> userTokens, RDConcept boundConcept) {
 		for (Token tok : userTokens) {
 			if (tok.isActionVerbDependent) {
 				if (
@@ -94,36 +120,52 @@ public class RDUniverse {
 		return false;
 	}
 	
-	protected float matchQueryWithPredicate(Query query, RDPredicate pred) {
-		// TODO: NOT READY!
+	private PMatch scoreQueryAgainstPredicate(Query query, RDPredicate pred) {
 		// 1. Match the action verb of the query with the one of the predicate
 		if (!pred.isThisPredicate(query.actionVerb, wordNet)) {
-			return 0.0f;
+			return null;
 		}
 		
 		// 2. Match the syntactic arguments with logical (bound) arguments
-		float mScore = 0.0f;
 		// Predicate bound arguments
 		List<RDConcept> predArgs = pred.getArguments();
 		// User query tokens making up syntactic arguments of the verb
-		List<List<Token>> qverbArgs = query.predicateArguments;
+		List<List<Token>> queryArgs = query.predicateArguments;
+		// Find the maximal sum assignment of query arguments
+		// to predicate arguments
+		float[][] matchScores = new float[predArgs.size()][queryArgs.size()];
 		
 		for (int i = 0; i < predArgs.size(); i++) {
-			RDConcept boundArg = predArgs.get(i);
-			float bestSim = 0.0f;
+			RDConcept pArg = predArgs.get(i);
 			
-			for (int j = 0; j < qverbArgs.size(); i++) {
-				List<Token> userArg = qverbArgs.get(j);
+			for (int j = 0; j < queryArgs.size(); i++) {
+				List<Token> qArg = queryArgs.get(j);
 				
-				if (isConceptInstance(userArg, boundArg)) {
-					float sim = descriptionSimilarity(boundArg.getReference(), userArg);
+				matchScores[i][j] = 0.0f;
+				
+				if (isConceptInstance(qArg, pArg)) {
+					matchScores[i][j] = descriptionSimilarity(pArg.getReference(), qArg);
 				}
 			}
 		}
 		
-		return 0.0f;
+		PMatch result = new PMatch(predArgs);
+		
+		for (int i = 0; i < predArgs.size(); i++) {
+			float maxScore = 0.0f;
+			
+			for (int j = 0; j < queryArgs.size(); i++) {
+				if (matchScores[i][j] > maxScore) {
+					maxScore = matchScores[i][j];
+				}
+			}
+			
+			result.pMatchScore += maxScore; 
+			result.aMatchScores[i] = maxScore;
+		}
+		
+		return result;
 	}
-	
 	
 	/**
 	 * <p>Detects if two lists of words are ``similar''. Word matching
@@ -138,7 +180,7 @@ public class RDUniverse {
 	 *                            are exactly equal and less than 1 for a degree of
 	 *                            similarity.
 	 */
-	protected float descriptionSimilarity(String description, List<Token> vtokens) {
+	private float descriptionSimilarity(String description, List<Token> vtokens) {
 		String[] dtokens = description.trim().toLowerCase().split("\\s+");
 		int sum = 0;
 		

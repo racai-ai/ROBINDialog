@@ -26,7 +26,7 @@ CONCEPT când -> TIME
 # To refer to this value in this file, we also add a value alias, as the last element,
 # using the '=' char. Use only the canonical name of the concept.
 
-REFERENCE sală 209 = S1
+REFERENCE sală 209 S1
 REFERENCE sală 113 = S2
 REFERENCE curs laboratorul de informatică = C1
 REFERENCE curs laboratorul de SDA = C2

@@ -3,6 +3,9 @@
  */
 package ro.racai.robin.dialog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  * <p>Concept type: if not a word such as <i>sală</i>, it can
@@ -17,5 +20,15 @@ public enum CType {
 	// e.g. 8:15
 	TIME,
 	// e.g. sala 209
-	LOCATION
+	LOCATION;
+	
+	public static String getMemberRegex() {
+		List<String> options = new ArrayList<String>();
+		
+		for (CType v : CType.values()) {
+			options.add(v.name());
+		}
+		
+		return "(" + String.join("|", options) + ")";
+	}
 }

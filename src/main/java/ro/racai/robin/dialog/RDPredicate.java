@@ -47,13 +47,33 @@ public class RDPredicate {
 	/**
 	 * Alternate names for the {@link #actionVerb}.
 	 */
-	private List<String> synonymsOfActionVerb = new ArrayList<String>();
+	private List<String> synonymsOfActionVerb;
 	
 	/**
 	 * The arguments of this predicate, in
 	 * no special order.
 	 */
-	private List<RDConcept> predicateArguments = new ArrayList<RDConcept>();
+	private List<RDConcept> predicateArguments;
+	
+	/**
+	 * @author Radu Ion ({@code radu@racai.ro})
+	 * <p>A predicate match object with the overall match score
+	 * and individual arguments match scores.</p>
+	 */
+	public static class PMatch {
+		public float pMatchScore;
+		
+		/**
+		 * This list has the same number of elements as the
+		 * {@link RDPredicate#predicateArguments} list.
+		 */
+		public float[] aMatchScores;
+		
+		public PMatch(List<RDConcept> args) {
+			aMatchScores = new float[args.size()];
+			pMatchScore = 0.0f;
+		}
+	}
 	
 	private RDPredicate(UIntentType uint, String verb) {
 		if (StringUtils.isNullEmptyOrBlank(verb)) {
@@ -62,6 +82,8 @@ public class RDPredicate {
 		
 		actionVerb = verb.trim().toLowerCase();
 		userIntention = uint;
+		synonymsOfActionVerb = new ArrayList<String>();
+		predicateArguments = new ArrayList<RDConcept>();
 	}
 	
 	/**
@@ -80,8 +102,20 @@ public class RDPredicate {
 		predicateArguments.add(arg);
 	}
 	
+	/**
+	 * <p>Get the bound arguments of this predicate.</p>
+	 * @return      a list with the predicate arguments.
+	 */
 	public List<RDConcept> getArguments() {
 		return predicateArguments;
+	}
+	
+	/**
+	 * <p>Get the action verb of this predicate.</p>
+	 * @return      the {@link #actionVerb} member field.
+	 */
+	public String getActionVerb() {
+		return actionVerb;
 	}
 	
 	/**
@@ -102,12 +136,34 @@ public class RDPredicate {
 			}
 		}
 		
-		if (args == null || args.isEmpty()) {
-			throw new RuntimeException("List of predicate arguments is null or empty!");
+		if (args != null) {
+			for (RDConcept cpt : args) {
+				predicate.addArgument(cpt);
+			}
 		}
 		
-		for (RDConcept cpt : args) {
-			predicate.addArgument(cpt);
+		return predicate;
+	}
+
+	/**
+	 * <p>Convenience method for returning a deep copy of this object.</p>
+	 * @return            an exact duplicate of this object.
+	 */
+	public RDPredicate DeepCopy() {
+		RDPredicate predicate =
+			new RDPredicate(
+				userIntention,
+				actionVerb != null ? new String(actionVerb) : null
+			);
+		
+		if (synonymsOfActionVerb != null) {
+			for (String s : synonymsOfActionVerb) {
+				predicate.addSynonym(new String(s));
+			}
+		}
+		
+		for (RDConcept cpt : predicateArguments) {
+			predicate.addArgument(cpt.DeepCopy());
 		}
 		
 		return predicate;

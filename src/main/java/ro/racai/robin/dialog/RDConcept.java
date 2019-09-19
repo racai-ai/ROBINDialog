@@ -19,7 +19,12 @@ import ro.racai.robin.nlp.WordNet;
  * we could speak of <i>sala 209</i> or of <i>laboratorul de robotică</i>.
  */
 public class RDConcept {
-	private CType conceptType;
+	/**
+	 * This is the type of the concept, to be
+	 * checked and enforced when this concept is a
+	 * predicate argument.
+	 */
+	protected CType conceptType;
 	
 	/**
 	 * Keeps the canonical form of the concept.
@@ -29,21 +34,32 @@ public class RDConcept {
 	 * same canonical form! It is a limitation
 	 * for now.</b>
 	 */
-	private String canonicalForm;
+	protected String canonicalForm;
 	
 	/**
 	 * Alternate words for the {@link #canonicalForm}.
 	 * For instance, Romanian <i>sală</i> and <i>laborator</i>.
 	 */
-	private List<String> synonymsOfCanonicalForm = new ArrayList<String>();
+	protected List<String> synonymsOfCanonicalForm;
 	
 	/**
 	 * This is the reference of the concept from the micro-world.
 	 * If no reference has been assigned yet, leave this to null. 
 	 */
-	private String assignedReferece;
+	protected String assignedReference;
 	
-	private RDConcept(CType ctyp, String cform) {
+	/**
+	 * <p>This one is for creating a {@link RDConstant}.</p> 
+	 * @param ctyp         the type of the concept constant.
+	 */
+	public RDConcept(CType ctyp, String ref) {
+		conceptType = ctyp;
+		synonymsOfCanonicalForm = new ArrayList<String>();
+		canonicalForm = null;
+		assignedReference = ref;
+	}
+	
+	private RDConcept(CType ctyp, String cform, String ref) {
 		conceptType = ctyp;
 		
 		if (StringUtils.isNullEmptyOrBlank(cform)) {
@@ -51,6 +67,8 @@ public class RDConcept {
 		}
 		
 		canonicalForm = cform.trim().toLowerCase();
+		synonymsOfCanonicalForm = new ArrayList<String>();
+		assignedReference = ref;
 	}
 	
 	/**
@@ -64,15 +82,41 @@ public class RDConcept {
 	 * @return          an {@link RDConcept}.
 	 */
 	public static RDConcept Builder(CType ctyp, String cform, List<String> syns, String ref) {
-		RDConcept concept = new RDConcept(ctyp, cform);
+		RDConcept concept = new RDConcept(ctyp, cform, ref);
 		
 		if (syns != null) {
 			for (String s : syns) {
 				concept.addSynonym(s);
 			}
 		}
+
+		return concept;
+	}
+	
+	/**
+	 * <p>Create a deep copy of this concept.
+	 * All internal data structure are allocated on the heap
+	 * for the new object.</p>
+	 * 
+	 * @return    a deep copy of this object.
+	 */
+	public RDConcept DeepCopy() {
+		RDConcept concept =
+			new RDConcept(
+				conceptType,
+				canonicalForm != null ? new String(canonicalForm) : null
+			);
+
+		if (synonymsOfCanonicalForm != null) {
+			for (String s : synonymsOfCanonicalForm) {
+				concept.addSynonym(new String(s));
+			}
+		}
 		
-		concept.setReference(ref);
+		concept.setReference(
+			assignedReference != null ? new String(assignedReference) : null
+		);
+		
 		return concept;
 	}
 	
@@ -94,13 +138,35 @@ public class RDConcept {
 	 * @param value        the reference to be set
 	 */
 	public void setReference(String value) {
-		assignedReferece = value;
+		assignedReference = value;
 	}
 	
+	/**
+	 * <p>Returns the textual description (reference) for this
+	 * concept in the given {@link RDUniverse}.</p>
+	 * @return              the textual description (or reference) of
+	 *                      this concept or {@code null} if there isn't one.
+	 */
 	public String getReference() {
-		return assignedReferece;
+		return assignedReference;
 	}
 
+	/**
+	 * <p>Returns the "standard" name for this concept.</p>
+	 * @return          the {@link #canonicalForm} member field.
+	 */
+	public String getCanonicalName() {
+		return canonicalForm;
+	}
+	
+	/**
+	 * <p>Returns the type of this concept.</p>
+	 * @return         the {@link #conceptType} member field.
+	 */
+	public CType getType() {
+		return conceptType;
+	}
+	
 	/**
 	 * <p>Tests if an arbitrary word refers to this concept.</p>
 	 * @param word     the word to be tested;
@@ -143,13 +209,18 @@ public class RDConcept {
 		if (obj instanceof RDConcept) {
 			RDConcept rdc = (RDConcept) obj;
 			
+			if (conceptType != rdc.conceptType) {
+				// Types have to be the same, as well.
+				return false;
+			}
+			
 			if (rdc.canonicalForm.equals(canonicalForm)) {
-				if (rdc.assignedReferece == null && assignedReferece == null) {
+				if (rdc.assignedReference == null && assignedReference == null) {
 					return true;
 				}
 				else if (
-					rdc.assignedReferece != null && assignedReferece != null &&
-					rdc.assignedReferece.equalsIgnoreCase(assignedReferece)
+					rdc.assignedReference != null && assignedReference != null &&
+					rdc.assignedReference.equalsIgnoreCase(assignedReference)
 				) {
 					return true;
 				}
