@@ -1,0 +1,74 @@
+cursul de limbaje formale și translatoare
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+limbaje	limbaj	Ncfp-n	nmod	1	false
+formale	formal	Afpfp-n	amod	3	false
+și	și	Crssp	cc	6	false
+translatoare	translatoare	Ncf--n	conj	4	false
+
+113
+113	113	Mc	root	0	false
+
+cursul de algebră
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+algebră	algebră	Ncfsrn	nmod	1	false
+
+În ce sală se desfășoară cursul de sisteme de operare?
+În	în	Spsa	case	3	false
+ce	ce	Dw3--r---e	det	3	false
+sală	sală	Ncfsrn	obl	5	true
+se	sine	Px3--a--------w	expl:pass	5	false
+desfășoară	desfășura	Vmip3	root	0	false
+cursul	curs	Ncmsry	nsubj	5	true
+de	de	Spsa	case	8	false
+sisteme	sistem	Ncfp-n	nmod	6	false
+de	de	Spsa	case	10	false
+operare	operare	Ncfsrn	nmod	8	false
+?	?	QUEST	punct	5	false
+
+sala de consiliu
+sala	sală	Ncfsry	root	0	false
+de	de	Spsa	case	3	false
+consiliu	consiliu	Ncms-n	nmod	1	false
+
+seminarul de analiză matematică
+seminarul	seminar	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+analiză	analiză	Ncfsrn	nmod	1	false
+matematică	matematic	Afpfsrn	amod	3	false
+
+laboratorul de robotică
+laboratorul	laborator	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+robotică	robotică	Ncfsrn	nmod	1	false
+
+209
+209	209	Mc	root	0	false
+
+laboratorul de informatică
+laboratorul	laborator	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+informatică	informatică	Ncfsrn	nmod	1	false
+
+Workshop-ul de Robotică, UPB 2019
+Workshop	Workshop	Np	root	0	false
+-ul	-ul	Tfmsry	det	1	false
+de	de	Spsa	case	4	false
+Robotică	robotică	Ncfsrn	nmod	1	false
+,	,	COMMA	punct	6	false
+UPB	UPB	Np	appos	1	false
+2019	2019	Mc	flat	6	false
+
+laboratorul de SDA
+laboratorul	laborator	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+SDA	SDA	Np	nmod	1	false
+
+cursul de sisteme de operare
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+sisteme	sistem	Ncfp-n	nmod	1	false
+de	de	Spsa	case	5	false
+operare	operare	Ncfsrn	nmod	3	false
+

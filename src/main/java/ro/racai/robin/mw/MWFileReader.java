@@ -25,6 +25,7 @@ import ro.racai.robin.dialog.RDPredicate;
 import ro.racai.robin.dialog.RDUniverse;
 import ro.racai.robin.dialog.UIntentType;
 import ro.racai.robin.nlp.Lexicon;
+import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.WordNet;
 
 /**
@@ -51,7 +52,6 @@ public class MWFileReader implements RDMicroworld {
 	private final static Pattern PREDICATE_PATT =
 		Pattern.compile("^PREDICATE\\s+(.+)\\s*->\\s*([A-Z_]+)$");
 	
-	
 	/**
 	 * <p>Constructs a {@code .mw} file reader from a given file.</p>
 	 * @param file      the file containing the micro-world definition.
@@ -64,7 +64,7 @@ public class MWFileReader implements RDMicroworld {
 	 * @see ro.racai.robin.mw.RDMicroworld#constructUniverse()
 	 */
 	@Override
-	public RDUniverse constructUniverse(WordNet wn, Lexicon lex) {
+	public RDUniverse constructUniverse(WordNet wn, Lexicon lex, TextProcessor proc) {
 		try {
 			BufferedReader rdr =
 				new BufferedReader(
@@ -161,7 +161,7 @@ public class MWFileReader implements RDMicroworld {
 							if (c.getCanonicalName().equals(canonName)) {
 								RDConcept nc = c.DeepCopy();
 								
-								nc.setReference(reference);
+								nc.setReference(reference, proc);
 								
 								if (!referencedConcepts.containsKey(refCode)) {
 									referencedConcepts.put(refCode, nc);
@@ -307,7 +307,7 @@ public class MWFileReader implements RDMicroworld {
 		
 			rdr.close();
 			
-			RDUniverse universe = new RDUniverse(wn, lex);
+			RDUniverse universe = new RDUniverse(wn, lex, proc);
 			
 			universe.addPredicates(truePredicates);
 			

@@ -11,9 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
@@ -26,11 +24,10 @@ import org.json.simple.parser.ParseException;
  * <p>The Romanian WordNet class, implementing
  * the {@link WordNet} interface.</p>
  */
-public class RoWordNet implements WordNet {
+public class RoWordNet extends WordNet {
 	private static final String WORDNET_QUERY =
 		"https://relate.racai.ro/index.php?path=rownws&word=#WORD#&sid=#ILI#&wn=ro";
 	private static final Logger LOGGER = Logger.getLogger(RoWordNet.class.getName());
-	private Map<String, Boolean> wnEqualsCache = new HashMap<String, Boolean>();
 	
 	@Override
 	public List<String> getHypernyms(String word) {
@@ -49,6 +46,12 @@ public class RoWordNet implements WordNet {
 		
 		try {
 			JSONObject root = (JSONObject) parser.parse(json);
+			
+			if (root.isEmpty()) {
+				// If word is not found in WordNet...
+				return members;
+			}
+			
 			JSONArray senses = (JSONArray) root.get("senses");
 			
 			for (int i = 0; i < senses.size(); i++) {
@@ -80,6 +83,12 @@ public class RoWordNet implements WordNet {
 		
 		try {
 			JSONObject root = (JSONObject) parser.parse(json);
+			
+			if (root.isEmpty()) {
+				// If word is not found in WordNet...
+				return synonyms;
+			}
+			
 			JSONArray senses = (JSONArray) root.get("senses");
 			
 			for (int i = 0; i < senses.size(); i++) {
@@ -147,54 +156,5 @@ public class RoWordNet implements WordNet {
 		}
 		
 		return null;
-	}
-
-	@Override
-	public boolean wordnetEquals(String w1, String w2) {
-		String key12 = w1 + "#" + w2;
-		String key21 = w2 + "#" + w1;
-		
-		if (wnEqualsCache.containsKey(key12)) {
-			return wnEqualsCache.get(key12);
-		}
-
-		if (wnEqualsCache.containsKey(key21)) {
-			return wnEqualsCache.get(key21);
-		}
-		
-		// Synonym check with WordNet
-		for (String syn : getSynonyms(w1)) {
-			if (w2.equals(syn)) {
-				wnEqualsCache.put(key12, true);
-				wnEqualsCache.put(key21, true);
-				
-				return true;
-			}
-		}
-		
-		// Use hypernyms from WordNet (only direct hypernyms)
-		for (String hyper : getHypernyms(w1)) {
-			if (w2.equals(hyper)) {
-				wnEqualsCache.put(key12, true);
-				wnEqualsCache.put(key21, true);
-				
-				return true;
-			}
-		}
-		
-		// Use hyponyms from WordNet (only direct hyponyms)
-		for (String hypo : getHyponyms(w1)) {
-			if (w2.equals(hypo)) {
-				wnEqualsCache.put(key12, true);
-				wnEqualsCache.put(key21, true);
-				
-				return true;
-			}
-		}
-		
-		wnEqualsCache.put(key12, false);
-		wnEqualsCache.put(key21, false);
-		
-		return false;
 	}
 }

@@ -21,18 +21,22 @@ public class RDManager {
 	public static void main(String[] args) {
 		RoWordNet rown = new RoWordNet();
 		RoLexicon rolex = new RoLexicon();
-		RoTextProcessor tp = new RoTextProcessor(rolex);
+		RoTextProcessor rotp = new RoTextProcessor(rolex);
 		MWFileReader mwr = new MWFileReader("src/main/resources/precis.mw");
-		RDUniverse precis = mwr.constructUniverse(rown, rolex);
+		RDUniverse precis = mwr.constructUniverse(rown, rolex, rotp);
 		Query q =
-			tp.queryAnalyzer(
-				tp.textProcessor(
+			rotp.queryAnalyzer(
+				rotp.textProcessor(
 					"În ce sală se desfășoară cursul de sisteme de operare?"
 				)
 			);
 		
-		precis.resolveQuery(q);
+		RDPredicate pred = precis.resolveQuery(q);
 		
-		return;
+		System.out.println(pred);
+		// Make sure you save expensive calls
+		// to local hard disk...
+		rotp.dumpTextCache();
+		rown.dumpWordNetCache();
 	}
 }

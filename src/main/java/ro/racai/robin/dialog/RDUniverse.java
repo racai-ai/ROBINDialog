@@ -4,13 +4,16 @@
 package ro.racai.robin.dialog;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ro.racai.robin.nlp.TextProcessor.Query;
 import ro.racai.robin.nlp.TextProcessor.Token;
 import ro.racai.robin.dialog.RDPredicate.PMatch;
 import ro.racai.robin.nlp.Levenshtein;
 import ro.racai.robin.nlp.Lexicon;
+import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.WordNet;
 
 /**
@@ -50,6 +53,12 @@ public class RDUniverse {
 	private WordNet wordNet;
 	
 	/**
+	 * The TextProcessor to use to compute
+	 * a special type of sentence length.
+	 */
+	private TextProcessor textProcessor;
+	
+	/**
 	 * Lexicon to test for functional words
 	 * when matching descriptions.
 	 */
@@ -60,12 +69,13 @@ public class RDUniverse {
 	 * @param wn      a WordNet instance for your language;
 	 * @param lex     a lexicon instance for your language.
 	 */
-	public RDUniverse(WordNet wn, Lexicon lex) {
+	public RDUniverse(WordNet wn, Lexicon lex, TextProcessor proc) {
 		concepts = new ArrayList<RDConcept>();
 		predicates = new ArrayList<RDPredicate>();
 		wordDistance = new Levenshtein();
 		wordNet = wn;
 		lexicon = lex;
+		textProcessor = proc;
 	}
 	
 	/**
@@ -105,7 +115,7 @@ public class RDUniverse {
 		for (RDPredicate pred : predicates) {
 			PMatch pm = scoreQueryAgainstPredicate(query, pred);
 			
-			if (pm.pMatchScore > maxScore) {
+			if (pm != null && pm.pMatchScore > maxScore) {
 				result = pred;
 				maxScore = pm.pMatchScore;
 			}
@@ -116,7 +126,10 @@ public class RDUniverse {
 	
 	private boolean isConceptInstance(List<Token> userTokens, RDConcept boundConcept) {
 		for (Token tok : userTokens) {
-			if (tok.isActionVerbDependent) {
+			if (
+				tok.isActionVerbDependent &&
+				!lexicon.isFunctionalPOS(tok.POS)
+			) {
 				if (
 					boundConcept.isThisConcept(tok.lemma, wordNet) ||
 					boundConcept.isThisConcept(tok.wform, wordNet)
@@ -142,18 +155,25 @@ public class RDUniverse {
 		List<List<Token>> queryArgs = query.predicateArguments;
 		// Find the maximal sum assignment of query arguments
 		// to predicate arguments
+		// Matrix is symmetrical
 		float[][] matchScores = new float[predArgs.size()][queryArgs.size()];
+		Set<String> ijPairs = new HashSet<String>();
 		
 		for (int i = 0; i < predArgs.size(); i++) {
 			RDConcept pArg = predArgs.get(i);
 			
-			for (int j = 0; j < queryArgs.size(); i++) {
+			for (int j = 0; j < queryArgs.size(); j++) {
 				List<Token> qArg = queryArgs.get(j);
 				
 				matchScores[i][j] = 0.0f;
 				
-				if (isConceptInstance(qArg, pArg)) {
-					matchScores[i][j] = descriptionSimilarity(pArg.getReference(), qArg);
+				if (ijPairs.contains(j + "#" + i)) {
+					matchScores[i][j] = matchScores[j][i];
+				}
+				else if (isConceptInstance(qArg, pArg)) {
+					matchScores[i][j] =
+						descriptionSimilarity(pArg.getTokenizedReference(), qArg);
+					ijPairs.add(i + "#" + j);
 				}
 			}
 		}
@@ -163,7 +183,7 @@ public class RDUniverse {
 		for (int i = 0; i < predArgs.size(); i++) {
 			float maxScore = 0.0f;
 			
-			for (int j = 0; j < queryArgs.size(); i++) {
+			for (int j = 0; j < queryArgs.size(); j++) {
 				if (matchScores[i][j] > maxScore) {
 					maxScore = matchScores[i][j];
 				}
@@ -182,46 +202,41 @@ public class RDUniverse {
 	 * Levenshtein distances.</p>
 	 * <p>If {@code i, j} are the indexes of the words aligning with
 	 * the lowest Levenshtein distance L, we output
-	 * sum((|i - j| + 1) * (L + 1)) / length(description).</p>
-	 * @param description         the description that is to be matched;
-	 * @param vtokens             list of value tokens parsed in the {@link Query};
+	 * sum((|i - j| + 1) * (L + 1)) / (length(description) + length(reference)).</p>
+	 * @param description         list of description tokens that is to be matched;
+	 * @param reference           list of reference tokens that is to be matched;
 	 * @return                    a real number that is 1.0f if the two entities
 	 *                            are exactly equal and less than 1 for a degree of
 	 *                            similarity.
 	 */
-	private float descriptionSimilarity(String description, List<Token> vtokens) {
-		String[] dtokens = description.trim().toLowerCase().split("\\s+");
+	private float descriptionSimilarity(List<Token> description, List<Token> reference) {
 		int sum = 0;
-		int dLen = 0;
-		int vLen = 0;
+		int dLen = textProcessor.noFunctionalWordsLength(description);
+		int rLen = textProcessor.noFunctionalWordsLength(reference);
 		
-		for (int i = 0; i < dtokens.length; i++) {
+		for (int i = 0; i < description.size(); i++) {
 			int L = 1000;
-			int j = vtokens.size();
-			String wi = dtokens[i];
+			int j = reference.size();
+			String li = description.get(i).lemma;
+			String wi = description.get(i).wform;
 			
-			if (lexicon.isFunctionalWord(wi)) {
+			if (lexicon.isFunctionalPOS(description.get(i).POS)) {
 				// Skip functional words from match.
 				continue;
 			}
 			
-			dLen++;
-			
-			for (int jj = 0; jj < vtokens.size(); jj++) {
-				if (lexicon.isFunctionalPOS(vtokens.get(jj).POS)) {
+			for (int jj = 0; jj < reference.size(); jj++) {
+				if (lexicon.isFunctionalPOS(reference.get(jj).POS)) {
 					// Skip functional words from match.
 					continue;
 				}
 				
-				vLen++;
-				
-				String wjj = vtokens.get(jj).wform;
-				String ljj = vtokens.get(jj).lemma;
+				String wjj = reference.get(jj).wform;
+				String ljj = reference.get(jj).lemma;
 				
 				if (
-					wi.equalsIgnoreCase(wjj) ||
-					wi.equalsIgnoreCase(ljj) ||
-					wordNet.wordnetEquals(wi, ljj)
+					li.equalsIgnoreCase(ljj) ||
+					wordNet.wordnetEquals(li, ljj)
 				) {
 					L = 0;
 					j = jj;
@@ -234,13 +249,6 @@ public class RDUniverse {
 						L = d;
 						j = jj;
 					}
-					
-					d = wordDistance.distance(wi.toLowerCase(), ljj.toLowerCase(), 5);
-					
-					if (d < L) {
-						L = d;
-						j = jj;
-					}
 				}
 			} // end jj
 			
@@ -248,8 +256,8 @@ public class RDUniverse {
 		} // end i
 		
 		float dScore = (float) sum / (float) dLen;
-		float vScore = (float) sum / (float) vLen;
+		float rScore = (float) sum / (float) rLen;
 		
-		return (dScore + vScore) / 2.0f;
+		return 2.0f / (dScore + rScore);
 	}
 }

@@ -33,6 +33,12 @@ public class RDRobotBehaviour {
 	 */
 	private String payload;
 	
+	/**
+	 * <p>Default constructor, specifying user intention
+	 * and payload.</p>
+	 * @param uityp       user intention;
+	 * @param pld         payload.
+	 */
 	public RDRobotBehaviour(UIntentType uityp, String pld) {
 		userIntent = uityp;
 		payload = pld;

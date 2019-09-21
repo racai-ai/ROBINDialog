@@ -28,6 +28,7 @@ CONCEPT când -> TIME
 
 REFERENCE sală 209 = S1
 REFERENCE sală 113 = S2
+REFERENCE sală sala de consiliu = S3
 REFERENCE curs laboratorul de informatică = C1
 REFERENCE curs laboratorul de SDA = C2
 REFERENCE curs laboratorul de robotică = C3
@@ -47,6 +48,7 @@ TIME marți, 8:00 = T1
 TIME miercuri, 9:00 = T2
 TIME joi = T3
 TIME decembrie 2020 = T4
+TIME joia de la 10:00 = T5
 
 # Person values are written as First name Last name.
 # PERSON is a concept type, see ro.racai.robin.dialog.CType.
@@ -84,3 +86,4 @@ PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
 TRUE ține C1 S1 T1
 TRUE fi P1 S1 T1
 TRUE ține W1 S2 T2
+TRUE ține C5 S3 T5

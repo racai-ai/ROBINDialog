@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ro.racai.robin.nlp.StringUtils;
+import ro.racai.robin.nlp.TextProcessor;
+import ro.racai.robin.nlp.TextProcessor.Token;
 import ro.racai.robin.nlp.WordNet;
 
 /**
@@ -49,6 +51,12 @@ public class RDConcept {
 	protected String assignedReference;
 	
 	/**
+	 * The processed version of the {@link #assignedReference}.
+	 * To be filled in at the first request.
+	 */
+	List<Token> assignedReferenceTokens;
+	
+	/**
 	 * <p>This one is for creating a {@link RDConstant}.</p> 
 	 * @param ctyp         the type of the concept constant.
 	 */
@@ -57,6 +65,7 @@ public class RDConcept {
 		synonymsOfCanonicalForm = new ArrayList<String>();
 		canonicalForm = null;
 		assignedReference = ref;
+		assignedReferenceTokens = new ArrayList<Token>();
 	}
 	
 	private RDConcept(CType ctyp, String cform, String ref) {
@@ -69,6 +78,7 @@ public class RDConcept {
 		canonicalForm = cform.trim().toLowerCase();
 		synonymsOfCanonicalForm = new ArrayList<String>();
 		assignedReference = ref;
+		assignedReferenceTokens = new ArrayList<Token>();
 	}
 	
 	/**
@@ -134,8 +144,19 @@ public class RDConcept {
 	 * <p>Sets the reference for this concept.</p>
 	 * @param value        the reference to be set
 	 */
-	public void setReference(String value) {
-		assignedReference = value;
+	public void setReference(String value, TextProcessor proc) {
+		if (value != null) {
+			if (
+				assignedReference == null ||
+				(
+					assignedReference != null && 
+					!value.equals(assignedReference)
+				)
+			) {
+				assignedReference = value;
+				assignedReferenceTokens = proc.textProcessor(assignedReference);
+			}
+		}
 	}
 	
 	/**
@@ -148,6 +169,16 @@ public class RDConcept {
 		return assignedReference;
 	}
 
+	/**
+	 * <p>Gets the tokenized version of the reference
+	 * for matching with user's sayings.</p>
+	 * @return              the processed version of the
+	 *                      {@link #assignedReference} member field. 
+	 */
+	public List<Token> getTokenizedReference() {
+		return assignedReferenceTokens;
+	}
+	
 	/**
 	 * <p>Returns the "standard" name for this concept.</p>
 	 * @return          the {@link #canonicalForm} member field.
@@ -171,6 +202,10 @@ public class RDConcept {
 	 * @return         {@code true} if the word signals the presence of this concept.
 	 */
 	public boolean isThisConcept(String word, WordNet wn) {
+		if (canonicalForm == null) {
+			return false;
+		}
+		
 		word = word.trim().toLowerCase();
 		
 		if (word.equals(canonicalForm)) {

@@ -3,10 +3,20 @@
  */
 package ro.racai.robin.nlp;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import ro.racai.robin.dialog.RDConcept;
+import org.apache.log4j.Logger;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
@@ -14,10 +24,22 @@ import ro.racai.robin.dialog.RDConcept;
  * add POS tagging, lemmatization and dependency parsing.</p>
  */
 public abstract class TextProcessor {
+	private static final Logger LOGGER =
+		Logger.getLogger(TextProcessor.class.getName());
+	
 	/**
 	 * Lexicon to use for text processing. 
 	 */
 	protected Lexicon lexicon;
+	
+	/**
+	 * Save expensive text processing calls
+	 * to the TEPROLIN web service. 
+	 */
+	private final String processedTextCacheFile =
+		"processed-text-cache.txt";
+	protected Map<String, List<Token>> processedTextCache =
+		new HashMap<String, List<Token>>(); 
 	
 	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
@@ -45,15 +67,19 @@ public abstract class TextProcessor {
 			POS = p;
 			head = h;
 			drel = dr;
-			isActionVerbDependent = true;
+			isActionVerbDependent = avd;
 		}
 
+		public String textRecord() {
+			return wform + "\t" + lemma + "\t" + POS + "\t" + drel + "\t" + head + "\t" + isActionVerbDependent;
+		}
+		
 		/* (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
 		@Override
 		public String toString() {
-			return wform + "/" + lemma + "/" + POS + " <-" + drel + "- " + head;
+			return wform + "/" + lemma + "/" + POS + " " + drel + "<-" + head;
 		}
 	}
 	
@@ -87,6 +113,7 @@ public abstract class TextProcessor {
 	
 	public TextProcessor(Lexicon lex) {
 		lexicon = lex;
+		populateProcessedTextCache();
 	}
 	
 	/**
@@ -99,9 +126,112 @@ public abstract class TextProcessor {
 		text = normalizeText(text);
 		text = textCorrection(text);
 		
-		return processText(text);
-	}
+		if (processedTextCache.containsKey(text)) {
+			return processedTextCache.get(text);
+		}
 		
+		List<Token> procText = processText(text);
+		
+		processedTextCache.put(text, procText);
+		
+		return procText;
+	}
+	
+	/**
+	 * <p>Returns the length of a sentence disregarding
+	 * functional words.</p>
+	 * @param sentence       the sentence to compute length
+	 *                       for;
+	 * @return               the number of content words
+	 *                       in the sentence.
+	 */
+	public int noFunctionalWordsLength(List<Token> sentence) {
+		int len = 0;
+		
+		if (sentence == null) {
+			return len;
+		}
+		
+		for (Token t : sentence) {
+			if (!lexicon.isFunctionalPOS(t.POS)) {
+				len++;
+			}
+		}
+		
+		return len;
+	}
+	
+	private void populateProcessedTextCache() {
+		if (!new File(processedTextCacheFile).exists()) {
+			// On first run this file does not exist yet.
+			return;
+		}
+		
+		try {
+			BufferedReader rdr =
+				new BufferedReader(
+					new InputStreamReader(
+						new FileInputStream(processedTextCacheFile), "UTF8"));
+			String line = rdr.readLine();
+			
+			while (line != null) {
+				String text = line;
+				List<Token> textProc = new ArrayList<Token>();
+				
+				line = rdr.readLine();
+				
+				while (!line.isEmpty()) {
+					String[] parts = line.split("\\s+");
+					String wform = parts[0];
+					String lemma = parts[1];
+					String POS = parts[2];
+					String drel = parts[3];
+					int head = Integer.parseInt(parts[4]);
+					boolean avd = Boolean.parseBoolean(parts[5]);
+					
+					textProc.add(new Token(wform, lemma, POS, head, drel, avd));
+					line = rdr.readLine();
+				}
+				
+				processedTextCache.put(text, textProc);
+				line = rdr.readLine();
+			}
+			
+			rdr.close();
+		}
+		catch (IOException ioe) {
+			LOGGER.warn("Could not open or read " + processedTextCacheFile);
+			ioe.printStackTrace();
+		}
+	}
+
+	public void dumpTextCache() {
+		try {
+			BufferedWriter wrt =
+				new BufferedWriter(
+					new OutputStreamWriter(
+						new FileOutputStream(processedTextCacheFile), "UTF8"));
+			
+			for (String text : processedTextCache.keySet()) {
+				wrt.write(text);
+				wrt.newLine();
+				
+				for (Token tok : processedTextCache.get(text)) {
+					wrt.write(tok.textRecord());
+					wrt.newLine();
+				}
+				
+				wrt.newLine();
+			}
+			
+			wrt.close();
+		}
+		catch (IOException ioe) {
+			LOGGER.warn("Could not open or write to " + processedTextCacheFile);
+			ioe.printStackTrace();
+		}
+	}
+
 	/**
 	 * <p>Implement this to get the annotations inside
 	 * a {@link Token}.</p>
@@ -137,7 +267,6 @@ public abstract class TextProcessor {
 	protected String normalizeText(String text) {
 		text = text.trim();
 		text = text.replaceAll("\\s+", " ");
-		text = Character.toUpperCase(text.charAt(0)) + text.substring(1);
 		
 		return text;
 	}

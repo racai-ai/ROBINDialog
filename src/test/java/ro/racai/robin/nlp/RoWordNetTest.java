@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ro.racai.robin.dialog;
+package ro.racai.robin.nlp;
 
 import static org.junit.Assert.*;
 
