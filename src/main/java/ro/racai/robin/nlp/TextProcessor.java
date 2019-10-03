@@ -18,6 +18,9 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import ro.racai.robin.dialog.RDConcept;
+import ro.racai.robin.dialog.RDSayings;
+
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  * <p>This class will take a bare text String and it will
@@ -33,13 +36,18 @@ public abstract class TextProcessor {
 	protected Lexicon lexicon;
 	
 	/**
+	 * Fixed expressions to be recognized.
+	 */
+	protected RDSayings sayings;
+	
+	/**
 	 * Save expensive text processing calls
 	 * to the TEPROLIN web service. 
 	 */
 	private final String processedTextCacheFile =
 		"processed-text-cache.txt";
 	protected Map<String, List<Token>> processedTextCache =
-		new HashMap<String, List<Token>>(); 
+		new HashMap<String, List<Token>>();
 	
 	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
@@ -82,6 +90,33 @@ public abstract class TextProcessor {
 			return wform + "/" + lemma + "/" + POS + " " + drel + "<-" + head;
 		}
 	}
+
+	/**
+	 * @author Radu Ion ({@code radu@racai.ro})
+	 * <p>This is the ``argument'' of a predicate, as
+	 * seen in the syntactic parsing of the sentence.</p>
+	 */
+	public static class Argument {
+		/**
+		 * These are the argument tokens
+		 * as uttered by the user. 
+		 */
+		public List<Token> argTokens;
+		
+		/**
+		 * <p>{@code true} if this argument represents
+		 * the missing information that the user requires.</p>
+		 * <p>For example:</p>
+		 * <p><i>În ce sală se desfășoară cursul de informatică?</i></p>
+		 * <p>Here, ``În ce sală'' is the query variable.</p>  
+		 */
+		public boolean isQueryVariable;
+		
+		public Argument(List<Token> toks, boolean isvar) {
+			argTokens = toks;
+			isQueryVariable = isvar;
+		}
+	}
 	
 	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
@@ -108,11 +143,12 @@ public abstract class TextProcessor {
 		 * An instantiation of an {@link RDConcept} -- to be matched
 		 * against a concept, e.g. "laboratorul de robotică".
 		 */
-		public List<List<Token>> predicateArguments = new ArrayList<List<Token>>();
+		public List<Argument> predicateArguments = new ArrayList<Argument>();
 	}
 	
-	public TextProcessor(Lexicon lex) {
+	public TextProcessor(Lexicon lex, RDSayings say) {
 		lexicon = lex;
+		sayings = say;
 		populateProcessedTextCache();
 	}
 	
@@ -270,4 +306,12 @@ public abstract class TextProcessor {
 		
 		return text;
 	}
+	
+	/**
+	 * <p>Checks to see if list of tokens could represent
+	 * a ``variable'', e.g. ``cine'', ``unde'', ``ce sală'', etc.</p>
+	 * @param argument      the list of tokens to check for a variable; 
+	 * @return              {@code true} if this list of tokens represents a variable.
+	 */
+	public abstract boolean isQueryVariable(List<Token> argument);
 }

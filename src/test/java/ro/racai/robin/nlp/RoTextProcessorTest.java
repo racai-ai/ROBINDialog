@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ro.racai.robin.dialog.RoSayings;
 import ro.racai.robin.nlp.RoLexicon;
 import ro.racai.robin.nlp.RoTextProcessor;
 import ro.racai.robin.nlp.TextProcessor;
@@ -22,7 +23,7 @@ public class RoTextProcessorTest {
 
 	@Test
 	public void testTEPROLIN() {
-		TextProcessor tp = new RoTextProcessor(new RoLexicon());
+		TextProcessor tp = new RoTextProcessor(new RoLexicon(), new RoSayings());
 		List<Token> tokens = tp.textProcessor("Unde se află laboratorul de SDA?");
 		
 		assertTrue(tokens.size() == 7);

@@ -61,17 +61,36 @@ public class RDPredicate {
 	 * and individual arguments match scores.</p>
 	 */
 	public static class PMatch {
-		public float pMatchScore;
+		/**
+		 * The predicate which matched.
+		 */
+		public RDPredicate matchedPredicate;
+		
+		/**
+		 * The score with which the predicate
+		 * {@link #pMatched} matched.
+		 *  
+		 */
+		public float matchScore;
 		
 		/**
 		 * This list has the same number of elements as the
 		 * {@link RDPredicate#predicateArguments} list.
 		 */
-		public float[] aMatchScores;
+		public float[] argMatchScores;
 		
-		public PMatch(List<RDConcept> args) {
-			aMatchScores = new float[args.size()];
-			pMatchScore = 0.0f;
+		/**
+		 * When the predicate is matched, this indexes into
+		 * the {@link RDPredicate#predicateArguments} list.
+		 *  
+		 */
+		public int saidArgumentIndex;
+		
+		public PMatch(RDPredicate pred) {
+			matchedPredicate = pred;
+			argMatchScores = new float[pred.getArguments().size()];
+			matchScore = 0.0f;
+			saidArgumentIndex = -1;
 		}
 	}
 	
@@ -116,6 +135,14 @@ public class RDPredicate {
 	 */
 	public String getActionVerb() {
 		return actionVerb;
+	}
+	
+	/**
+	 * <p>Get the user intent associated with this predicate.</p>
+	 * @return      the {@link #userIntention} member field.
+	 */
+	public UIntentType getUserIntent() {
+		return userIntention;
 	}
 	
 	/**

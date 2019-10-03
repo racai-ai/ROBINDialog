@@ -51,4 +51,14 @@ public class RDRobotBehaviour {
 	public String getPayload() {
 		return payload;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return
+			"User wants: " + userIntent.name() + System.lineSeparator() +
+			"Extra info: " + payload + System.lineSeparator();
+	}
 }

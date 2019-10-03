@@ -3,8 +3,6 @@
  */
 package ro.racai.robin.nlp;
 
-import java.util.List;
-
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  * <p>An interface to build a "verb" inventory
@@ -48,13 +46,4 @@ public interface Lexicon {
 	 * @return           {@code true} if {@code pos} is a preposition
 	 */
 	public boolean isPrepositionPOS(String pos);
-	
-	/**
-	 * User has ended the dialog with a "Thank you"
-	 * "Goodbye".
-	 * @param words      a list of words to check if
-	 *                   they mark the end of the conversation (EOC)
-	 * @return           {@code true} if words mark the EOC
-	 */
-	public boolean isClosingStatement(List<String> words);
 }

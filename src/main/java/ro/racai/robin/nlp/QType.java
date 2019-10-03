@@ -20,8 +20,10 @@ public enum QType {
 	HOW,
 	// În ce SALĂ se ține cursul de informatică?
 	WHAT,
-	// Nu e așa că d-na Laura Florescu ține cursul X în sala Y?
+	// Nu e așa că d-na Laura Florescu ține cursul de SDA în sala 113?
 	YESNO,
 	// End of conversation
-	GOODBYE
+	GOODBYE,
+	// Start of conversation
+	HELLO;
 }

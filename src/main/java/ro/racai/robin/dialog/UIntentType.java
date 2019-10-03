@@ -9,7 +9,7 @@ package ro.racai.robin.dialog;
  */
 public enum UIntentType {
 	// User wants some explanation from Pepper
-	EXPLAIN_SOMETHING,
+	SAY_SOMETHING,
 	// User wants Pepper to take him/her somewhere
 	TAKE_ME_SOMEWHERE,
 	// User wants Pepper to bring him/her something

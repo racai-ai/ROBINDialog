@@ -4,7 +4,7 @@
 
   <groupId>ro.racai.robin</groupId>
   <artifactId>ROBINDialog</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -32,13 +32,48 @@
       <version>1.1.1</version>
 	</dependency>
   </dependencies>
-  <description>This is the RACAI-developed dialogue manager for the ROBIN Dialog project. It supports micro-worlds and it uses the TEPROLIN platform for Romanian text pre-processing.
-</description>
+  <build>
+    <pluginManagement>
+      <plugins>
+		<plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>3.1.1</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <mainClass>ro.racai.robin.dialog.RDManager</mainClass>
+              </manifest>
+            </archive>
+            <!-- get all project dependencies -->
+            <descriptorRefs>
+              <descriptorRef>jar-with-dependencies</descriptorRef>
+            </descriptorRefs>
+            <outputDirectory>${project.build.directory}</outputDirectory>
+            <finalName>${project.build.finalName}</finalName>
+          </configuration>
+          <executions>
+            <execution>
+              <id>make-assembly</id>
+              <!-- bind to the packaging phase -->
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <description>This is the RACAI-developed dialogue manager for the ROBIN Dialog project. It supports micro-worlds and it uses the TEPROLIN platform for Romanian text pre-processing.</description>
   <name>The ROBIN Dialogue manager for Pepper</name>
   <organization>
   	<name>Research Institute for AI, Romanian Academy</name>
   	<url>http://www.racai.ro</url>
   </organization>
-  
   <url>http://aimas.cs.pub.ro/robin/robin-dialog</url>
 </project>

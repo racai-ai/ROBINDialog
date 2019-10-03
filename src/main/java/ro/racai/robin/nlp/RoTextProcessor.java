@@ -27,18 +27,20 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import ro.racai.robin.dialog.RDSayings;
+
 /**
  * @author Radu Ion  ({@code radu@racai.ro})
- * <p>The Romanian implementation using relate.racai.ro:5000,
- * the TEPROLIN web service.</p>
+ * <p>The Romanian implementation using
+ * <a href="http://relate.racai.ro:5000">RELATE</a>, the TEPROLIN web service.</p>
  */
 public class RoTextProcessor extends TextProcessor {
 	private static final String TEPROLIN_QUERY =
 		"http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
 
-	public RoTextProcessor(Lexicon lex) {
-		super(lex);
+	public RoTextProcessor(Lexicon lex, RDSayings say) {
+		super(lex, say);
 	}
 	
 	/* (non-Javadoc)
@@ -156,14 +158,20 @@ public class RoTextProcessor extends TextProcessor {
 		
 		Query result = new Query();
 		int actionVerbID = 0;
-		List<String> queryWordsLC =
+		List<String> queryWords =
 			query
 			.stream()
-			.map((x) -> x.wform.toLowerCase())
+			.map((x) -> x.wform)
 			.collect(Collectors.toList());
 		
+		// -1. If hello, return quickly.
+		if (sayings.userOpeningStatement(queryWords)) {
+			result.queryType = QType.HELLO;
+			return result;
+		}
+		
 		// 0. If goodbye, return quickly.
-		if (lexicon.isClosingStatement(queryWordsLC)) {
+		if (sayings.userClosingStatement(queryWords)) {
 			result.queryType = QType.GOODBYE;
 			return result;
 		}
@@ -213,8 +221,9 @@ public class RoTextProcessor extends TextProcessor {
 					//.filter((x) -> !lexicon.isFunctionalPOS(query.get(x - 1).POS))
 					.map((x) -> query.get(x - 1))
 					.collect(Collectors.toList());
+				Argument pArg = new Argument(nounPhrase, isQueryVariable(nounPhrase));
 				
-				result.predicateArguments.add(nounPhrase);
+				result.predicateArguments.add(pArg);
 			}
 		}
 		
@@ -298,5 +307,43 @@ public class RoTextProcessor extends TextProcessor {
 	// Debugging method.
 	private String queryToString(List<Token> query) {
 		return query.stream().map((x) -> x.wform).collect(Collectors.joining(" "));
+	}
+
+	@Override
+	public boolean isQueryVariable(List<Token> argument) {
+		if (
+			argument != null &&
+			!argument.isEmpty()
+		) {
+			int firstIndex = 0;
+			
+			if (argument.get(0).POS.startsWith("S")) {
+				// Remove first preposition, if it exists.
+				firstIndex = 1;
+			}
+			
+			// Relative pronoun/determiner/adverb
+			if (
+				argument.get(firstIndex).POS.length() >= 2 &&
+				argument.get(firstIndex).POS.charAt(1) == 'w'
+				
+			) {
+				return true;
+			}
+			
+			if (
+				argument.size() == 1 &&
+				(
+					argument.get(0).POS.startsWith("N") ||
+					argument.get(0).POS.startsWith("Y") ||
+					argument.get(0).POS.startsWith("M")
+				)
+			) {
+				// If we have a single noun in the argument
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

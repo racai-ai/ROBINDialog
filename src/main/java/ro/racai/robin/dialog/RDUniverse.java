@@ -8,11 +8,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import ro.racai.robin.nlp.TextProcessor.Argument;
 import ro.racai.robin.nlp.TextProcessor.Query;
 import ro.racai.robin.nlp.TextProcessor.Token;
 import ro.racai.robin.dialog.RDPredicate.PMatch;
 import ro.racai.robin.nlp.Levenshtein;
 import ro.racai.robin.nlp.Lexicon;
+import ro.racai.robin.nlp.QType;
 import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.WordNet;
 
@@ -106,24 +108,32 @@ public class RDUniverse {
 	 * and assigns a match score.</p>
 	 * @param query             the parsed {@link Query} object from the
 	 *                          user utterance;
-	 * @return                  the predicate which best matches the query.
+	 * @return                  the predicate match object which best matches the query.
 	 */
-	public RDPredicate resolveQuery(Query query) {
-		RDPredicate result = null;
+	public PMatch resolveQuery(Query query) {
+		PMatch result = null;
 		float maxScore = 0.0f;
 		
 		for (RDPredicate pred : predicates) {
 			PMatch pm = scoreQueryAgainstPredicate(query, pred);
 			
-			if (pm != null && pm.pMatchScore > maxScore) {
-				result = pred;
-				maxScore = pm.pMatchScore;
+			if (pm != null && pm.matchScore > maxScore) {
+				result = pm;
+				maxScore = pm.matchScore;
 			}
 		}
 		
 		return result;
 	}
 	
+	/**
+	 * <p>Verifies if the user description of a concept matches
+	 * the given bound concept.</p>
+	 * @param userTokens           the user description of the concept;
+	 * @param boundConcept         the target bound concept to do the
+	 *                             matching against.
+	 * @return                     {@code true} if description matches the concept.
+	 */
 	private boolean isConceptInstance(List<Token> userTokens, RDConcept boundConcept) {
 		for (Token tok : userTokens) {
 			if (
@@ -152,7 +162,7 @@ public class RDUniverse {
 		// Predicate bound arguments
 		List<RDConcept> predArgs = pred.getArguments();
 		// User query tokens making up syntactic arguments of the verb
-		List<List<Token>> queryArgs = query.predicateArguments;
+		List<Argument> queryArgs = query.predicateArguments;
 		// Find the maximal sum assignment of query arguments
 		// to predicate arguments
 		// Matrix is symmetrical
@@ -163,7 +173,7 @@ public class RDUniverse {
 			RDConcept pArg = predArgs.get(i);
 			
 			for (int j = 0; j < queryArgs.size(); j++) {
-				List<Token> qArg = queryArgs.get(j);
+				List<Token> qArg = queryArgs.get(j).argTokens;
 				
 				matchScores[i][j] = 0.0f;
 				
@@ -178,22 +188,64 @@ public class RDUniverse {
 			}
 		}
 		
-		PMatch result = new PMatch(predArgs);
+		PMatch result = new PMatch(pred);
 		
 		for (int i = 0; i < predArgs.size(); i++) {
+			RDConcept pArg = predArgs.get(i);
 			float maxScore = 0.0f;
 			
 			for (int j = 0; j < queryArgs.size(); j++) {
+				Argument qArg = queryArgs.get(j);
+				
 				if (matchScores[i][j] > maxScore) {
 					maxScore = matchScores[i][j];
 				}
+				
+				if (
+					qArg.isQueryVariable &&
+					isOfSameType(pArg, qArg, query.queryType)
+				) {
+					result.saidArgumentIndex = i;
+					break;
+				}
 			}
 			
-			result.pMatchScore += maxScore; 
-			result.aMatchScores[i] = maxScore;
+			result.matchScore += maxScore;
+			result.argMatchScores[i] = maxScore;
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * <p>Will say {@code true} if this concept is of the same type
+	 * as the query, that is if query could be asking for this concept.
+	 * @param con       the concept to be matched against... 
+	 * @param qarg      the argument that was extracted
+	 *                  from the user's query;
+	 * @return          {@code true} if query is asking for this.               
+	 */
+	public boolean isOfSameType(RDConcept con, Argument arg, QType qtyp) {
+		if (con.getType() == CType.WORD && qtyp == QType.WHAT) {
+			for (Token t : arg.argTokens) {
+				if (lexicon.isNounPOS(t.POS)) {
+					if (t.lemma.equalsIgnoreCase(con.canonicalForm)) {
+						return true;
+					}
+				}
+			}
+		}
+		else if (qtyp == QType.PERSON && con.getType() == CType.PERSON) {
+			return true;
+		}
+		else if (qtyp == QType.LOCATION && con.getType() == CType.LOCATION) {
+			return true;
+		}
+		else if (qtyp == QType.TIME && con.getType() == CType.TIME) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**

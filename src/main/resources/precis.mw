@@ -67,8 +67,8 @@ PERSON Nicolae Țăpuș = P3
 # Use a value from there or add a new value there and then use it here.
 # Specify the user intent with the arrow operator '->'.
 
-PREDICATE ține, desfășura -> EXPLAIN_SOMETHING
-PREDICATE fi, afla -> EXPLAIN_SOMETHING
+PREDICATE ține, desfășura -> SAY_SOMETHING
+PREDICATE fi, afla -> SAY_SOMETHING
 PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
 
 # The order of the arguments does not affect predicate matching.
@@ -87,3 +87,6 @@ TRUE ține C1 S1 T1
 TRUE fi P1 S1 T1
 TRUE ține W1 S2 T2
 TRUE ține C5 S3 T5
+TRUE duce S1
+TRUE duce S2
+TRUE duce S3

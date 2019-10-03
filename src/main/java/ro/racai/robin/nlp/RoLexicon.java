@@ -4,7 +4,6 @@
 package ro.racai.robin.nlp;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -601,33 +600,6 @@ public class RoLexicon implements Lexicon {
 		// Some extensions for Romanian, to accommodate
 		// words such as "unde" and "când"
 		return pos.matches("^(N|P[^x]|M|Rw|Yn?).*$");
-	}
-
-	@Override
-	public boolean isClosingStatement(List<String> words) {
-		if (
-			words.size() == 1 &&
-			(
-				words.get(0).trim().equalsIgnoreCase("mulțumesc") ||
-				words.get(0).trim().equalsIgnoreCase("mulțam") ||
-				words.get(0).trim().equalsIgnoreCase("mersi") ||
-				words.get(0).trim().equalsIgnoreCase("pa")
-			)
-		) {
-			return true;
-		}
-		
-		if (
-			words.size() == 2 &&
-			(
-				words.get(0).trim().equalsIgnoreCase("la") &&
-				words.get(1).trim().equalsIgnoreCase("revedere")
-			)
-		) {
-			return true;
-		}
-		
-		return false;
 	}
 
 	@Override
