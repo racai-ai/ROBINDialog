@@ -27,6 +27,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import ro.racai.robin.dialog.CType;
+import ro.racai.robin.dialog.RDConcept;
 import ro.racai.robin.dialog.RDSayings;
 
 /**
@@ -39,8 +41,8 @@ public class RoTextProcessor extends TextProcessor {
 		"http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
 
-	public RoTextProcessor(Lexicon lex, RDSayings say) {
-		super(lex, say);
+	public RoTextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
+		super(lex, wn, say);
 	}
 	
 	/* (non-Javadoc)
@@ -227,17 +229,23 @@ public class RoTextProcessor extends TextProcessor {
 			}
 		}
 		
-		if (query.size() < 2) {
+		int fti = 0;
+		
+		// Skip non-interesting words at the beginning
+		// of the user's sentence.
+		while (
+			fti < query.size() &&
+			lexicon.isSkippablePOS(query.get(fti).POS)
+		) {
+			fti++;
+		}
+		
+		if (fti >= query.size() - 1) {
 			return null;
 		}
 		
-		Token firstToken = query.get(0);
-		
-		if (lexicon.isPrepositionPOS(firstToken.POS)) {
-			// Skip the first preposition in the query,
-			// if it exists.
-			firstToken = query.get(1);
-		}
+		Token firstToken = query.get(fti);
+		Token secondToken = query.get(fti + 1);
 		
 		// 3. Determine the query type.
 		if (lexicon.isCommandVerb(result.actionVerb)) {
@@ -247,7 +255,38 @@ public class RoTextProcessor extends TextProcessor {
 			result.queryType = QType.PERSON;
 		}
 		else if (firstToken.lemma.equals("ce")) {
-			result.queryType = QType.WHAT;
+			if (
+				lexicon.isPureNounPOS(secondToken.POS) &&
+				universeConcepts != null
+			) {
+				for (RDConcept c : universeConcepts) {
+					if (
+						c.isThisConcept(secondToken.lemma, wordNet) &&
+						c.getType() != CType.WORD
+					) {
+						switch (c.getType()) {
+						case PERSON:
+							result.queryType = QType.PERSON;
+							break;
+						case LOCATION:
+							result.queryType = QType.LOCATION;
+							break;
+						case TIME:
+							result.queryType = QType.TIME;
+							break;
+						default:
+							result.queryType = QType.WHAT;
+						}
+						
+						if (result.queryType != null) {
+							break;
+						}
+					}
+				}
+			}
+			else {
+				result.queryType = QType.WHAT;
+			}
 		}
 		else if (firstToken.lemma.equals("unde")) {
 			result.queryType = QType.LOCATION;

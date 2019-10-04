@@ -28,6 +28,7 @@ public class RDManager {
 	private Lexicon resourceLexicon;
 	private TextProcessor resourceTextProc;
 	private RDSayings resourceSayings;
+	private String microworldName;
 	
 	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
@@ -36,6 +37,11 @@ public class RDManager {
 	 * 
 	 */
 	public static class DialogueState {
+		/**
+		 * What was the type of the previous query.
+		 */
+		QType previousQueryType;
+		
 		/**
 		 * If this is not-null, the dialogue had ended
 		 * and the robot behaviour is defined and 
@@ -76,6 +82,51 @@ public class RDManager {
 		public RDRobotBehaviour getBehaviour() {
 			return inferredBehaviour;
 		}
+		
+		/**
+		 * <p>Canned response when the robot says fixed things.</p>
+		 * @param qtyp       query type to set on the state;
+		 * @return           a new {@link DialogueState} object.
+		 */
+		public static DialogueState robotSaysSomething(QType qtyp, List<String> lines) {
+			DialogueState state = new DialogueState();
+			
+			state.robotReply = lines;
+			state.previousQueryType = qtyp;
+			return state;
+		}
+		
+		/**
+		 * <p>Canned response when the robot responds with
+		 * the argument that checks the type of the query.</p>
+		 * @param qtyp       query type; 
+		 * @param pm         predicate match object;
+		 * @return           a new {@link DialogueState} object with
+		 *                   {@link RDRobotBehaviour} set.
+		 */
+		public static DialogueState robotInformedResponse(QType qtyp, PMatch pm) {
+			DialogueState state = new DialogueState();
+			
+			state.inferredPredicate = pm.matchedPredicate;
+			state.robotReply = new ArrayList<String>();
+			state.robotReply.add(
+					state.inferredPredicate.
+					getArguments().
+					get(pm.saidArgumentIndex).
+					assignedReference
+			);
+			state.inferredBehaviour =
+				new RDRobotBehaviour(
+					state.inferredPredicate.getUserIntent(),
+					state.inferredPredicate.
+					getArguments().
+					get(pm.saidArgumentIndex).
+					assignedReference
+				);
+			
+			state.previousQueryType = qtyp;
+			return state;
+		}
 	}
 	
 	/**
@@ -107,10 +158,13 @@ public class RDManager {
 				resourceLexicon,
 				resourceTextProc
 			);
+		microworldName = mwr.getMicroworldName();
+		// Set concepts on the text processor...
+		resourceTextProc.setConceptList(discourseUniverse.getUniverseConcepts());
 	}
 	
 	public String getMicroworldName() {
-		return discourseUniverse.toString();
+		return microworldName;
 	}
 	
 	/**
@@ -128,58 +182,77 @@ public class RDManager {
 			);
 		
 		if (q.queryType == QType.HELLO) {
-			currentDState = new DialogueState();
-			currentDState.robotReply = resourceSayings.robotOpeningLines();
+			currentDState =
+				DialogueState.robotSaysSomething(
+					q.queryType,
+					resourceSayings.robotOpeningLines()
+				);
+					
 			return currentDState;
 		}
 
 		if (q.queryType == QType.GOODBYE) {
-			currentDState = new DialogueState();
-			currentDState.robotReply = resourceSayings.robotClosingLines();
+			currentDState = null;
+			
+			return
+				DialogueState.robotSaysSomething(
+					q.queryType,
+					resourceSayings.robotClosingLines()
+				);
+		}
+		
+		// 1. Try and match the query first...
+		PMatch pm = discourseUniverse.resolveQuery(q);
+		
+		if (pm.matchedPredicate == null) {
+			// No predicate found, this means no
+			// predicate was found in KB. Return this
+			// and say we do not know about it.
+			currentDState =
+				DialogueState.robotSaysSomething(
+					q.queryType,
+					resourceSayings.robotDontKnowLines()
+				);
+					
 			return currentDState;
 		}
 		
-		if (currentDState == null) {
-			currentDState = new DialogueState();
-			
-			PMatch pm = discourseUniverse.resolveQuery(q);
-			
-			if (pm.matchedPredicate == null) {
-				currentDState.robotReply = resourceSayings.robotDidntUnderstandLines();
-				return currentDState;
+		if (pm.saidArgumentIndex >= 0 && pm.isValidMatch) {
+			// 2. Some predicate matched. If we have an
+			// argument that we could return, that's
+			// a success.
+			currentDState = DialogueState.robotInformedResponse(q.queryType, pm);
+		}
+		else if (currentDState.inferredPredicate != null) {
+			// 3. Some predicate matched but we don't have
+			// enough information specified. Try to do a
+			// match in the context of the previously
+			// matched predicate.
+			pm = discourseUniverse.resolveQueryInContext(q, currentDState.inferredPredicate);
+
+			if (pm.saidArgumentIndex >= 0) {
+				currentDState = DialogueState.robotInformedResponse(q.queryType, pm);
 			}
 			else {
-				currentDState.inferredPredicate = pm.matchedPredicate;
-				
-				if (pm.saidArgumentIndex >= 0) {
-					currentDState.robotReply = new ArrayList<String>();
-					currentDState.robotReply.add(
-						currentDState.inferredPredicate.
-							getArguments().
-							get(pm.saidArgumentIndex).
-							assignedReference
+				currentDState =
+					DialogueState.robotSaysSomething(
+						q.queryType,
+						resourceSayings.robotDontKnowLines()
 					);
-					currentDState.inferredBehaviour =
-						new RDRobotBehaviour(
-							currentDState.inferredPredicate.getUserIntent(),
-							currentDState.inferredPredicate.
-								getArguments().
-								get(pm.saidArgumentIndex).
-								assignedReference
-						);
-					
-					return currentDState;
-				}
-				else {
-					// TODO: Not implemented yet, ask further questions...
-					return null;
-				}
 			}
 		}
 		else {
-			// TODO: Not implemented yet, ask further questions...
-			return null;
+			// No predicate found, this means no
+			// predicate was found in KB. Return this
+			// and say we do not know about it.
+			currentDState =
+				DialogueState.robotSaysSomething(
+					q.queryType,
+					resourceSayings.robotDontKnowLines()
+				);
 		}
+		
+		return currentDState;
 	}
 
 	/**
@@ -199,20 +272,22 @@ public class RDManager {
 	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
-			System.err.println("java ");
+			System.err.println("java ROBINDialog-1.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
+			return;
 		}
 		
+		String mwFile = args[0];
 		RoWordNet rown = new RoWordNet();
 		RoLexicon rolex = new RoLexicon();
 		RDSayings say = new RoSayings();
-		RoTextProcessor rotp = new RoTextProcessor(rolex, say);
+		RoTextProcessor rotp = new RoTextProcessor(rolex, rown, say);
 		RDManager dman = new RDManager(rown, rolex, rotp, say);
 		
-		dman.loadMicroworld("src/main/resources/precis.mw");
+		dman.loadMicroworld(mwFile);
 		
 		// A text-based dialogue loop.
 		// Type 'exit' or 'quit' to end it.
-		System.out.println("Running with MW " + dman.getMicroworldName());
+		System.out.println("Running with the " + dman.getMicroworldName() + " microworld");
 		System.out.print("User> ");
         Scanner scanner = new Scanner(System.in);
         String prompt = scanner.nextLine();
@@ -233,6 +308,7 @@ public class RDManager {
         		System.out.print(dstat.getBehaviour());
         	}
         	
+        	System.out.print("User> ");
         	prompt = scanner.nextLine();
         } // end demo dialogue loop
         

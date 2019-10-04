@@ -603,8 +603,16 @@ public class RoLexicon implements Lexicon {
 	}
 
 	@Override
-	public boolean isPrepositionPOS(String pos) {
-		return pos.startsWith("Sp");
+	public boolean isPureNounPOS(String pos) {
+		return pos.matches("^(N|Yn?).*$");
+	}
+	
+	@Override
+	public boolean isSkippablePOS(String pos) {
+		return
+			pos.startsWith("Sp") ||
+			pos.startsWith("C") ||
+			pos.startsWith("I");
 	}
 
 	@Override

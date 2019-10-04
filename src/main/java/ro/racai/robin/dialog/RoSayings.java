@@ -54,6 +54,8 @@ public class RoSayings implements RDSayings {
 			String.join(" ",
 				words
 				.stream()
+				// Skip punctuation...
+				.filter(x -> !x.matches("^\\W+$"))
 				.map(x -> x.trim().toLowerCase())
 				.collect(Collectors.toList())
 			);
@@ -70,6 +72,7 @@ public class RoSayings implements RDSayings {
 			String.join(" ",
 				words
 				.stream()
+				.filter(x -> !x.matches("^\\W+$"))
 				.map(x -> x.trim().toLowerCase())
 				.collect(Collectors.toList())
 			);

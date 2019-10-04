@@ -6,8 +6,85 @@ formale	formal	Afpfp-n	amod	3	false
 și	și	Crssp	cc	6	false
 translatoare	translatoare	Ncf--n	conj	4	false
 
+Unde se ține cursul de sisteme de operare?
+Unde	unde	Rw	advmod	3	true
+se	sine	Px3--a--------w	expl:pass	3	false
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	nsubj:pass	3	true
+de	de	Spsa	case	6	false
+sisteme	sistem	Ncfp-n	nmod	4	false
+de	de	Spsa	case	8	false
+operare	operare	Ncfsrn	nmod	6	false
+?	?	QUEST	punct	3	false
+
+Salut
+Salut	saluta	Vmip1s	root	0	false
+
+seminarul de analiză matematică
+seminarul	seminar	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+analiză	analiză	Ncfsrn	nmod	1	false
+matematică	matematic	Afpfsrn	amod	3	false
+
+Și cine îl ține?
+Și	și	Crssp	cc	4	false
+cine	cine	Pw3--r	obj	4	true
+îl	el	Pp3msa--------w	obj	4	true
+ține	ține	Vmip3s	root	0	false
+?	?	QUEST	punct	4	false
+
+Și unde se ține?
+Și	și	Crssp	cc	4	false
+unde	unde	Rw	advmod	4	true
+se	sine	Px3--a--------w	expl:pv	4	false
+ține	ține	Vmip3s	root	0	false
+?	?	QUEST	punct	4	false
+
+laboratorul de informatică
+laboratorul	laborator	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+informatică	informatică	Ncfsrn	nmod	1	false
+
+Workshop-ul de Robotică, UPB 2019
+Workshop	Workshop	Np	root	0	false
+-ul	-ul	Tfmsry	det	1	false
+de	de	Spsa	case	4	false
+Robotică	robotică	Ncfsrn	nmod	1	false
+,	,	COMMA	punct	6	false
+UPB	UPB	Np	appos	1	false
+2019	2019	Mc	flat	6	false
+
+Unde se desfășoară laboratorul de informatică?
+Unde	unde	Rw	advmod	3	true
+se	sine	Px3--a--------w	expl:pass	3	false
+desfășoară	desfășura	Vmip3	root	0	false
+laboratorul	laborator	Ncmsry	nsubj	3	true
+de	de	Spsa	case	6	false
+informatică	informatică	Ncfsrn	nmod	4	false
+?	?	QUEST	punct	3	false
+
+laboratorul de SDA
+laboratorul	laborator	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+SDA	SDA	Np	nmod	1	false
+
+cursul de sisteme de operare
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+sisteme	sistem	Ncfp-n	nmod	1	false
+de	de	Spsa	case	5	false
+operare	operare	Ncfsrn	nmod	3	false
+
+Noroc Pepper!
+Noroc	noroc	Ncms-n	root	0	false
+Pepper	Pepper	Np	nmod	1	false
+!	!	EXCL	punct	1	false
+
 113
 113	113	Mc	root	0	false
+
+Servus
+Servus	servus	I	root	0	false
 
 cursul de algebră
 cursul	curs	Ncmsry	root	0	false
@@ -32,43 +109,51 @@ sala	sală	Ncfsry	root	0	false
 de	de	Spsa	case	3	false
 consiliu	consiliu	Ncms-n	nmod	1	false
 
-seminarul de analiză matematică
-seminarul	seminar	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-analiză	analiză	Ncfsrn	nmod	1	false
-matematică	matematic	Afpfsrn	amod	3	false
+Cine ține cursul de sisteme de operare?
+Cine	cine	Pw3--r	nsubj	2	true
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	obj	2	true
+de	de	Spsa	case	5	false
+sisteme	sistem	Ncfp-n	nmod	3	false
+de	de	Spsa	case	7	false
+operare	operare	Ncfsrn	nmod	5	false
+?	?	QUEST	punct	2	false
+
+În ce sală se ține cursul de PLN?
+În	în	Spsa	case	3	false
+ce	ce	Dw3--r---e	det	3	false
+sală	sală	Ncfsrn	obl	5	true
+se	sine	Px3--a--------w	expl:pass	5	false
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	nsubj:pass	5	true
+de	de	Spsa	case	8	false
+PLN	PLN	Np	nmod	6	false
+?	?	QUEST	punct	5	false
 
 laboratorul de robotică
 laboratorul	laborator	Ncmsry	root	0	false
 de	de	Spsa	case	3	false
 robotică	robotică	Ncfsrn	nmod	1	false
 
+Bună Pepper.
+Bună	bun	Afpfsrn	amod	2	false
+Pepper	Pepper	Np	root	0	false
+.	.	PERIOD	punct	2	false
+
+Noroc
+Noroc	noroc	Ncms-n	root	0	false
+
 209
 209	209	Mc	root	0	false
 
-laboratorul de informatică
-laboratorul	laborator	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-informatică	informatică	Ncfsrn	nmod	1	false
-
-Workshop-ul de Robotică, UPB 2019
-Workshop	Workshop	Np	root	0	false
--ul	-ul	Tfmsry	det	1	false
-de	de	Spsa	case	4	false
-Robotică	robotică	Ncfsrn	nmod	1	false
-,	,	COMMA	punct	6	false
-UPB	UPB	Np	appos	1	false
-2019	2019	Mc	flat	6	false
-
-laboratorul de SDA
-laboratorul	laborator	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-SDA	SDA	Np	nmod	1	false
-
-cursul de sisteme de operare
-cursul	curs	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-sisteme	sistem	Ncfp-n	nmod	1	false
-de	de	Spsa	case	5	false
-operare	operare	Ncfsrn	nmod	3	false
+Când se ține cursul de sisteme de operare?
+Când	când	Rw	advmod:tmod	3	true
+se	sine	Px3--a--------w	expl:pass	3	false
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	nsubj:pass	3	true
+de	de	Spsa	case	6	false
+sisteme	sistem	Ncfp-n	nmod	4	false
+de	de	Spsa	case	8	false
+operare	operare	Ncfsrn	nmod	6	false
+?	?	QUEST	punct	3	false
 

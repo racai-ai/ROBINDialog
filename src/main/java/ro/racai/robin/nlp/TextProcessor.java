@@ -31,9 +31,22 @@ public abstract class TextProcessor {
 		Logger.getLogger(TextProcessor.class.getName());
 	
 	/**
+	 * This is the list of instantiated concepts constructed
+	 * during the creation of the micro-world. The text processor
+	 * must know about them to properly set the query type.
+	 * If {@code null}, it will NOT be used.
+	 */
+	protected List<RDConcept> universeConcepts;
+	
+	/**
 	 * Lexicon to use for text processing. 
 	 */
 	protected Lexicon lexicon;
+	
+	/**
+	 * WordNet to use in text processing. 
+	 */
+	protected WordNet wordNet;
 	
 	/**
 	 * Fixed expressions to be recognized.
@@ -146,7 +159,7 @@ public abstract class TextProcessor {
 		public List<Argument> predicateArguments = new ArrayList<Argument>();
 	}
 	
-	public TextProcessor(Lexicon lex, RDSayings say) {
+	public TextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		lexicon = lex;
 		sayings = say;
 		populateProcessedTextCache();
@@ -314,4 +327,12 @@ public abstract class TextProcessor {
 	 * @return              {@code true} if this list of tokens represents a variable.
 	 */
 	public abstract boolean isQueryVariable(List<Token> argument);
+	
+	/**
+	 * <p>Used to the the concept list to be used in this processor.</p>
+	 * @param conList        the concept list to be set.
+	 */
+	public void setConceptList(List<RDConcept> conList) {
+		universeConcepts = conList;
+	}
 }

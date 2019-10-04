@@ -34,16 +34,23 @@ public interface Lexicon {
 	public boolean isFunctionalWord(String word);
 	
 	/**
-	 * Checks if POS is a noun POS.
+	 * Checks if POS is a noun POS, with friends such as pronouns.
 	 * @param pos        the POS to check
 	 * @return           {@code true} if {@code pos} is a noun
 	 */
 	public boolean isNounPOS(String pos);
+
+	/**
+	 * Checks if POS is a noun POS, only.
+	 * @param pos        the POS to check
+	 * @return           {@code true} if {@code pos} is a noun
+	 */
+	public boolean isPureNounPOS(String pos);
 	
 	/**
-	 * Checks if POS is a preposition POS.
+	 * Checks if POS can be skipped at the beginning of the sentence.
 	 * @param pos        the POS to check
 	 * @return           {@code true} if {@code pos} is a preposition
 	 */
-	public boolean isPrepositionPOS(String pos);
+	public boolean isSkippablePOS(String pos);
 }

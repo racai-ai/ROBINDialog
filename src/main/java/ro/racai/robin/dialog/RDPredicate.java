@@ -67,6 +67,13 @@ public class RDPredicate {
 		public RDPredicate matchedPredicate;
 		
 		/**
+		 * For a predicate to match, at least
+		 * one referenced argument must match
+		 * against what user said. 
+		 */
+		public boolean isValidMatch;
+		
+		/**
 		 * The score with which the predicate
 		 * {@link #pMatched} matched.
 		 *  
@@ -91,6 +98,7 @@ public class RDPredicate {
 			argMatchScores = new float[pred.getArguments().size()];
 			matchScore = 0.0f;
 			saidArgumentIndex = -1;
+			isValidMatch = false;
 		}
 	}
 	

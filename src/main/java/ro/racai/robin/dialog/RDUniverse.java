@@ -81,6 +81,15 @@ public class RDUniverse {
 	}
 	
 	/**
+	 * <p>Get the universe instantiated concepts to pass on
+	 * to the text processor.</p>
+	 * @return
+	 */
+	public List<RDConcept> getUniverseConcepts() {
+		return concepts;
+	}
+	
+	/**
 	 * <p>Adds a concept built with {@link RDConcept#Builder(CType, String, List, String)} to
 	 * this universe of discourse. Note that the textual description {@link RDConcept#getReference()}
 	 * must not be null!
@@ -108,7 +117,9 @@ public class RDUniverse {
 	 * and assigns a match score.</p>
 	 * @param query             the parsed {@link Query} object from the
 	 *                          user utterance;
-	 * @return                  the predicate match object which best matches the query.
+	 * @return                  the predicate match object which best matches the query;
+	 *                          {@code null} if no predicate matched. It's safe to say that
+	 *                          the information is not in the Knowledge Base in this case.
 	 */
 	public PMatch resolveQuery(Query query) {
 		PMatch result = null;
@@ -124,6 +135,56 @@ public class RDUniverse {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * <p>If user asks something else, in the context of the first utterance,
+	 * try and find some other argument of the previously matched predicate
+	 * which could be the answer...</p>
+	 * @param query            the parsed {@link Query} object from the user's
+	 *                         utterance
+	 * @param pred             the previously matched predicate which could
+	 *                         hold information that the user wants with
+	 *                         its current, incomplete query.
+	 * @return                 {@code null} if no information could be extracted or
+	 *                         a new predicate match if new information could be extracted.
+	 */
+	public PMatch resolveQueryInContext(Query query, RDPredicate pred) {
+		// 1. Match the action verb of the query with the one of the predicate
+		if (!pred.isThisPredicate(query.actionVerb, wordNet)) {
+			return null;
+		}
+		
+		// Predicate bound arguments
+		List<RDConcept> predArgs = pred.getArguments();
+		// User query tokens making up syntactic arguments of the verb
+		List<Argument> queryArgs = query.predicateArguments;
+		PMatch result = new PMatch(pred);
+		
+		for (Argument qArg : queryArgs) {
+			if (qArg.isQueryVariable) {
+				for (int i = 0; i < predArgs.size(); i++) {
+					RDConcept pArg = predArgs.get(i);
+						
+					if (
+						qArg.isQueryVariable &&
+						isOfSameType(pArg, qArg, query.queryType)
+					) {
+						result.saidArgumentIndex = i;
+						break;
+					}
+				}
+				
+				break;
+			}
+		}
+		
+		if (result.saidArgumentIndex >= 0) {
+			result.isValidMatch = true;
+			return result;
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -173,22 +234,37 @@ public class RDUniverse {
 			RDConcept pArg = predArgs.get(i);
 			
 			for (int j = 0; j < queryArgs.size(); j++) {
-				List<Token> qArg = queryArgs.get(j).argTokens;
+				Argument qArg = queryArgs.get(j);
+				List<Token> qArgToks = queryArgs.get(j).argTokens;
 				
 				matchScores[i][j] = 0.0f;
 				
 				if (ijPairs.contains(j + "#" + i)) {
+					// Matrix is symmetrical, where it can.
 					matchScores[i][j] = matchScores[j][i];
 				}
-				else if (isConceptInstance(qArg, pArg)) {
+				else if (
+					// A query type that matches argument
+					// is counted as a argument match.
+					qArg.isQueryVariable &&
+					isOfSameType(pArg, qArg, query.queryType)
+				) {
+					matchScores[i][j] = 1.0f;
+					ijPairs.add(i + "#" + j);
+				}
+				else if (isConceptInstance(qArgToks, pArg)) {
+					// Else, the argument is fuzzy scored against user's description.
 					matchScores[i][j] =
-						descriptionSimilarity(pArg.getTokenizedReference(), qArg);
+						descriptionSimilarity(pArg.getTokenizedReference(), qArgToks);
 					ijPairs.add(i + "#" + j);
 				}
 			}
 		}
 		
 		PMatch result = new PMatch(pred);
+		
+		// Predicate has matched, at least with its name.
+		result.matchScore = 1.0f;
 		
 		for (int i = 0; i < predArgs.size(); i++) {
 			RDConcept pArg = predArgs.get(i);
@@ -203,10 +279,11 @@ public class RDUniverse {
 				
 				if (
 					qArg.isQueryVariable &&
-					isOfSameType(pArg, qArg, query.queryType)
+					isOfSameType(pArg, qArg, query.queryType) &&
+					// Only set this once.
+					result.saidArgumentIndex == -1
 				) {
 					result.saidArgumentIndex = i;
-					break;
 				}
 			}
 			
@@ -214,6 +291,8 @@ public class RDUniverse {
 			result.argMatchScores[i] = maxScore;
 		}
 		
+		// 1.0 for the predicate name and 1.0 of the query variable.
+		result.isValidMatch = (result.matchScore > 2.0f);
 		return result;
 	}
 	

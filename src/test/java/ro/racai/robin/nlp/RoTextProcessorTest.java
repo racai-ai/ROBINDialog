@@ -23,7 +23,7 @@ public class RoTextProcessorTest {
 
 	@Test
 	public void testTEPROLIN() {
-		TextProcessor tp = new RoTextProcessor(new RoLexicon(), new RoSayings());
+		TextProcessor tp = new RoTextProcessor(new RoLexicon(), new RoWordNet(), new RoSayings());
 		List<Token> tokens = tp.textProcessor("Unde se află laboratorul de SDA?");
 		
 		assertTrue(tokens.size() == 7);
