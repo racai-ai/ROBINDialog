@@ -238,15 +238,11 @@ public class RDPredicate {
 		String strValue =  actionVerb + "(";
 		
 		for (int i = 0; i < predicateArguments.size() - 1; i++) {
-			strValue +=
-				"\"" + predicateArguments.get(i) +
-				"\"/" + predicateArguments.get(i).getType() + ", ";
+			strValue += predicateArguments.get(i) + ", ";
 		}
 		
 		if (predicateArguments.size() >= 1) {
-			strValue +=
-				"\"" + predicateArguments.get(predicateArguments.size() - 1) +
-				"\"/" + predicateArguments.get(predicateArguments.size() - 1).getType();
+			strValue += predicateArguments.get(predicateArguments.size() - 1);
 		}
 		
 		strValue += ")";

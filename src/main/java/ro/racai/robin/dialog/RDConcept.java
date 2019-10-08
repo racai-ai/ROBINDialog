@@ -231,10 +231,10 @@ public class RDConcept {
 	@Override
 	public String toString() {
 		if (!StringUtils.isNullEmptyOrBlank(assignedReference)) {
-			return assignedReference;
+			return "\"" + assignedReference + "\"" + "/" + conceptType.name();
 		}
 		
-		return canonicalForm;
+		return "\"" + canonicalForm + "\"" + "/" + conceptType.name();
 	}
 
 	/* (non-Javadoc)

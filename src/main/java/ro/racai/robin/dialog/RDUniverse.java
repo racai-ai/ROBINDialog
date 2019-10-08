@@ -82,11 +82,21 @@ public class RDUniverse {
 	
 	/**
 	 * <p>Get the universe instantiated concepts to pass on
-	 * to the text processor.</p>
-	 * @return
+	 * to the text processor or to print.</p>
+	 * @return        the list of bound concepts that exist
+	 *                in this universe.
 	 */
 	public List<RDConcept> getUniverseConcepts() {
 		return concepts;
+	}
+	
+	/**
+	 * <p>Get the universe instantiated predicates to print.</p>
+	 * @return        the list of bound predicates that exist
+	 *                in this universe.
+	 */
+	public List<RDPredicate> getUniversePredicates() {
+		return predicates;
 	}
 	
 	/**

@@ -3,9 +3,12 @@
  */
 package ro.racai.robin.dialog;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import ro.racai.robin.dialog.RDPredicate.PMatch;
 import ro.racai.robin.mw.MWFileReader;
@@ -167,6 +170,28 @@ public class RDManager {
 		return microworldName;
 	}
 	
+	public String getConceptsAsString() {
+		return
+			String.join(
+				System.lineSeparator(),
+				discourseUniverse.getUniverseConcepts()
+				.stream()
+				.map(x -> x.toString())
+				.collect(Collectors.toList())
+			);
+	}
+
+	public String getPredicatesAsString() {
+		return
+			String.join(
+				System.lineSeparator(),
+				discourseUniverse.getUniversePredicates()
+				.stream()
+				.map(x -> x.toString())
+				.collect(Collectors.toList())
+			);
+	}
+	
 	/**
 	 * <p>This is the main method of the {@link RDManager}:
 	 * it processes a textual user input are returns a
@@ -267,52 +292,110 @@ public class RDManager {
 		resouceWordNet.dumpWordNetCache();
 	}
 	
+	private static String romanianDiacritics(String prompt) {
+		prompt = prompt.replace("a^", "â");
+		prompt = prompt.replace("i^", "î");
+		prompt = prompt.replace("a@", "ă");
+		prompt = prompt.replace("s@", "ș");
+		prompt = prompt.replace("t@", "ț");
+		prompt = prompt.replace("A^", "Â");
+		prompt = prompt.replace("I^", "Î");
+		prompt = prompt.replace("A@", "Ă");
+		prompt = prompt.replace("S@", "Ș");
+		prompt = prompt.replace("T@", "Ț");
+		
+		return prompt;
+	}
+	
 	/**
 	 * @param args
+	 * @throws IOException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		if (args.length != 1) {
 			System.err.println("java ROBINDialog-1.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
 			return;
 		}
-		
+
 		String mwFile = args[0];
 		RoWordNet rown = new RoWordNet();
 		RoLexicon rolex = new RoLexicon();
 		RDSayings say = new RoSayings();
 		RoTextProcessor rotp = new RoTextProcessor(rolex, rown, say);
 		RDManager dman = new RDManager(rown, rolex, rotp, say);
-		
+
 		dman.loadMicroworld(mwFile);
-		
+
+		System.out.println("Default charset: " + Charset.defaultCharset().displayName());
+		System.out.println();
+		System.out.println("Use the following convention:");
+		System.out.println("(replace lower with upper-case for upper-case diacritics)");
+		System.out.println("  a^ for â");
+		System.out.println("  i^ for î");
+		System.out.println("  a@ for ă");
+		System.out.println("  s@ for ș");
+		System.out.println("  t@ for ț");
+		System.out.println();
+		System.out.println("Dialogue manager commands:");
+		System.out.println("  'exit' or 'quit' to terminate this dialogue;");
+		System.out.println("  'dump predicates' to print the list of ``known'' predicates in the KB;");
+		System.out.println("  'dump concepts' to print the list of ``known'' bound concepts in the KB.");
+		System.out.println();
+
 		// A text-based dialogue loop.
 		// Type 'exit' or 'quit' to end it.
 		System.out.println("Running with the " + dman.getMicroworldName() + " microworld");
 		System.out.print("User> ");
-        Scanner scanner = new Scanner(System.in);
-        String prompt = scanner.nextLine();
-        
-        while (
-        	!prompt.isEmpty() &&
-        	!prompt.equalsIgnoreCase("exit") &&
-        	!prompt.equalsIgnoreCase("quit")
-        ) {
-        	prompt = prompt.trim();
-        	
-        	DialogueState dstat = dman.doConversation(prompt);
-        
-        	System.out.print("Pepper> ");
-        	System.out.println(String.join(" ", dstat.getReply()));
-        	
-        	if (dstat.isDialogueDone()) {
-        		System.out.print(dstat.getBehaviour());
-        	}
-        	
-        	System.out.print("User> ");
-        	prompt = scanner.nextLine();
-        } // end demo dialogue loop
-        
-        scanner.close();
+
+		Scanner scanner = new Scanner(System.in);
+		String prompt = romanianDiacritics(scanner.nextLine());
+		// String prompt = System.console().readLine();
+		// BufferedReader scanner = new BufferedReader(new
+		// InputStreamReader(System.in));
+		// String prompt = scanner.readLine();
+
+		while (
+				!prompt.isEmpty() &&
+				!prompt.equalsIgnoreCase("exit") &&
+				!prompt.equalsIgnoreCase("quit")
+		) {
+			prompt = prompt.trim();
+			
+			if (prompt.startsWith("dump")) {
+				String[] parts = prompt.split("\\s+");
+				
+				switch (parts[1]) {
+				case "concepts":
+					System.out.println(dman.getConceptsAsString());
+					break;
+				case "predicates":
+					System.out.println(dman.getPredicatesAsString());
+					break;
+				default:
+					System.out.println("Dialogue Manager> Unknown 'dump' command.");
+				}
+				
+				System.out.print("User> ");
+				prompt = romanianDiacritics(scanner.nextLine());
+				continue;
+			}
+
+			DialogueState dstat = dman.doConversation(prompt);
+
+			System.out.print("Pepper> ");
+			System.out.println(String.join(" ", dstat.getReply()));
+
+			if (dstat.isDialogueDone()) {
+				System.out.print(dstat.getBehaviour());
+			}
+
+			System.out.print("User> ");
+			prompt = romanianDiacritics(scanner.nextLine());
+			// prompt = System.console().readLine();
+			// prompt = scanner.readLine();
+		} // end demo dialogue loop
+
+		scanner.close();
 		dman.dumpResourceCaches();
 	}
 }
