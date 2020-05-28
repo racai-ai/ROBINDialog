@@ -1,0 +1,411 @@
+/**
+ * 
+ */
+package ro.racai.robin.nlp;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.Line;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer;
+import javax.sound.sampled.Port;
+import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.log4j.Logger;
+
+/**
+ * @author Radu Ion ({@code radu@racai.ro}
+ * 
+ * <p>
+ * Handles the ASR and TTS routines for ROBIN Dialogue.
+ * </p>
+ */
+public abstract class SpeechProcessing {
+	private static final Logger LOGGER = Logger.getLogger(SpeechProcessing.class.getName());
+
+	private LinkedList<Float> silenceSamplesStdDevs = new LinkedList<Float>();
+
+	/**
+	 * How many silence averages to maintain to get an accurate estimation on what it means to be
+	 * silent, in terms of sample values.
+	 */
+	private final int silenceSamplesStdDevsLength = 100;
+
+	/**
+	 * After how many consecutive silence samples do we stop recording the voice.
+	 */
+	private final int consecutiveSilenceSamples = 20;
+
+	/**
+	 * After how many consecutive speech samples do we start recording speech.
+	 */
+	private final int consecutiveSpeechSamples = 5;
+
+	/**
+	 * Value computed from {@link #silenceSamplesStdDevsLength}.
+	 */
+	private float silenceSignalLevel = 0.0f;
+
+	/**
+	 * If using a webcam microphone, leave it at {@code 1.5}, if using a dedicated microphone, you
+	 * can raise it to e.g. {@code 10.0}.
+	 */
+	private final float signalToSilenceRatio = 10.0f;
+
+	/**
+	 * <p>
+	 * Records a .wav file stored on the local hard disk and converts it to the said text.
+	 * </p>
+	 * 
+	 * @return the said text.
+	 */
+	public abstract String speechToText();
+
+	/**
+	 * <p>
+	 * Takes a Java {@link String} representing a saying the the given language and produces the
+	 * corresponding utterance from it.
+	 * </p>
+	 * 
+	 * @param text the text to be said;
+	 * @return the .wav file stored on the local HDD.
+	 */
+	public abstract File textToSpeech(String text);
+
+	// Assumes we have 16 bit samples, 2 bytes/sample, ByteOrder.LITTLE_ENDIAN
+	private List<Float> pcmDataPoints(byte[] vector) {
+		List<Float> dataPoints = new ArrayList<Float>();
+
+		for (int i = 0; i < vector.length; i += 2) {
+			// LSB, MSB
+			byte[] twobytes = new byte[] {vector[i], vector[i + 1]};
+			ByteBuffer short_buff =
+				ByteBuffer.wrap(twobytes).order(ByteOrder.LITTLE_ENDIAN);
+			short dataPoint = short_buff.getShort();
+
+			dataPoints.add((float) dataPoint);
+		}
+
+		return dataPoints;
+	}
+
+	private float signalAverage(List<Float> vector) {
+		float sum = 0.0f;
+
+		for (Float f : vector) {
+			sum += f;
+		}
+
+		return sum / (float) vector.size();
+	}
+
+	private float signalStandardDeviation(byte[] vector) {
+		List<Float> floatVector = pcmDataPoints(vector);
+		float m = signalAverage(floatVector);
+		float sum = 0.0f;
+
+		for (Float f : floatVector) {
+			sum += (f - m) * (f - m);
+		}
+
+		return (float) Math.sqrt(sum / (float) floatVector.size());
+	}
+
+	private boolean isSilence(float sampleStdDev) {
+		// Collect some silence data first,
+		// before making silence/non-silence judgments.
+		if (silenceSamplesStdDevs.isEmpty()) {
+			return true;
+		}
+
+		float sum = 0.0f;
+
+		for (float a : silenceSamplesStdDevs) {
+			sum += a;
+		}
+
+		silenceSignalLevel = sum / (float) silenceSamplesStdDevs.size();
+
+		if ((sampleStdDev / silenceSignalLevel) >= signalToSilenceRatio) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * <p>Plays a generated .wav file, saying whatever
+	 * the dialog system has produced in text.</p>
+	 * @param wavFile        the .wav file to play with
+	 *                       available speakers.
+	 */
+	public void playUtterance(File wavFile)
+		throws LineUnavailableException, UnsupportedAudioFileException, IOException {
+		Mixer.Info[] mixerInfo = AudioSystem.getMixerInfo();
+		
+		for (Mixer.Info mnf : mixerInfo) {
+			if (
+				!mnf.getName().matches("^.*[sS][pP][eE][aA][kK][eE][rR].*$") &&
+				!mnf.getName().matches("^.*[hH][eE][aA][dD][pP][hH][oO][nN][eE].*$")
+			) {
+				continue;
+			}
+
+			Mixer mixer = AudioSystem.getMixer(mnf);
+			Line.Info[] lineInfo = mixer.getSourceLineInfo();
+
+			for (Line.Info lnf : lineInfo) {
+				Line line = mixer.getLine(lnf);
+				
+				try {
+					Clip clipLine = (Clip) line;
+					AudioInputStream original = AudioSystem.getAudioInputStream(wavFile);
+					AudioFormat format = original.getFormat();
+
+					// Match this with the incoming TTS WAV format!
+					// PCM_FLOAT 24000.0 Hz, 32 bit, mono, 4 bytes/frame
+					if (
+						format.getFrameSize() != 4 ||
+						format.getSampleSizeInBits() != 32 ||
+						format.getChannels() != 1 ||
+						format.isBigEndian()
+					) {
+						throw new UnsupportedAudioFileException();
+					}
+
+					byte[] pcm_data = original.readAllBytes();
+					// Going from 32 bits to 16 bits
+					byte[] pcm_data_converted = new byte[pcm_data.length / 2];
+					int j = 0;
+
+					for (int i = 0; i < pcm_data.length; i += 4) {
+						byte B0 = pcm_data[i];
+						byte B1 = pcm_data[i + 1];
+						byte B2 = pcm_data[i + 2];
+						byte B3 = pcm_data[i + 3];
+						byte[] pcm_float = new byte[] {B0, B1, B2, B3};
+
+						// https://www.scadacore.com/tools/programming-calculators/online-hex-converter/
+						//String bytesPrint = "";
+						//bytesPrint += String.format("%2x", B0).replace(" ", "0");
+						//bytesPrint += String.format("%2x", B1).replace(" ", "0");
+						//bytesPrint += String.format("%2x", B2).replace(" ", "0");
+						//bytesPrint += String.format("%2x", B3).replace(" ", "0");
+						//System.out.println(bytesPrint);
+
+						// Data comes in LITTLE_ENDIAN
+						ByteBuffer float_buffer =
+							ByteBuffer.wrap(pcm_float).order(ByteOrder.LITTLE_ENDIAN);
+						// PCM_FLOAT range is -1.0 to 1.0
+						float floatDataPoint = float_buffer.getFloat();
+						// So it has to be scaled with Short.MAX_VALUE
+						// for 16 bit conversion
+						float scaledDataPoint = Short.MAX_VALUE * floatDataPoint;
+						short shortDataPoint =
+							scaledDataPoint > Short.MAX_VALUE ? Short.MAX_VALUE
+							: scaledDataPoint < Short.MIN_VALUE ? Short.MIN_VALUE
+							: (short) scaledDataPoint;
+						ByteBuffer short_buffer = 
+							ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
+						
+						short_buffer.putShort(shortDataPoint);
+
+						byte[] short_buffer_array = short_buffer.array();
+
+						for (int k = 0; k < short_buffer_array.length; k++) {
+							pcm_data_converted[j] = short_buffer_array[k];
+							j++;
+						}
+					}
+
+					clipLine.open(
+						// Play PCM_SIGNED, 16 bit, mono.
+						new AudioFormat(format.getSampleRate(), 16, 1, true, false),
+						pcm_data_converted, 0, pcm_data_converted.length
+					);
+					clipLine.start();
+					clipLine.drain();
+					clipLine.close();
+					return;
+				}
+				catch (ClassCastException e) {}
+				catch (LineUnavailableException e) {}
+			}
+		} // end full mixer query
+
+		throw new LineUnavailableException();
+	}
+
+	/**
+	 * <p>Records a message from the default microphone
+	 * of the system.</p>
+	 * @return                              the .wav file with the recorded utterance.
+	 * @throws LineUnavailableException     if there is no microphone available.
+	 * @throws IOException                  if .wav file cannot be written.
+	 */
+	protected File recordUtterance() throws LineUnavailableException, IOException {
+		if (AudioSystem.isLineSupported(Port.Info.MICROPHONE)) {
+	    	AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
+	    	TargetDataLine microphone = AudioSystem.getTargetDataLine(format);    	
+		    
+	    	// 0. Open and start the microphone
+	    	microphone.open();
+	    	microphone.start();
+	    	
+	    	// 0.1 Will hold the last 3 data buffers
+	    	// to save them all into the .wav file
+	    	// when speech is detected.
+	    	List<byte[]> dataBuffers = new ArrayList<byte[]>();
+	    	int dbi = 0;
+	    	final int dbSize =
+	    		consecutiveSpeechSamples + 5 * consecutiveSilenceSamples;
+	    	
+	    	for (int i = 0; i < dbSize; i++) {
+	    		dataBuffers.add(new byte[microphone.getBufferSize() / 5]);
+	    	}
+	    	
+	    	byte[] data = dataBuffers.get(dbi);
+	    	
+	    	microphone.read(data, 0, data.length);
+	    	
+	    	float dataStdDev = signalStandardDeviation(data);
+			boolean silenceFlag = isSilence(dataStdDev);
+
+	    	LOGGER.info("Listening...");
+	    	
+	    	int speechCount = 0;
+	    	
+	    	// 1. Remain in this loop while
+	    	// there is no speech detected.
+			while (
+				silenceFlag ||
+				speechCount < consecutiveSpeechSamples
+			) {
+				dbi++;
+				
+				if (dbi % dbSize == 0) {
+					dbi = 0;
+				}
+				
+				data = dataBuffers.get(dbi);
+				
+				// Read the next chunk of data from the TargetDataLine.
+				microphone.read(data, 0, data.length);
+				dataStdDev = signalStandardDeviation(data);
+				
+				silenceFlag = isSilence(dataStdDev);
+				
+				if (silenceFlag) {
+					speechCount = 0;
+
+					if (
+						silenceSamplesStdDevs.size() ==
+						silenceSamplesStdDevsLength
+					) {
+						silenceSamplesStdDevs.removeFirst();
+					}
+
+					if (dbi % 10 == 0) {
+						silenceSamplesStdDevs.add(dataStdDev);
+						LOGGER.info("Instant silence std. dev. = " + dataStdDev);
+					}
+				}
+				else {
+					LOGGER.info("Instant speech #" + speechCount + " std. dev. = " + dataStdDev);
+					speechCount++;
+				}
+			} // end silence loop
+
+			LOGGER.info("Speech detected! Speech std. dev. = " +
+				dataStdDev + ", Silence std. dev. = " + silenceSignalLevel);
+			
+			// 2. Collect speech samples and save them into voiceData
+			LinkedList<Byte> voiceData = new LinkedList<Byte>();
+			int silenceCount = 0;
+			
+			// 2.2 Here we record the actual speech
+			// coming from the microphone
+			do {
+				for (byte b : data) {
+					voiceData.add(b);
+				}
+				
+				// Read the next chunk of data from the TargetDataLine.
+				microphone.read(data, 0, data.length);
+				dataStdDev = signalStandardDeviation(data);
+				
+				// LOGGER.info("Speech std. dev. = " + dataStdDev);
+				
+				silenceFlag = isSilence(dataStdDev);
+				
+				if (silenceFlag) {
+					silenceCount++;
+				}
+				else {
+					silenceCount = 0;
+				}
+			} // end speech loop
+			while (!silenceFlag || silenceCount < consecutiveSilenceSamples);
+			
+			LOGGER.info("Speech stopped.");
+			
+			// 2.3 Collect the last buffers as well
+			// to get the start of the syllable.
+			int dbc = 0;
+			
+			dbi--;
+			
+			while (
+				dbi >= 0 &&
+				dbc < consecutiveSpeechSamples + (consecutiveSilenceSamples / 2)
+			) {
+				byte[] pastdata = dataBuffers.get(dbi);
+				
+				for (int i = pastdata.length - 1; i >= 0; i--) {
+					voiceData.addFirst(pastdata[i]);
+				}
+				
+				dbi--;
+				dbc++;
+			}
+			
+			// 3. And save it to the .wav file
+			byte[] pcm_data =
+				ArrayUtils.toPrimitive(voiceData.toArray(new Byte[0]));
+			
+			AudioInputStream ais =
+				new AudioInputStream(
+					new ByteArrayInputStream(pcm_data),
+					format, pcm_data.length / format.getFrameSize()
+				);
+			File wav = new File("test.wav");
+			AudioSystem.write(
+				ais,
+				AudioFileFormat.Type.WAVE,
+				wav
+			);
+			
+			// 4. Release the microphone resource
+			microphone.stop();
+	    	microphone.close();
+	    	
+	    	return wav;
+		}
+		else {
+			throw new LineUnavailableException();
+		}
+	}
+}

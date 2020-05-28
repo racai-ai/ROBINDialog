@@ -4,6 +4,7 @@
 package ro.racai.robin.dialog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,23 +27,41 @@ public class RoSayings implements RDSayings {
 		CLOSING_LINES.add("la revedere");
 		
 		// Everything is lower-cased here!
-		OPENING_LINES.add("salut");
-		OPENING_LINES.add("noroc");
-		OPENING_LINES.add("bună");
-		OPENING_LINES.add("servus");
-		OPENING_LINES.add("pepper");
-		OPENING_LINES.add("pepăr");
-		OPENING_LINES.add("salut pepper");
-		OPENING_LINES.add("salut pepăr");
-		OPENING_LINES.add("bună ziua");
-		OPENING_LINES.add("bună ziua pepper");
-		OPENING_LINES.add("bună ziua pepăr");
-		OPENING_LINES.add("bună pepper");
-		OPENING_LINES.add("bună pepăr");
-		OPENING_LINES.add("noroc pepăr");
-		OPENING_LINES.add("noroc pepper");
-		OPENING_LINES.add("servus pepăr");
-		OPENING_LINES.add("servus pepper");
+		for (String roboName :
+			Arrays.asList("", "pepper", "pepăr",
+					"robotule", "robot", "roboțel",
+					"roboțelul", "roboțelule")
+		) {
+			if (!roboName.isEmpty()) {
+				OPENING_LINES.add(roboName);
+				OPENING_LINES.add("salut " + roboName);
+				OPENING_LINES.add("servus " + roboName);
+				OPENING_LINES.add("noroc " + roboName);
+				OPENING_LINES.add("bună " + roboName);
+				OPENING_LINES.add("bună ziua " + roboName);
+				OPENING_LINES.add("bună seara " + roboName);
+				OPENING_LINES.add("bună dimineața "  + roboName);
+				OPENING_LINES.add("buna " + roboName);
+				OPENING_LINES.add("buna ziua " + roboName);
+				OPENING_LINES.add("buna seara " + roboName);
+				OPENING_LINES.add("buna dimineața "  + roboName);
+				OPENING_LINES.add("neața "  + roboName);
+			}
+			else {
+				OPENING_LINES.add("salut");
+				OPENING_LINES.add("servus");
+				OPENING_LINES.add("noroc");
+				OPENING_LINES.add("bună");
+				OPENING_LINES.add("bună ziua");
+				OPENING_LINES.add("bună seara");
+				OPENING_LINES.add("bună dimineața");
+				OPENING_LINES.add("buna");
+				OPENING_LINES.add("buna ziua");
+				OPENING_LINES.add("buna seara");
+				OPENING_LINES.add("buna dimineața");
+				OPENING_LINES.add("neața");
+			}
+		}
 	}
 
 	/* (non-Javadoc)

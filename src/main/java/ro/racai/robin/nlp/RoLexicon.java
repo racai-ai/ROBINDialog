@@ -619,4 +619,12 @@ public class RoLexicon implements Lexicon {
 	public boolean isFunctionalWord(String word) {
 		return STOP_WORDS.contains(word.toLowerCase());
 	}
+
+	@Override
+	public boolean isQuestionFirstWord(String word) {
+		return
+			word.equals("cine") || word.equals("unde") ||
+			word.equals("când") || word.equals("care") ||
+			word.equals("ce") || word.equals("care");
+	}
 }

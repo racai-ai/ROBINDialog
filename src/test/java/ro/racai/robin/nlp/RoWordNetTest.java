@@ -9,8 +9,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ro.racai.robin.nlp.RoWordNet;
-
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  * <p>Tests the Romanian WordNet implementation, based on

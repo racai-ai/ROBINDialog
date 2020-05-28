@@ -145,7 +145,29 @@ public class RoTextProcessor extends TextProcessor {
 	 */
 	@Override
 	public String textCorrection(String text) {
-		// TODO: apply any text correction mechanisms here!
+		if (text != null && !text.isEmpty()) {
+			// 1. Make first letter upper case.
+			text = text.substring(0, 1).toUpperCase() + text.substring(1);
+			
+			// 2. Add '?' or '.' depending on the statement.
+			String[] spaceTokens = text.split("\\s+");
+
+			if (spaceTokens.length == 1) {
+				text += ".";
+			}
+			else if (
+				lexicon.isQuestionFirstWord(spaceTokens[0]) ||
+				lexicon.isQuestionFirstWord(spaceTokens[1])
+			) {
+				text += "?";
+			}
+			else {
+				text += ".";
+			}
+			
+			// TODO: make proper names sentence-case...
+		}
+		
 		return text;
 	}
 
@@ -384,5 +406,11 @@ public class RoTextProcessor extends TextProcessor {
 		}
 		
 		return false;
+	}
+
+	@Override
+	public String expandEntities(String text) {
+		// TODO: implement this for Romanian.
+		return text;
 	}
 }

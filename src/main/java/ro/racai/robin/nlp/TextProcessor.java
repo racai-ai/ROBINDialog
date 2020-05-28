@@ -173,7 +173,6 @@ public abstract class TextProcessor {
 	 */
 	public List<Token> textProcessor(String text) {
 		text = normalizeText(text);
-		text = textCorrection(text);
 		
 		if (processedTextCache.containsKey(text)) {
 			return processedTextCache.get(text);
@@ -291,12 +290,20 @@ public abstract class TextProcessor {
 	
 	/**
 	 * <p>If the text comes from an ASR engine, it may have
-	 * errors, so use this method to correct it if possible.</p>
+	 * errors, so use this method to correct it, if possible.</p>
 	 * @param text          text to be corrected
 	 * @return              the fixed text
 	 */
-	protected abstract String textCorrection(String text);
+	public abstract String textCorrection(String text);
 	
+	/**
+	 * <p>When saying e.g. '245', we need to transform
+	 * the number into a sequence of words. Also, when saying
+	 * English acronyms, e.g. 'IBM', we need a phonetic transcription
+	 * in Romanian, e.g. 'aibiem'.
+	 */
+	public abstract String expandEntities(String text);
+
 	/**
 	 * <p>Main method of query analysis. This method will
 	 * construct a "parse" of the text query received,

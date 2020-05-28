@@ -4,13 +4,12 @@
 
   <groupId>ro.racai.robin</groupId>
   <artifactId>ROBINDialog</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>14</maven.compiler.release>
   </properties>
 
   <dependencies>
@@ -31,11 +30,31 @@
       <artifactId>json-simple</artifactId>
       <version>1.1.1</version>
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+	<dependency>
+		<groupId>commons-io</groupId>
+		<artifactId>commons-io</artifactId>
+		<version>2.6</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-lang3</artifactId>
+		<version>3.9</version>
+	</dependency>
   </dependencies>
   <build>
     <pluginManagement>
       <plugins>
-		<plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.0</version>
+          <configuration>
+            <release>14</release>
+          </configuration>
+        </plugin>
+        <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.0.2</version>
         </plugin>
@@ -69,7 +88,7 @@
       </plugins>
     </pluginManagement>
   </build>
-  <description>This is the RACAI-developed dialogue manager for the ROBIN Dialog project. It supports micro-worlds and it uses the TEPROLIN platform for Romanian text pre-processing.</description>
+  <description>This is the RACAI-developed dialogue manager for the ROBIN Dialog project. It supports micro-worlds and it uses the TEPROLIN platform for Romanian text pre-processing. It also uses external web services for ASR and TTS of Romanian speech.</description>
   <name>The ROBIN Dialogue manager for Pepper</name>
   <organization>
   	<name>Research Institute for AI, Romanian Academy</name>

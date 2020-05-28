@@ -10,9 +10,6 @@ import java.util.List;
 import org.junit.Test;
 
 import ro.racai.robin.dialog.RoSayings;
-import ro.racai.robin.nlp.RoLexicon;
-import ro.racai.robin.nlp.RoTextProcessor;
-import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.TextProcessor.Token;
 
 /**

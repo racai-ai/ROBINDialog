@@ -53,4 +53,12 @@ public interface Lexicon {
 	 * @return           {@code true} if {@code pos} is a preposition
 	 */
 	public boolean isSkippablePOS(String pos);
+	
+	/**
+	 * Checks this word to see if it can start a question.
+	 * @param word          the word to check
+	 * @return              {@code true} if this word can start
+	 *                      a question
+	 */
+	public boolean isQuestionFirstWord(String word);
 }
