@@ -65,6 +65,8 @@ public abstract class SpeechProcessing {
 	 */
 	private final float signalToSilenceRatio = 10.0f;
 
+	protected Clip speakersClipLine = null;
+
 	/**
 	 * <p>
 	 * Records a .wav file stored on the local hard disk and converts it to the said text.
@@ -146,14 +148,7 @@ public abstract class SpeechProcessing {
 		return true;
 	}
 
-	/**
-	 * <p>Plays a generated .wav file, saying whatever
-	 * the dialog system has produced in text.</p>
-	 * @param wavFile        the .wav file to play with
-	 *                       available speakers.
-	 */
-	public void playUtterance(File wavFile)
-		throws LineUnavailableException, UnsupportedAudioFileException, IOException {
+	protected Clip findSpeakers() throws LineUnavailableException {
 		Mixer.Info[] mixerInfo = AudioSystem.getMixerInfo();
 		
 		for (Mixer.Info mnf : mixerInfo) {
@@ -172,79 +167,111 @@ public abstract class SpeechProcessing {
 				
 				try {
 					Clip clipLine = (Clip) line;
-					AudioInputStream original = AudioSystem.getAudioInputStream(wavFile);
-					AudioFormat format = original.getFormat();
 
-					// Match this with the incoming TTS WAV format!
-					// PCM_FLOAT 24000.0 Hz, 32 bit, mono, 4 bytes/frame
-					if (
-						format.getFrameSize() != 4 ||
-						format.getSampleSizeInBits() != 32 ||
-						format.getChannels() != 1 ||
-						format.isBigEndian()
-					) {
-						throw new UnsupportedAudioFileException();
-					}
-
-					byte[] pcm_data = original.readAllBytes();
-					// Going from 32 bits to 16 bits
-					byte[] pcm_data_converted = new byte[pcm_data.length / 2];
-					int j = 0;
-
-					for (int i = 0; i < pcm_data.length; i += 4) {
-						byte B0 = pcm_data[i];
-						byte B1 = pcm_data[i + 1];
-						byte B2 = pcm_data[i + 2];
-						byte B3 = pcm_data[i + 3];
-						byte[] pcm_float = new byte[] {B0, B1, B2, B3};
-
-						// https://www.scadacore.com/tools/programming-calculators/online-hex-converter/
-						//String bytesPrint = "";
-						//bytesPrint += String.format("%2x", B0).replace(" ", "0");
-						//bytesPrint += String.format("%2x", B1).replace(" ", "0");
-						//bytesPrint += String.format("%2x", B2).replace(" ", "0");
-						//bytesPrint += String.format("%2x", B3).replace(" ", "0");
-						//System.out.println(bytesPrint);
-
-						// Data comes in LITTLE_ENDIAN
-						ByteBuffer float_buffer =
-							ByteBuffer.wrap(pcm_float).order(ByteOrder.LITTLE_ENDIAN);
-						// PCM_FLOAT range is -1.0 to 1.0
-						float floatDataPoint = float_buffer.getFloat();
-						// So it has to be scaled with Short.MAX_VALUE
-						// for 16 bit conversion
-						float scaledDataPoint = Short.MAX_VALUE * floatDataPoint;
-						short shortDataPoint =
-							scaledDataPoint > Short.MAX_VALUE ? Short.MAX_VALUE
-							: scaledDataPoint < Short.MIN_VALUE ? Short.MIN_VALUE
-							: (short) scaledDataPoint;
-						ByteBuffer short_buffer = 
-							ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
-						
-						short_buffer.putShort(shortDataPoint);
-
-						byte[] short_buffer_array = short_buffer.array();
-
-						for (int k = 0; k < short_buffer_array.length; k++) {
-							pcm_data_converted[j] = short_buffer_array[k];
-							j++;
-						}
-					}
-
-					clipLine.open(
-						// Play PCM_SIGNED, 16 bit, mono.
-						new AudioFormat(format.getSampleRate(), 16, 1, true, false),
-						pcm_data_converted, 0, pcm_data_converted.length
-					);
-					clipLine.start();
-					clipLine.drain();
-					clipLine.close();
-					return;
+					return clipLine;
 				}
 				catch (ClassCastException e) {}
-				catch (LineUnavailableException e) {}
 			}
-		} // end full mixer query
+		}
+		
+		throw new LineUnavailableException();
+	}
+
+	/**
+	 * <p>
+	 * Plays a generated .wav file, saying whatever the dialog system has produced in text.
+	 * </p>
+	 * 
+	 * @param wavFile the .wav file to play with available speakers.
+	 * @throws InterruptedException
+	 */
+	public void playUtterance(File wavFile) throws LineUnavailableException,
+			UnsupportedAudioFileException, IOException, InterruptedException {
+		if (AudioSystem.isLineSupported(Port.Info.SPEAKER)) {
+			AudioInputStream original = AudioSystem.getAudioInputStream(wavFile);
+			AudioFormat format = original.getFormat();
+
+			// Match this with the incoming TTS WAV format!
+			// PCM_FLOAT 24000.0 Hz, 32 bit, mono, 4 bytes/frame
+			if (
+				format.getFrameSize() != 4 ||
+				format.getSampleSizeInBits() != 32 ||
+				format.getChannels() != 1 ||
+				format.isBigEndian()
+			) {
+				throw new UnsupportedAudioFileException();
+			}
+
+			byte[] pcm_data = original.readAllBytes();
+			// Going from 32 bits to 16 bits
+			byte[] pcm_data_converted = new byte[pcm_data.length / 2];
+			int j = 0;
+
+			for (int i = 0; i < pcm_data.length; i += 4) {
+				byte B0 = pcm_data[i];
+				byte B1 = pcm_data[i + 1];
+				byte B2 = pcm_data[i + 2];
+				byte B3 = pcm_data[i + 3];
+				byte[] pcm_float = new byte[] {B0, B1, B2, B3};
+
+				// https://www.scadacore.com/tools/programming-calculators/online-hex-converter/
+				//String bytesPrint = "";
+				//bytesPrint += String.format("%2x", B0).replace(" ", "0");
+				//bytesPrint += String.format("%2x", B1).replace(" ", "0");
+				//bytesPrint += String.format("%2x", B2).replace(" ", "0");
+				//bytesPrint += String.format("%2x", B3).replace(" ", "0");
+				//System.out.println(bytesPrint);
+
+				// Data comes in LITTLE_ENDIAN
+				ByteBuffer float_buffer =
+					ByteBuffer.wrap(pcm_float).order(ByteOrder.LITTLE_ENDIAN);
+				// PCM_FLOAT range is -1.0 to 1.0
+				float floatDataPoint = float_buffer.getFloat();
+				// So it has to be scaled with Short.MAX_VALUE
+				// for 16 bit conversion
+				float scaledDataPoint = Short.MAX_VALUE * floatDataPoint;
+				short shortDataPoint =
+					scaledDataPoint > Short.MAX_VALUE ? Short.MAX_VALUE
+					: scaledDataPoint < Short.MIN_VALUE ? Short.MIN_VALUE
+					: (short) scaledDataPoint;
+				ByteBuffer short_buffer = 
+					ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
+				
+				short_buffer.putShort(shortDataPoint);
+
+				byte[] short_buffer_array = short_buffer.array();
+
+				for (int k = 0; k < short_buffer_array.length; k++) {
+					pcm_data_converted[j] = short_buffer_array[k];
+					j++;
+				}
+			}
+
+			AudioFormat pformat = new AudioFormat(format.getSampleRate(), 16, 1, true, false);
+
+			if (speakersClipLine == null) {
+				// Only do this once, for the lifetime
+				// of this object.
+				speakersClipLine = findSpeakers();
+			}
+
+			speakersClipLine.open(
+				pformat,
+				pcm_data_converted, 0, pcm_data_converted.length
+			);
+			speakersClipLine.start();
+			speakersClipLine.drain();
+
+			// Wait for the clip to play...
+			float waitTimeSecs =
+				(float) (pcm_data_converted.length / 2) / format.getSampleRate();
+
+			Thread.sleep((long) (1000.0f * waitTimeSecs));
+			speakersClipLine.stop();
+			speakersClipLine.close();
+
+			return;
+		}
 
 		throw new LineUnavailableException();
 	}
@@ -320,11 +347,11 @@ public abstract class SpeechProcessing {
 
 					if (dbi % 10 == 0) {
 						silenceSamplesStdDevs.add(dataStdDev);
-						LOGGER.info("Instant silence std. dev. = " + dataStdDev);
+						//LOGGER.info("Instant silence std. dev. = " + dataStdDev);
 					}
 				}
 				else {
-					LOGGER.info("Instant speech #" + speechCount + " std. dev. = " + dataStdDev);
+					//LOGGER.info("Instant speech #" + speechCount + " std. dev. = " + dataStdDev);
 					speechCount++;
 				}
 			} // end silence loop

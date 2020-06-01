@@ -1,14 +1,14 @@
-/**
- * 
- */
 package ro.racai.robin.nlp;
+
+import java.util.Map;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
- * <p>An interface to build a "verb" inventory
- * with meanings given by the method name. Implement
- * this for your language. Also add other meaning-related
- * methods or word-related methods.</p>
+ * <p>
+ * An interface to build a "verb" inventory with meanings given by the method name.
+ * Implement this for your language. Also add other meaning-related methods or word-related
+ * methods.
+ * </p>
  */
 public interface Lexicon {
 	/**
@@ -61,4 +61,39 @@ public interface Lexicon {
 	 *                      a question
 	 */
 	public boolean isQuestionFirstWord(String word);
+
+	/**
+	 * Will take a number and transform it to its
+	 * literal equivalent, e.g. 249 -> 'două sute patruzeci și nouă'
+	 * @param number      the number to transform
+	 * @return            the language specific representation of
+	 *                    the given number
+	 */
+	public String sayNumber(String number);
+
+	/**
+	 * Will take a time specification and transform it 
+	 * to its literal equivalent, e.g. 8:30 -> 'ora opt și treizeci de minute'
+	 * @param time        the time to transform
+	 * @return            the language specific representation of
+	 *                    the given time
+	 */
+	public String sayTime(String time);
+
+	/**
+	 * Will take a date specification and transform it
+	 * to its literal equivalent, e.g. 28/05/2020 -> 'douăzeci și opt mai două mii douăzeci'
+	 * 
+	 * @param date        the date to transform
+	 * @return            the language specific representation of
+	 *                    the given date
+	 */
+	public String sayDate(String date);
+
+	/**
+	 * Find and mark, returning a Map from offsets to a
+	 * {@link Pair} of entity type and entity length in text.
+	 * @param text      the text to scan for know entity types.
+	*/
+	public Map<Integer, Pair<EntityType, Integer>> markEntities(String text);
 }

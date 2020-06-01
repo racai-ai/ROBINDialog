@@ -410,7 +410,77 @@ public class RoTextProcessor extends TextProcessor {
 
 	@Override
 	public String expandEntities(String text) {
-		// TODO: implement this for Romanian.
-		return text;
+		text = text.trim();
+
+		Map<Integer, Pair<EntityType, Integer>> entities = lexicon.markEntities(text);
+		Map<Integer, Pair<Integer, String>> replacements = new HashMap<>();
+
+		// 1. Expand all found entities
+		for (int offset : entities.keySet()) {
+			Pair<EntityType, Integer> pair = entities.get(offset);
+			EntityType eType = pair.getFirstMember();
+			int length = pair.getSecondMember();
+			String entityAtOffset = text.substring(offset, length);
+			String eText;
+
+			switch (eType) {
+				case DATE:
+					eText = lexicon.sayDate(entityAtOffset);
+					replacements.put(offset, new Pair<>(length, eText));
+					break;
+				case TIME:
+					eText = lexicon.sayTime(entityAtOffset);
+					replacements.put(offset, new Pair<>(length, eText));
+					break;
+				case NUMBER:
+					eText = lexicon.sayNumber(entityAtOffset);
+					replacements.put(offset, new Pair<>(length, eText));
+			}
+		} // end all offsets
+
+		// 2. Insert the replacements back into the original text
+		List<Integer> allOffsets = new ArrayList<Integer>();
+
+		for (int offset : entities.keySet()) {
+			if (allOffsets.isEmpty()) {
+				allOffsets.add(offset);
+			}
+			else {
+				// Insert offset in the sorted list,
+				// on the proper position.
+				boolean added = false;
+
+				for (int i = 0; i < allOffsets.size(); i++) {
+					if (offset <= allOffsets.get(i)) {
+						allOffsets.add(i, offset);
+						added = true;
+						break;
+					}
+				}
+
+				if (!added) {
+					allOffsets.add(offset);
+				}
+			}
+		}
+
+		String result = "";
+		int walkIndex = 0;
+
+		for (int i = 0; i < allOffsets.size(); i++) {
+			int offset = allOffsets.get(i);
+			String eText = replacements.get(offset).getSecondMember();
+			int length = replacements.get(offset).getFirstMember();
+
+			result += text.substring(walkIndex, offset);
+			result += eText;
+			walkIndex = offset + length;
+		}
+		
+		if (result.isEmpty()) {
+			return text;
+		}
+		
+		return result;
 	}
 }

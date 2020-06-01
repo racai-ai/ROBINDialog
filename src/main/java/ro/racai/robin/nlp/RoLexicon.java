@@ -1,10 +1,13 @@
-/**
- * 
- */
 package ro.racai.robin.nlp;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
@@ -12,8 +15,108 @@ import java.util.Set;
  */
 public class RoLexicon implements Lexicon {
 	private static final Set<String> STOP_WORDS = new HashSet<String>();
+	private static final Pattern DATE_RX1 =
+		Pattern.compile("([0-9]{1,2})[/:-]([0-9]{1,2})[/:-]([0-9]{4})");
+	private static final Pattern DATE_RX2 =
+		Pattern.compile(
+			"([0-9]{1,2})\\s(" +
+			"ian[.]?|ianuarie|" +
+			"feb[.]?|febr[.]?|februarie|" +
+			"mar[.]?|mart[.]?|martie|" +
+			"apr[.]?|aprilie|" +
+			"mai|" +
+			"iun[.]?|iunie|" +
+			"iul[.]?|iulie|" +
+			"aug[.]?|august|" +
+			"sep[.]?|sept[.]?|septembrie|" +
+			"oct[.]?|octombrie|" +
+			"noi[.]?|nov[.]?|noiembrie|" +
+			"dec[.]?|decembrie" +
+			")\\s([0-9]{4})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern TIME_RX = Pattern.compile("([0-9]{1,2}):([0-9]{1,2})");
+	private static final Pattern NUMBER_RX = Pattern.compile("([0-9]+)");
+	private static final Map<Integer, String> NUMBERS = new HashMap<Integer, String>();
+	private static final List<Pair<EntityType, Pattern>> ENTITIES =
+		new ArrayList<Pair<EntityType, Pattern>>();
+	private static final Map<Integer, String> MONTHS = new HashMap<Integer, String>();
+	private static final Map<String, String> MONTHS_ABBR = new HashMap<String, String>();
 	
 	static {
+		MONTHS.put(1, "ianuarie");
+		MONTHS.put(2, "februarie");
+		MONTHS.put(3, "martie");
+		MONTHS.put(4, "aprilie");
+		MONTHS.put(5, "mai");
+		MONTHS.put(6, "iunie");
+		MONTHS.put(7, "iulie");
+		MONTHS.put(8, "august");
+		MONTHS.put(9, "septembrie");
+		MONTHS.put(10, "octombrie");
+		MONTHS.put(11, "noiembrie");
+		MONTHS.put(12, "decembrie");
+
+		MONTHS_ABBR.put("ian", "ianuarie");
+		MONTHS_ABBR.put("ianuarie", "ianuarie");
+		MONTHS_ABBR.put("feb", "februarie");
+		MONTHS_ABBR.put("febr", "februarie");
+		MONTHS_ABBR.put("februarie", "februarie");
+		MONTHS_ABBR.put("mar", "martie");
+		MONTHS_ABBR.put("mart", "martie");
+		MONTHS_ABBR.put("martie", "martie");
+		MONTHS_ABBR.put("apr", "aprilie");
+		MONTHS_ABBR.put("aprilie", "aprilie");
+		MONTHS_ABBR.put("iun", "iunie");
+		MONTHS_ABBR.put("iunie", "iunie");
+		MONTHS_ABBR.put("iul", "iulie");
+		MONTHS_ABBR.put("iulie", "iulie");
+		MONTHS_ABBR.put("aug", "august");
+		MONTHS_ABBR.put("august", "august");
+		MONTHS_ABBR.put("sep", "septembrie");
+		MONTHS_ABBR.put("sept", "septembrie");
+		MONTHS_ABBR.put("septembrie", "septembrie");
+		MONTHS_ABBR.put("oct", "octombrie");
+		MONTHS_ABBR.put("octombrie", "octombrie");
+		MONTHS_ABBR.put("noi", "noiembrie");
+		MONTHS_ABBR.put("nov", "noiembrie");
+		MONTHS_ABBR.put("noiembrie", "noiembrie");
+		MONTHS_ABBR.put("dec", "decembrie");
+		MONTHS_ABBR.put("decembrie", "decembrie");
+
+		// Add new entities here, defining their types in EntityType.java.
+		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.DATE, DATE_RX1));
+		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.DATE, DATE_RX2));
+		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.TIME, TIME_RX));
+		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.NUMBER, NUMBER_RX));
+
+		NUMBERS.put(0, "zero");
+		NUMBERS.put(1, "unu");
+		NUMBERS.put(2, "doi");
+		NUMBERS.put(3, "trei");
+		NUMBERS.put(4, "patru");
+		NUMBERS.put(5, "cinci");
+		NUMBERS.put(6, "șase");
+		NUMBERS.put(7, "șapte");
+		NUMBERS.put(8, "opt");
+		NUMBERS.put(9, "nouă");
+		NUMBERS.put(10, "zece");
+		NUMBERS.put(11, "unsprezece");
+		NUMBERS.put(12, "doisprezece");
+		NUMBERS.put(13, "treisprezece");
+		NUMBERS.put(14, "paisprezece");
+		NUMBERS.put(15, "cincisprezece");
+		NUMBERS.put(16, "șaisprezece");
+		NUMBERS.put(17, "șaptesprezece");
+		NUMBERS.put(18, "optsprezece");
+		NUMBERS.put(19, "nouăsprezece");
+		NUMBERS.put(20, "douăzeci");
+		NUMBERS.put(30, "treizeci");
+		NUMBERS.put(40, "patruzeci");
+		NUMBERS.put(50, "cincizeci");
+		NUMBERS.put(60, "șaizeci");
+		NUMBERS.put(70, "șaptezeci");
+		NUMBERS.put(80, "optzeci");
+		NUMBERS.put(90, "nouăzeci");
+
 		// Generated automatically from
 		// tbl.wordform.ro.v87
 		STOP_WORDS.add("a");
@@ -626,5 +729,347 @@ public class RoLexicon implements Lexicon {
 			word.equals("cine") || word.equals("unde") ||
 			word.equals("când") || word.equals("care") ||
 			word.equals("ce") || word.equals("care");
+	}
+
+	@Override
+	public String sayNumber(String number) {
+		if (NUMBER_RX.matcher(number).matches()) {
+			int integer = Integer.parseInt(number);
+			
+			if (integer >= 0 && integer <= 20) {
+				return RoLexicon.NUMBERS.get(integer);
+			}
+			else {
+				List<String> saidNumber = new ArrayList<String>();
+				boolean tenToNineteen = false;
+				int i = 0;
+
+				while (i < number.length()) {
+					int tenPower = number.length() - i - 1;
+					int units =
+						Integer.parseInt(Character.toString(number.charAt(i)));
+
+					switch (tenPower) {
+						case 0:
+							if (units > 0 && !tenToNineteen) {
+								saidNumber.add(RoLexicon.NUMBERS.get(units));
+							}
+							break;
+
+						case 1:
+							if (units >= 2) {
+								if (number.endsWith("0")) {
+									saidNumber.add(RoLexicon.NUMBERS.get(units * 10));
+								}
+								else {
+									saidNumber.add(RoLexicon.NUMBERS.get(units * 10) + " și");
+								}
+							}
+							else if (units == 1) {
+								int lasttwodigits = Integer.parseInt(number.substring(i));
+
+								tenToNineteen = true;
+								saidNumber.add(RoLexicon.NUMBERS.get(lasttwodigits));
+							}
+							break;
+
+						case 2:
+							if (units == 1) {
+								saidNumber.add("o sută");
+							}
+							else if (units == 2) {
+								saidNumber.add("două sute");
+							}
+							else if (units >= 3){
+								saidNumber.add(RoLexicon.NUMBERS.get(units) + " sute");
+							}
+							break;
+
+						case 3:
+							if (units == 1) {
+								saidNumber.add("o mie");
+							}
+							else if (units == 2) {
+								saidNumber.add("două mii");
+							}
+							else {
+								saidNumber.add(RoLexicon.NUMBERS.get(units) + " mii");
+							}
+							break;
+
+						case 4:
+							if (units == 1) {
+								int nexttwodigits = Integer.parseInt(number.substring(i, i + 2));
+
+								saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits) + " mii");
+								i++;
+							}
+							else if (units >= 2) {
+								int nexttwodigits = Integer.parseInt(number.substring(i, i + 2));
+
+								if (nexttwodigits % 10 == 0) {
+									saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits) + " de mii");
+								}
+								else {
+									saidNumber.add(RoLexicon.NUMBERS.get(units * 10) + " și");
+									saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits - units * 10) + " de mii");
+								}
+								i++;
+							}
+							break;
+
+						case 5:
+							if (units == 1) {
+								saidNumber.add("o sută");
+							}
+							else if (units == 2) {
+								saidNumber.add("două sute");
+							}
+							else {
+								saidNumber.add(RoLexicon.NUMBERS.get(units) + " sute");
+							}
+							break;
+
+						case 6:
+							if (units == 1) {
+								saidNumber.add("un milion");
+							}
+							else if (units == 2) {
+								saidNumber.add("două milioane");
+							}
+							else {
+								saidNumber.add(RoLexicon.NUMBERS.get(units) + " milioane");
+							}
+							break;							
+					} // end switch
+
+					i++;
+				} // end digits of number
+
+				return String.join(" ", saidNumber);
+			}
+		}
+		else {
+			return number;
+		}
+	}
+
+	@Override
+	public String sayTime(String time) {
+		Matcher m = TIME_RX.matcher(time);
+
+		if (m.matches()) {
+			// E.g. 8:10, 20:50
+			int hours = Integer.parseInt(m.group(1));
+			int minutes = Integer.parseInt(m.group(2));
+
+			if (
+				hours >= 0 && hours <= 23 &&
+				minutes >= 0 && minutes <= 59
+			) {
+				List<String> saidTime = new ArrayList<String>();
+
+				switch (hours) {
+					case 0:
+						if (minutes == 0) {
+							saidTime.add("ora douăsprezece noaptea");
+						}
+						else {
+							saidTime.add("ora zero și");
+						}
+						break;
+					case 12:
+						if (minutes == 0) {
+							saidTime.add("ora douăsprezece fix");
+						}
+						else {
+							saidTime.add("ora douăsprezece și");
+						}
+						break;
+					case 2:
+						if (minutes == 0) {
+							saidTime.add("ora două fix");
+						}
+						else {
+							saidTime.add("ora două și");
+						}
+						break;
+					default:
+						if (minutes == 0) {
+							saidTime.add("ora " + sayNumber(Integer.toString(hours)) + " fix");
+						}
+						else {
+							saidTime.add("ora " + sayNumber(Integer.toString(hours)) + " și");
+						}
+				} // end hours
+
+				switch (minutes) {
+					case 1:
+						saidTime.add("un minut");
+						break;
+					case 2:
+						saidTime.add("două minute");
+						break;
+					case 12:
+						saidTime.add("douăsprezece minute");
+						break;
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+					case 8:
+					case 9:
+					case 10:
+					case 11:
+					case 13:
+					case 14:
+					case 15:
+					case 16:
+					case 17:
+					case 18:
+					case 19:
+						saidTime.add(sayNumber(Integer.toString(minutes)) + " minute");
+						break;
+					case 22:
+						saidTime.add("douăzeci și două de minute");
+						break;
+					case 32:
+						saidTime.add("treizeci și două de minute");
+						break;
+					case 42:
+						saidTime.add("patruzeci și două de minute");
+						break;
+					case 52:
+						saidTime.add("cincizeci și două de minute");
+						break;
+					default:
+						saidTime.add(sayNumber(Integer.toString(minutes)) + " de minute");
+				} // end minutes
+
+				return String.join(" ", saidTime);
+			}
+		}
+
+		return time;
+	}
+
+	@Override
+	public String sayDate(String date) {
+		Matcher m = DATE_RX1.matcher(date);
+
+		if (m.matches()) {
+			int day = Integer.parseInt(m.group(1));
+			int month = Integer.parseInt(m.group(2));
+			int year = Integer.parseInt(m.group(3));
+
+			if (month > 12 && month <= 31 && day <= 12) {
+				// Month and day are reversed,
+				// American notation
+				int temp = day;
+
+				day = month;
+				month = temp;
+			}
+
+			if (!(day >= 1 && day <= 31 && month >= 1 && month <= 12)) {
+				return date;
+			}
+
+			List<String> saidDate = new ArrayList<String>();
+
+			if (day == 2) {
+				saidDate.add("două");
+			}
+			else if (day == 12) {
+				saidDate.add("douăsprezece");
+			}
+			else if (day == 22) {
+				saidDate.add("douăzeci și două");
+			}
+			else if (day == 1) {
+				saidDate.add("întâi");
+			}
+			else {
+				saidDate.add(sayNumber(Integer.toString(day)));
+			}
+
+			saidDate.add(sayNumber(Integer.toString(month)));
+			saidDate.add(sayNumber(Integer.toString(year)));
+
+			return String.join(" ", saidDate);
+		}
+
+		m = DATE_RX2.matcher(date);
+
+		if (m.matches()) {
+			int day = Integer.parseInt(m.group(1));
+			String month = m.group(2).toLowerCase();
+			int year = Integer.parseInt(m.group(3));
+
+			if (!(day >= 1 && day <= 31 && MONTHS_ABBR.containsKey(month))) {
+				return date;
+			}
+
+			List<String> saidDate = new ArrayList<String>();
+
+			if (day == 2) {
+				saidDate.add("două");
+			}
+			else if (day == 12) {
+				saidDate.add("douăsprezece");
+			}
+			else if (day == 22) {
+				saidDate.add("douăzeci și două");
+			}
+			else if (day == 1) {
+				saidDate.add("întâi");
+			}
+			else {
+				saidDate.add(sayNumber(Integer.toString(day)));
+			}
+
+			saidDate.add(MONTHS_ABBR.get(month));
+			saidDate.add(sayNumber(Integer.toString(year)));
+
+			return String.join(" ", saidDate);
+		}
+
+		return null;
+	}
+
+	@Override
+	public Map<Integer, Pair<EntityType, Integer>> markEntities(String text) {
+		Map<Integer, Pair<EntityType, Integer>> result = new HashMap<>();
+
+		for (Pair<EntityType, Pattern> pair : RoLexicon.ENTITIES) {
+			Pattern p = pair.getSecondMember();
+			Matcher m = p.matcher(text);
+
+			while (m.find()) {
+				if (
+					(
+						m.start() == 0 ||
+						Character.isWhitespace(text.charAt(m.start() - 1))
+					) &&
+					(
+						m.end() == text.length() ||
+						Character.isWhitespace(text.charAt(m.end()))
+					)
+				) {
+					int offset = m.start();
+					int length = m.end() - m.start();
+
+					if (!result.containsKey(offset)) {
+						result.put(
+							offset,
+							new Pair<EntityType, Integer>(pair.getFirstMember(), length)
+						);
+					}
+				}
+			}
+		}
+
+		return result;
 	}
 }

@@ -167,6 +167,8 @@ public class RoSpeechProcessing extends SpeechProcessing {
 	public File textToSpeech(String text) {
 		String query = new String(RoSpeechProcessing.TTS_QUERY);
 
+		LOGGER.info("Doing TTS on the reply from Pepper...");
+
 		try {
 			long startTime = System.currentTimeMillis();
 			URL url = new URL(query);

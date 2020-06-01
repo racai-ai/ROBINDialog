@@ -3,6 +3,7 @@
  */
 package ro.racai.robin.dialog;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -217,7 +218,8 @@ public class RDManager {
 			// argument that we could return, that's
 			// a success.
 			currentDState = DialogueState.robotInformedResponse(q.queryType, pm);
-		} else if (currentDState.inferredPredicate != null) {
+		}
+		else if (currentDState.inferredPredicate != null) {
 			// 3. Some predicate matched but we don't have
 			// enough information specified. Try to do a
 			// match in the context of the previously
@@ -230,7 +232,8 @@ public class RDManager {
 				currentDState = DialogueState.robotSaysSomething(q.queryType,
 						resourceSayings.robotDontKnowLines());
 			}
-		} else {
+		}
+		else {
 			// No predicate found, this means no
 			// predicate was found in KB. Return this
 			// and say we do not know about it.
@@ -257,11 +260,12 @@ public class RDManager {
 	 * @throws IOException
 	 * @throws UnsupportedAudioFileException
 	 * @throws LineUnavailableException
+	 * @throws InterruptedException
 	 */
-	public static void main(String[] args)
-		throws IOException, LineUnavailableException, UnsupportedAudioFileException {
+	public static void main(String[] args) throws IOException, LineUnavailableException,
+			UnsupportedAudioFileException, InterruptedException {
 		if (args.length != 1) {
-			System.err.println("java ROBINDialog-2.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
+			System.err.println("java ROBINDialog-3.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
 			return;
 		}
 		
@@ -315,12 +319,10 @@ public class RDManager {
 			List<String> replies = dstat.getReply();
 
 			for (int i = 0; i < replies.size(); i++) {
-				replies.set(i, rotp.expandEntities(replies.get(i)));
+				String pepperTalk = rotp.expandEntities(replies.get(i));
+
+				speech.playUtterance(speech.textToSpeech(pepperTalk));
 			}
-
-			String talkPepper = String.join(" ", replies);
-
-			speech.playUtterance(speech.textToSpeech(talkPepper));
 
 			if (dstat.isDialogueDone()) {
 				System.out.print(dstat.getBehaviour());

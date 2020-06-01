@@ -107,6 +107,16 @@ translatoare	translatoare	Ncf--n	conj	4	false
 Salut
 Salut	saluta	Vmip1s	root	0	false
 
+Cine ține cursuri de sisteme de operare.
+Cine	cine	Pw3--r	nsubj	2	true
+ține	ține	Vmip3s	root	0	false
+cursuri	curs	Ncfp-n	obj	2	true
+de	de	Spsa	case	5	false
+sisteme	sistem	Ncfp-n	nmod	3	false
+de	de	Spsa	case	7	false
+operare	operare	Ncfsrn	nmod	5	false
+.	.	PERIOD	punct	2	true
+
 seminarul de analiză matematică
 seminarul	seminar	Ncmsry	root	0	false
 de	de	Spsa	case	3	false
@@ -139,6 +149,17 @@ Pepper	Pepper	Np	nmod	1	false
 
 Servus
 Servus	servus	I	root	0	false
+
+Unde se ține cursul de sisteme de operare.
+Unde	unde	Rw	advmod	3	true
+se	sine	Px3--a--------w	expl:pass	3	false
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	nsubj:pass	3	true
+de	de	Spsa	case	6	false
+sisteme	sistem	Ncfp-n	nmod	4	false
+de	de	Spsa	case	8	false
+operare	operare	Ncfsrn	nmod	6	false
+.	.	PERIOD	punct	3	true
 
 Salut Pepper!
 Salut	salut	Ncms-n	root	0	false

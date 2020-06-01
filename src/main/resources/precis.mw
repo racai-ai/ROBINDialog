@@ -27,8 +27,8 @@ CONCEPT oră -> TIME
 # To refer to this value in this file, we also add a value alias, as the last element,
 # using the '=' char. Use only the canonical name of the concept.
 
-REFERENCE sală 209 = S1
-REFERENCE sală 113 = S2
+REFERENCE sală sala 209 = S1
+REFERENCE sală sala 113 = S2
 REFERENCE sală sala de consiliu = S3
 REFERENCE curs laboratorul de informatică = C1
 REFERENCE curs laboratorul de SDA = C2
@@ -37,6 +37,7 @@ REFERENCE curs seminarul de analiză matematică = C4
 REFERENCE curs cursul de sisteme de operare = C5
 REFERENCE curs cursul de limbaje formale și translatoare = C6
 REFERENCE curs cursul de algebră = C7
+REFERENCE curs cursul de inteligență artificială = C8
 REFERENCE conferință Workshop-ul de Robotică, UPB 2019 = W1
 
 # Step 3. Define person names and time stamps that the dialogue
@@ -45,8 +46,8 @@ REFERENCE conferință Workshop-ul de Robotică, UPB 2019 = W1
 # TIME is a concept type, see ro.racai.robin.dialog.CType.
 # Here we list constants of type TIME that are valid in this universe.
 
-TIME marți, 8:00 = T1
-TIME miercuri, 9:00 = T2
+TIME marți la 8:00 = T1
+TIME miercuri la 9:00 = T2
 TIME joi = T3
 TIME decembrie 2020 = T4
 TIME joia de la 10:00 = T5
@@ -56,6 +57,7 @@ TIME joia de la 10:00 = T5
 PERSON Adriana Vlad = P1
 PERSON Magda Vlad = P2
 PERSON Nicolae Țăpuș = P3
+PERSON Adina Florea = P4
 
 # Step 4. Define what is true in this MW; in other words, what
 # dialogue system "knows". Use predicate names and value aliases.
@@ -68,7 +70,7 @@ PERSON Nicolae Țăpuș = P3
 # Use a value from there or add a new value there and then use it here.
 # Specify the user intent with the arrow operator '->'.
 
-PREDICATE ține, desfășura -> SAY_SOMETHING
+PREDICATE ține, desfășura, preda -> SAY_SOMETHING
 PREDICATE fi, afla -> SAY_SOMETHING
 PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
 
@@ -84,6 +86,8 @@ PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
 # There is only one predicate in the Knowledge Base which can match: ține(C1, S1, T1).
 # Pepper> 209, marți 8:00
 
+TRUE ține C8 S1 T1 P4
+TRUE ține C1 S1 T2
 TRUE ține C1 S1 T1
 TRUE fi P1 S1 T1
 TRUE ține W1 S2 T2
