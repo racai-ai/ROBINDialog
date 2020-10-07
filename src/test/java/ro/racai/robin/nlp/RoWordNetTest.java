@@ -3,7 +3,7 @@
  */
 package ro.racai.robin.nlp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
@@ -21,8 +21,8 @@ public class RoWordNetTest {
 		RoWordNet rown = new RoWordNet();
 		List<String> synonyms = rown.getSynonyms("copac");
 
-		assertTrue(synonyms.get(0).equals("arbore"));
-		assertTrue(synonyms.get(1).equals("pom"));
+		assertEquals("arbore", synonyms.get(0));
+		assertEquals("pom", synonyms.get(1));
 	}
 	
 	@Test
@@ -30,9 +30,9 @@ public class RoWordNetTest {
 		RoWordNet rown = new RoWordNet();
 		List<String> synonyms = rown.getSynonyms("mașină");
 
-		assertTrue(synonyms.get(0).equals("mașină-unealtă"));
-		assertTrue(synonyms.get(1).equals("automobil"));
-		assertTrue(synonyms.get(2).equals("locomotivă"));
+		assertEquals("mașină-unealtă", synonyms.get(0));
+		assertEquals("automobil", synonyms.get(1));
+		assertEquals("locomotivă", synonyms.get(2));
 	}
 	
 	@Test
@@ -40,8 +40,8 @@ public class RoWordNetTest {
 		RoWordNet rown = new RoWordNet();
 		List<String> hyponyms = rown.getHyponyms("copac");
 
-		assertTrue(hyponyms.get(0).equals("piper_de_Guineea"));
-		assertTrue(hyponyms.get(1).equals("anason"));
+		assertEquals("piper_de_Guineea", hyponyms.get(0));
+		assertEquals("anason", hyponyms.get(1));
 	}
 	
 	@Test
@@ -49,6 +49,6 @@ public class RoWordNetTest {
 		RoWordNet rown = new RoWordNet();
 		List<String> hypernyms = rown.getHypernyms("copac");
 
-		assertTrue(hypernyms.get(0).equals("plantă_lemnoasă"));
+		assertEquals("plantă_lemnoasă", hypernyms.get(0));
 	}
 }

@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class RoWordNet extends WordNet {
 	}
 	
 	private List<String> getRelationMembers(String word, String relName) {
-		List<String> members = new ArrayList<String>();
+		List<String> members = new ArrayList<>();
 		String json = jsonWordNetResponse(word);
 		JSONParser parser = new JSONParser();
 		
@@ -77,7 +78,7 @@ public class RoWordNet extends WordNet {
 
 	@Override
 	public List<String> getSynonyms(String word) {
-		List<String> synonyms = new ArrayList<String>();
+		List<String> synonyms = new ArrayList<>();
 		String json = jsonWordNetResponse(word);
 		JSONParser parser = new JSONParser();
 		
@@ -110,7 +111,7 @@ public class RoWordNet extends WordNet {
 	}
 	
 	private String jsonWordNetResponse(String word) {
-		String query = new String(RoWordNet.WORDNET_QUERY);
+		String query = RoWordNet.WORDNET_QUERY;
 
 		try {
 			word = URLEncoder.encode(word, "UTF-8");
@@ -135,9 +136,9 @@ public class RoWordNet extends WordNet {
 			if (status == 200) {
 				BufferedReader in =
 					new BufferedReader(
-						new InputStreamReader(con.getInputStream(), "UTF-8"));
+						new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
 				String line = in.readLine();
-				StringBuffer content = new StringBuffer();
+				StringBuilder content = new StringBuilder();
 				
 				while (line != null) {
 					content.append(line);

@@ -5,7 +5,9 @@ package ro.racai.robin.nlp;
 
 /**
  * @author Radu Ion {@code radu@racai.ro}
- * <p>An enumeration describing possible query types.</p>
+ *         <p>
+ *         An enumeration describing possible query types.
+ *         </p>
  */
 public enum QType {
 	// CONDU-mă te rog la camera 1222.

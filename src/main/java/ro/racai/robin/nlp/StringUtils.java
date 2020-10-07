@@ -9,6 +9,9 @@ package ro.racai.robin.nlp;
  *
  */
 public class StringUtils {
+	private StringUtils() {
+	}
+	
 	public static boolean isNullEmptyOrBlank(String input) {
 		return input == null || input.isEmpty() || input.matches("^\\s+$");
 	}

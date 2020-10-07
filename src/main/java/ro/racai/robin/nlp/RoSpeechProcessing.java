@@ -26,17 +26,15 @@ import org.json.simple.parser.ParseException;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
- * <p>
- * Romanian TTS and ASR.
- * </p>
+ *         <p>
+ *         Romanian TTS and ASR.
+ *         </p>
  */
 public class RoSpeechProcessing extends SpeechProcessing {
 	private static final Logger LOGGER = Logger.getLogger(RoSpeechProcessing.class.getName());
 
 	private static final String ASR_QUERY = "http://89.38.230.18/upload";
 	private static final String TTS_QUERY = "http://89.38.230.18:8080/synthesis";
-
-	public RoSpeechProcessing() {}
 
 	/*
 	 * (non-Javadoc)
@@ -45,11 +43,11 @@ public class RoSpeechProcessing extends SpeechProcessing {
 	 */
 	@Override
 	public String speechToText() {
-		StringBuffer content = new StringBuffer();
+		StringBuilder content = new StringBuilder();
 
 		try {
 			File wavFile = recordUtterance();
-			String LINE_FEED = "\r\n";
+			String lineFeed = "\r\n";
 
 			LOGGER.info("Doing ASR on the utterance...");
 
@@ -70,12 +68,12 @@ public class RoSpeechProcessing extends SpeechProcessing {
 				PrintWriter writer = new PrintWriter(
 						new OutputStreamWriter(output, StandardCharsets.US_ASCII), true);
 
-				writer.append("--" + boundary).append(LINE_FEED);
+				writer.append("--" + boundary).append(lineFeed);
 				writer.append("Content-Disposition: form-data; name=\"file\"; filename=\""
-						+ wavFile.getName() + "\"").append(LINE_FEED);
-				writer.append("Content-Type: audio/wav").append(LINE_FEED);
-				writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
-				writer.append(LINE_FEED);
+						+ wavFile.getName() + "\"").append(lineFeed);
+				writer.append("Content-Type: audio/wav").append(lineFeed);
+				writer.append("Content-Transfer-Encoding: binary").append(lineFeed);
+				writer.append(lineFeed);
 				writer.flush();
 
 				Files.copy(wavFile.toPath(), output);
@@ -84,15 +82,15 @@ public class RoSpeechProcessing extends SpeechProcessing {
 				writer.flush();
 
 				// Finalizing
-				writer.append(LINE_FEED).flush();
-				writer.append("--" + boundary + "--").append(LINE_FEED);
+				writer.append(lineFeed).flush();
+				writer.append("--" + boundary + "--").append(lineFeed);
 				writer.close();
 
 				int status = http.getResponseCode();
 
 				if (status == 200) {
 					BufferedReader in = new BufferedReader(
-							new InputStreamReader(http.getInputStream(), "UTF-8"));
+							new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
 					String line = in.readLine();
 
 					while (line != null) {
@@ -101,8 +99,7 @@ public class RoSpeechProcessing extends SpeechProcessing {
 					}
 
 					in.close();
-				}
-				else {
+				} else {
 					LOGGER.error("ASR query error; error code " + status);
 				}
 
@@ -110,20 +107,16 @@ public class RoSpeechProcessing extends SpeechProcessing {
 				long duration = (endTime - startTime);
 
 				LOGGER.info("Elapsed time (s) : " + (duration / 1000));
-			}
-			catch (UnsupportedEncodingException uee) {
+			} catch (UnsupportedEncodingException uee) {
 				uee.printStackTrace();
 				return null;
-			}
-			catch (IOException ioe) {
+			} catch (IOException ioe) {
 				ioe.printStackTrace();
 				return null;
 			}
-		}
-		catch (LineUnavailableException lue) {
+		} catch (LineUnavailableException lue) {
 			lue.printStackTrace();
-		}
-		catch (IOException ioe) {
+		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
 
@@ -143,15 +136,14 @@ public class RoSpeechProcessing extends SpeechProcessing {
 		try {
 			JSONObject root = (JSONObject) parser.parse(json);
 			String transcript = (String) root.get("data");
-			Boolean success = (Boolean) root.get("success");
+			boolean success = (Boolean) root.get("success");
 
 			if (!success) {
 				return null;
 			} else {
 				return transcript.trim().replaceFirst("\\s+\\n$", "").toLowerCase();
 			}
-		}
-		catch (ParseException pe) {
+		} catch (ParseException pe) {
 			pe.printStackTrace();
 		}
 
@@ -165,27 +157,25 @@ public class RoSpeechProcessing extends SpeechProcessing {
 	 */
 	@Override
 	public File textToSpeech(String text) {
-		String query = new String(RoSpeechProcessing.TTS_QUERY);
-
 		LOGGER.info("Doing TTS on the reply from Pepper...");
 
 		try {
 			long startTime = System.currentTimeMillis();
-			URL url = new URL(query);
+			URL url = new URL(RoSpeechProcessing.TTS_QUERY);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
 			con.setRequestMethod("POST");
 			con.setRequestProperty("Content-Type", "application/json");
-			
+
 			con.setDoOutput(true);
 			con.connect();
 
 			OutputStream output = con.getOutputStream();
 			PrintWriter writer =
-				new PrintWriter(
-					new OutputStreamWriter(output, StandardCharsets.UTF_8), true);
+					new PrintWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8), true);
 
-			writer.append("{\"language\": \"ro\", \"speaker\": \"anca\", \"text\": \"" + text + "\"}");
+			writer.append(
+					"{\"language\": \"ro\", \"speaker\": \"anca\", \"text\": \"" + text + "\"}");
 			output.flush();
 			writer.flush();
 			// Finalizing
@@ -195,15 +185,16 @@ public class RoSpeechProcessing extends SpeechProcessing {
 
 			if (status == 200) {
 				InputStream is = con.getInputStream();
-				byte[] pcm_data = is.readAllBytes();
+				byte[] pcmData = is.readAllBytes();
 
 				is.close();
 
-				FileOutputStream fos = new FileOutputStream("out.wav");
-
-				fos.write(pcm_data);
-				fos.flush();
-				fos.close();
+				try (FileOutputStream fos = new FileOutputStream("out.wav")) {
+					fos.write(pcmData);
+					fos.flush();
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
+				}
 
 				long endTime = System.currentTimeMillis();
 				long duration = (endTime - startTime);
@@ -211,12 +202,10 @@ public class RoSpeechProcessing extends SpeechProcessing {
 				LOGGER.info("Elapsed time (s) : " + (duration / 1000));
 
 				return new File("out.wav");
-			}
-			else {
+			} else {
 				LOGGER.error("TTS query error; error code " + status);
 			}
-		}
-		catch (IOException ioe) {
+		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
 

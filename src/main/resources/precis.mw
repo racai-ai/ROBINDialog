@@ -1,6 +1,10 @@
 # This is a micro-world (MW) file. It is a text file, UTF-8 encoded.
 # This is a comment.
 
+# This dictionary maps from the said words
+# to their surface forms
+DICT uorcșop workshop
+
 # Step 1. Define a list of "concepts" that are valid in this MW.
 # A concept is the head of a noun phrase which can be bound to different values.
 # For instance, we could have "cursul de sisteme de operare" or "laboratorul de informatică".
@@ -16,7 +20,7 @@
 
 CONCEPT sală, laborator, cameră -> LOCATION
 CONCEPT curs, materie, seminar, laborator -> WORD
-CONCEPT conferință, workshop, uorcșop -> WORD
+CONCEPT conferință, workshop -> WORD
 CONCEPT cine -> PERSON
 CONCEPT unde -> LOCATION
 CONCEPT când -> TIME

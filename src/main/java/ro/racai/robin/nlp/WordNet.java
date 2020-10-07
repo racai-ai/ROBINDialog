@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public abstract class WordNet {
 	protected String wnEqualsCacheFile = "wordnet-cache.txt";
 	
 	public WordNet() {
-		wnEqualsCache = new HashMap<String, Boolean>();
+		wnEqualsCache = new HashMap<>();
 		populateWordNetEqualsCache();
 	}
 	
@@ -50,11 +51,9 @@ public abstract class WordNet {
 			return;
 		}
 		
-		try {
-			BufferedReader rdr =
-				new BufferedReader(
-					new InputStreamReader(
-						new FileInputStream(wnEqualsCacheFile), "UTF8"));
+		try (BufferedReader rdr =
+				new BufferedReader(new InputStreamReader(new FileInputStream(wnEqualsCacheFile),
+						StandardCharsets.UTF_8))) {
 			String line = rdr.readLine();
 			
 			while (line != null) {
@@ -63,8 +62,6 @@ public abstract class WordNet {
 				wnEqualsCache.put(parts[0], Boolean.parseBoolean(parts[1]));
 				line = rdr.readLine();
 			}
-			
-			rdr.close();
 		}
 		catch (IOException ioe) {
 			LOGGER.warn("Could not open or read " + wnEqualsCacheFile);
@@ -73,18 +70,12 @@ public abstract class WordNet {
 	}
 
 	public void dumpWordNetCache() {
-		try {
-			BufferedWriter wrt =
-				new BufferedWriter(
-					new OutputStreamWriter(
-						new FileOutputStream(wnEqualsCacheFile), "UTF8"));
-			
-			for (String eqk : wnEqualsCache.keySet()) {
-				wrt.write(eqk + "\t" + wnEqualsCache.get(eqk));
+		try (BufferedWriter wrt = new BufferedWriter(
+				new OutputStreamWriter(new FileOutputStream(wnEqualsCacheFile), StandardCharsets.UTF_8))) {
+			for (Map.Entry<String, Boolean> e : wnEqualsCache.entrySet()) {
+				wrt.write(e.getKey() + "\t" + e.getValue());
 				wrt.newLine();
 			}
-			
-			wrt.close();
 		}
 		catch (IOException ioe) {
 			LOGGER.warn("Could not open or write to " + wnEqualsCacheFile);

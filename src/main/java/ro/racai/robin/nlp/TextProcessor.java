@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,10 +58,8 @@ public abstract class TextProcessor {
 	 * Save expensive text processing calls
 	 * to the TEPROLIN web service. 
 	 */
-	private final String processedTextCacheFile =
-		"processed-text-cache.txt";
-	protected Map<String, List<Token>> processedTextCache =
-		new HashMap<String, List<Token>>();
+	protected static final String PROCESSED_TEXT_CACHE_FILE = "processed-text-cache.txt";
+	protected Map<String, List<Token>> processedTextCache = new HashMap<>();
 	
 	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
@@ -70,7 +69,7 @@ public abstract class TextProcessor {
 	public static class Token {
 		public String wform;
 		public String lemma;
-		public String POS;
+		public String pos;
 		// Head of this token in the
 		// dependency tree.
 		public int head;
@@ -85,14 +84,14 @@ public abstract class TextProcessor {
 		public Token(String w, String l, String p, int h, String dr, boolean avd) {
 			wform = w;
 			lemma = l;
-			POS = p;
+			pos = p;
 			head = h;
 			drel = dr;
 			isActionVerbDependent = avd;
 		}
 
 		public String textRecord() {
-			return wform + "\t" + lemma + "\t" + POS + "\t" + drel + "\t" + head + "\t" + isActionVerbDependent;
+			return wform + "\t" + lemma + "\t" + pos + "\t" + drel + "\t" + head + "\t" + isActionVerbDependent;
 		}
 		
 		/* (non-Javadoc)
@@ -100,7 +99,7 @@ public abstract class TextProcessor {
 		 */
 		@Override
 		public String toString() {
-			return wform + "/" + lemma + "/" + POS + " " + drel + "<-" + head;
+			return wform + "/" + lemma + "/" + pos + " " + drel + "<-" + head;
 		}
 	}
 
@@ -156,12 +155,13 @@ public abstract class TextProcessor {
 		 * An instantiation of an {@link RDConcept} -- to be matched
 		 * against a concept, e.g. "laboratorul de robotică".
 		 */
-		public List<Argument> predicateArguments = new ArrayList<Argument>();
+		public List<Argument> predicateArguments = new ArrayList<>();
 	}
 	
 	public TextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		lexicon = lex;
 		sayings = say;
+		wordNet = wn;
 		populateProcessedTextCache();
 	}
 	
@@ -201,7 +201,7 @@ public abstract class TextProcessor {
 		}
 		
 		for (Token t : sentence) {
-			if (!lexicon.isFunctionalPOS(t.POS)) {
+			if (!lexicon.isFunctionalPOS(t.pos)) {
 				len++;
 			}
 		}
@@ -210,21 +210,18 @@ public abstract class TextProcessor {
 	}
 	
 	private void populateProcessedTextCache() {
-		if (!new File(processedTextCacheFile).exists()) {
+		if (!new File(PROCESSED_TEXT_CACHE_FILE).exists()) {
 			// On first run this file does not exist yet.
 			return;
 		}
 		
-		try {
-			BufferedReader rdr =
-				new BufferedReader(
-					new InputStreamReader(
-						new FileInputStream(processedTextCacheFile), "UTF8"));
+		try (BufferedReader rdr = new BufferedReader(new InputStreamReader(
+				new FileInputStream(PROCESSED_TEXT_CACHE_FILE), StandardCharsets.UTF_8))) {
 			String line = rdr.readLine();
 			
 			while (line != null) {
 				String text = line;
-				List<Token> textProc = new ArrayList<Token>();
+				List<Token> textProc = new ArrayList<>();
 				
 				line = rdr.readLine();
 				
@@ -232,50 +229,43 @@ public abstract class TextProcessor {
 					String[] parts = line.split("\\s+");
 					String wform = parts[0];
 					String lemma = parts[1];
-					String POS = parts[2];
+					String pos = parts[2];
 					String drel = parts[3];
 					int head = Integer.parseInt(parts[4]);
 					boolean avd = Boolean.parseBoolean(parts[5]);
 					
-					textProc.add(new Token(wform, lemma, POS, head, drel, avd));
+					textProc.add(new Token(wform, lemma, pos, head, drel, avd));
 					line = rdr.readLine();
 				}
 				
 				processedTextCache.put(text, textProc);
 				line = rdr.readLine();
 			}
-			
-			rdr.close();
 		}
 		catch (IOException ioe) {
-			LOGGER.warn("Could not open or read " + processedTextCacheFile);
+			LOGGER.warn("Could not open or read " + PROCESSED_TEXT_CACHE_FILE);
 			ioe.printStackTrace();
 		}
 	}
 
 	public void dumpTextCache() {
-		try {
-			BufferedWriter wrt =
-				new BufferedWriter(
-					new OutputStreamWriter(
-						new FileOutputStream(processedTextCacheFile), "UTF8"));
+		try (BufferedWriter wrt = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream(PROCESSED_TEXT_CACHE_FILE), StandardCharsets.UTF_8))) {
 			
-			for (String text : processedTextCache.keySet()) {
-				wrt.write(text);
+			for (Map.Entry<String, List<Token>> e : processedTextCache.entrySet()) {
+				wrt.write(e.getKey());
 				wrt.newLine();
 				
-				for (Token tok : processedTextCache.get(text)) {
+				for (Token tok : e.getValue()) {
 					wrt.write(tok.textRecord());
 					wrt.newLine();
 				}
 				
 				wrt.newLine();
 			}
-			
-			wrt.close();
 		}
 		catch (IOException ioe) {
-			LOGGER.warn("Could not open or write to " + processedTextCacheFile);
+			LOGGER.warn("Could not open or write to " + PROCESSED_TEXT_CACHE_FILE);
 			ioe.printStackTrace();
 		}
 	}

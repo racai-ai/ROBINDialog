@@ -3,7 +3,7 @@
  */
 package ro.racai.robin.nlp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
@@ -23,9 +23,9 @@ public class RoTextProcessorTest {
 		TextProcessor tp = new RoTextProcessor(new RoLexicon(), new RoWordNet(), new RoSayings());
 		List<Token> tokens = tp.textProcessor("Unde se află laboratorul de SDA?");
 		
-		assertTrue(tokens.size() == 7);
-		assertTrue(tokens.get(0).wform.equals("Unde"));
-		assertTrue(tokens.get(0).drel.equals("advmod"));
-		assertTrue(tokens.get(0).head == 3);
+		assertEquals(7, tokens.size());
+		assertEquals("Unde", tokens.get(0).wform);
+		assertEquals("advmod", tokens.get(0).drel);
+		assertEquals(3, tokens.get(0).head);
 	}
 }

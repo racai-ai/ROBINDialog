@@ -14,7 +14,6 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +39,7 @@ public class RoTextProcessor extends TextProcessor {
 	private static final String TEPROLIN_QUERY =
 		"http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
+	private static final String UTF8_STRCONST = "UTF-8";
 
 	public RoTextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		super(lex, wn, say);
@@ -50,7 +50,7 @@ public class RoTextProcessor extends TextProcessor {
 	 */
 	@Override
 	protected List<Token> processText(String text) {
-		StringBuffer content = new StringBuffer();
+		StringBuilder content = new StringBuilder();
 				
 		try {
 			URL url = new URL(RoTextProcessor.TEPROLIN_QUERY);
@@ -60,15 +60,15 @@ public class RoTextProcessor extends TextProcessor {
 			http.setRequestMethod("POST");
 			http.setDoOutput(true);
 			
-			Map<String,String> arguments = new HashMap<String, String>();
+			Map<String,String> arguments = new HashMap<>();
 
 			arguments.put("text", text);
 
 			StringJoiner sj = new StringJoiner("&");
 			
 			for(Map.Entry<String,String> entry : arguments.entrySet()) {
-			    sj.add(URLEncoder.encode(entry.getKey(), "UTF-8") + "=" 
-			         + URLEncoder.encode(entry.getValue(), "UTF-8"));
+				sj.add(URLEncoder.encode(entry.getKey(), UTF8_STRCONST) + "="
+						+ URLEncoder.encode(entry.getValue(), UTF8_STRCONST));
 			}
 			
 			byte[] out = sj.toString().getBytes(StandardCharsets.UTF_8);
@@ -86,9 +86,8 @@ public class RoTextProcessor extends TextProcessor {
 			int status = http.getResponseCode();
 			
 			if (status == 200) {
-				BufferedReader in =
-					new BufferedReader(
-						new InputStreamReader(http.getInputStream(), "UTF-8"));
+				BufferedReader in = new BufferedReader(
+						new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
 				String line = in.readLine();
 				
 				
@@ -105,14 +104,14 @@ public class RoTextProcessor extends TextProcessor {
 		}
 		catch (UnsupportedEncodingException uee) {
 			uee.printStackTrace();
-			return null;
+			return new ArrayList<>();
 		}
 		catch (IOException ioe) {
 			ioe.printStackTrace();
-			return null;
+			return new ArrayList<>();
 		}
 		
-		List<Token> tokens = new ArrayList<Token>();
+		List<Token> tokens = new ArrayList<>();
 		String json = content.toString();
 		JSONParser parser = new JSONParser();
 		
@@ -185,7 +184,7 @@ public class RoTextProcessor extends TextProcessor {
 		List<String> queryWords =
 			query
 			.stream()
-			.map((x) -> x.wform)
+			.map(x -> x.wform)
 			.collect(Collectors.toList());
 		
 		// -1. If hello, return quickly.
@@ -225,17 +224,12 @@ public class RoTextProcessor extends TextProcessor {
 			if (t.head == actionVerbID && lexicon.isNounPOS(t.POS)) {
 				t.isActionVerbDependent = true;
 				
-				List<Integer> belowIndexes = new ArrayList<Integer>();
-				List<Integer> nounPhraseIndexes = new ArrayList<Integer>();
+				List<Integer> belowIndexes = new ArrayList<>();
+				List<Integer> nounPhraseIndexes = new ArrayList<>();
 				
 				belowIndexes.add(i + 1);
 				treeUnder(query, belowIndexes, nounPhraseIndexes);
-				nounPhraseIndexes.sort(new Comparator<Integer>() {
-					@Override
-					public int compare(Integer o1, Integer o2) {
-						return o1.compareTo(o2);
-					}
-				});
+				nounPhraseIndexes.sort((Integer o1, Integer o2) -> o1.compareTo(o2));
 				
 				// -1 because all indexes are +1 to match
 				// dependency parsing 1-based indexes
@@ -243,7 +237,7 @@ public class RoTextProcessor extends TextProcessor {
 					nounPhraseIndexes
 					.stream()
 					//.filter((x) -> !lexicon.isFunctionalPOS(query.get(x - 1).POS))
-					.map((x) -> query.get(x - 1))
+					.map(x -> query.get(x - 1))
 					.collect(Collectors.toList());
 				Argument pArg = new Argument(nounPhrase, isQueryVariable(nounPhrase));
 				
@@ -339,21 +333,16 @@ public class RoTextProcessor extends TextProcessor {
 	 *                         that are "below" the starting index
 	 */
 	private void treeUnder(List<Token> query, List<Integer> checkHeads, List<Integer> storedHeads) {
-		List<Integer> addedHeads = new ArrayList<Integer>();
+		List<Integer> addedHeads = new ArrayList<>();
 		
 		for (int h : checkHeads) {
 			for (int i = 0; i < query.size(); i++) {
 				Token t = query.get(i);
 				int tIndex = i + 1;
 				
-				if (t.head == h) {
-					if (
-						!checkHeads.contains(tIndex) &&
-						!storedHeads.contains(tIndex) &&
-						!addedHeads.contains(tIndex)
-					) {
-						addedHeads.add(tIndex);
-					}
+				if (t.head == h && !checkHeads.contains(tIndex) && !storedHeads.contains(tIndex)
+						&& !addedHeads.contains(tIndex)) {
+					addedHeads.add(tIndex);
 				}
 			}
 		}
@@ -367,7 +356,7 @@ public class RoTextProcessor extends TextProcessor {
 	
 	// Debugging method.
 	private String queryToString(List<Token> query) {
-		return query.stream().map((x) -> x.wform).collect(Collectors.joining(" "));
+		return query.stream().map(x -> x.wform).collect(Collectors.joining(" "));
 	}
 
 	@Override
@@ -416,8 +405,9 @@ public class RoTextProcessor extends TextProcessor {
 		Map<Integer, Pair<Integer, String>> replacements = new HashMap<>();
 
 		// 1. Expand all found entities
-		for (int offset : entities.keySet()) {
-			Pair<EntityType, Integer> pair = entities.get(offset);
+		for (Map.Entry<Integer, Pair<EntityType, Integer>> e : entities.entrySet()) {
+			int offset = e.getKey();
+			Pair<EntityType, Integer> pair = e.getValue();
 			EntityType eType = pair.getFirstMember();
 			int length = pair.getSecondMember();
 			String entityAtOffset = text.substring(offset, length);
@@ -439,7 +429,7 @@ public class RoTextProcessor extends TextProcessor {
 		} // end all offsets
 
 		// 2. Insert the replacements back into the original text
-		List<Integer> allOffsets = new ArrayList<Integer>();
+		List<Integer> allOffsets = new ArrayList<>();
 
 		for (int offset : entities.keySet()) {
 			if (allOffsets.isEmpty()) {
@@ -464,7 +454,7 @@ public class RoTextProcessor extends TextProcessor {
 			}
 		}
 
-		String result = "";
+		StringBuilder result = new StringBuilder();
 		int walkIndex = 0;
 
 		for (int i = 0; i < allOffsets.size(); i++) {
@@ -472,15 +462,15 @@ public class RoTextProcessor extends TextProcessor {
 			String eText = replacements.get(offset).getSecondMember();
 			int length = replacements.get(offset).getFirstMember();
 
-			result += text.substring(walkIndex, offset);
-			result += eText;
+			result.append(text.substring(walkIndex, offset));
+			result.append(eText);
 			walkIndex = offset + length;
 		}
 		
-		if (result.isEmpty()) {
+		if (result.length() == 0) {
 			return text;
 		}
 		
-		return result;
+		return result.toString();
 	}
 }

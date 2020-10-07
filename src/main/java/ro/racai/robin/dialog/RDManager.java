@@ -41,7 +41,6 @@ public class RDManager {
 	 *         <p>
 	 *         This is the current state of the dialogue to be used by the client of this class.
 	 *         </p>
-	 * 
 	 */
 	public static class DialogueState {
 		/**
@@ -71,7 +70,7 @@ public class RDManager {
 		public DialogueState() {
 			inferredBehaviour = null;
 			inferredPredicate = null;
-			robotReply = new ArrayList<String>();
+			robotReply = new ArrayList<>();
 		}
 
 		public boolean isDialogueDone() {
@@ -116,7 +115,7 @@ public class RDManager {
 			DialogueState state = new DialogueState();
 
 			state.inferredPredicate = pm.matchedPredicate;
-			state.robotReply = new ArrayList<String>();
+			state.robotReply = new ArrayList<>();
 			state.robotReply.add(state.inferredPredicate.getArguments()
 					.get(pm.saidArgumentIndex).assignedReference);
 			state.inferredBehaviour = new RDRobotBehaviour(state.inferredPredicate.getUserIntent(),
@@ -165,12 +164,12 @@ public class RDManager {
 
 	public String getConceptsAsString() {
 		return String.join(System.lineSeparator(), discourseUniverse.getUniverseConcepts().stream()
-				.map(x -> x.toString()).collect(Collectors.toList()));
+				.map(RDConcept::toString).collect(Collectors.toList()));
 	}
 
 	public String getPredicatesAsString() {
 		return String.join(System.lineSeparator(), discourseUniverse.getUniversePredicates()
-				.stream().map(x -> x.toString()).collect(Collectors.toList()));
+				.stream().map(RDPredicate::toString).collect(Collectors.toList()));
 	}
 
 	/**
@@ -217,8 +216,7 @@ public class RDManager {
 			// argument that we could return, that's
 			// a success.
 			currentDState = DialogueState.robotInformedResponse(q.queryType, pm);
-		}
-		else if (currentDState.inferredPredicate != null) {
+		} else if (currentDState.inferredPredicate != null) {
 			// 3. Some predicate matched but we don't have
 			// enough information specified. Try to do a
 			// match in the context of the previously
@@ -231,8 +229,7 @@ public class RDManager {
 				currentDState = DialogueState.robotSaysSomething(q.queryType,
 						resourceSayings.robotDontKnowLines());
 			}
-		}
-		else {
+		} else {
 			// No predicate found, this means no
 			// predicate was found in KB. Return this
 			// and say we do not know about it.
@@ -264,10 +261,11 @@ public class RDManager {
 	public static void main(String[] args) throws IOException, LineUnavailableException,
 			UnsupportedAudioFileException, InterruptedException {
 		if (args.length != 1) {
-			System.err.println("java ROBINDialog-3.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
+			System.err.println(
+					"java ROBINDialog-3.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
 			return;
 		}
-		
+
 		RoSpeechProcessing speech = new RoSpeechProcessing();
 		String mwFile = args[0];
 		RoWordNet rown = new RoWordNet();
@@ -286,28 +284,15 @@ public class RDManager {
 		prompt = rotp.textCorrection(prompt);
 		System.out.println("User> " + prompt);
 
-		while (
-			!prompt.isEmpty() &&
-			!say.userClosingStatement(
-				Arrays.asList(prompt.split("\\s+"))
-			)
-		) {
+		while (!prompt.isEmpty()
+				&& !say.userClosingStatement(Arrays.asList(prompt.split("\\s+")))) {
 			/*
-			if (prompt.startsWith("dump")) {
-				String[] parts = prompt.split("\\s+");
-				
-				switch (parts[1]) {
-				case "concepts":
-					System.out.println(dman.getConceptsAsString());
-					break;
-				case "predicates":
-					System.out.println(dman.getPredicatesAsString());
-					break;
-				default:
-					System.out.println("Dialogue Manager> Unknown 'dump' command.");
-				}
-			}
-			*/
+			 * if (prompt.startsWith("dump")) { String[] parts = prompt.split("\\s+");
+			 * 
+			 * switch (parts[1]) { case "concepts": System.out.println(dman.getConceptsAsString());
+			 * break; case "predicates": System.out.println(dman.getPredicatesAsString()); break;
+			 * default: System.out.println("Dialogue Manager> Unknown 'dump' command."); } }
+			 */
 
 			DialogueState dstat = dman.doConversation(prompt);
 

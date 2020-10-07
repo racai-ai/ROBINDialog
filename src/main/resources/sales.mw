@@ -1,0 +1,31 @@
+DICT leptop laptop
+DICT desctop desktop
+DICT gheiming gaming
+DICT biznis business
+DICT "a me de" AMD
+DICT intel Intel
+DICT envidia NVIDIA
+DICT radeon Radeon
+DICT "ce pe u" CPU
+DICT "ge pe u" GPU
+DICT ram RAM
+DICT "i trei" i3
+DICT "i cinci" i5
+DICT "i șapte" i7
+DICT "i nouă" i9
+DICT "de de re trei" DDR3
+DICT "de de re patru" DDR4
+DICT gigaherți GHz
+DICT megabaiți GB
+DICT gigabaiți GB
+DICT terabaiți TB
+DICT hardisc HDD
+DICT harddisc HDD
+
+CONCEPT calculator, desktop -> WORD
+CONCEPT laptop, portabil -> WORD
+CONCEPT CPU -> WORD
+CONCEPT GPU -> WORD
+CONCEPT memorie -> WORD
+CONCEPT HDD -> WORD
+

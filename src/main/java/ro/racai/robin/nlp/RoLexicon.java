@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * <p>Romanian action verbs to be used in ROBIN Dialog.</p>
  */
 public class RoLexicon implements Lexicon {
-	private static final Set<String> STOP_WORDS = new HashSet<String>();
+	private static final Set<String> STOP_WORDS = new HashSet<>();
 	private static final Pattern DATE_RX1 =
 		Pattern.compile("([0-9]{1,2})[/:-]([0-9]{1,2})[/:-]([0-9]{4})");
 	private static final Pattern DATE_RX2 =
@@ -35,58 +35,69 @@ public class RoLexicon implements Lexicon {
 			")\\s([0-9]{4})", Pattern.CASE_INSENSITIVE);
 	private static final Pattern TIME_RX = Pattern.compile("([0-9]{1,2}):([0-9]{1,2})");
 	private static final Pattern NUMBER_RX = Pattern.compile("([0-9]+)");
-	private static final Map<Integer, String> NUMBERS = new HashMap<Integer, String>();
-	private static final List<Pair<EntityType, Pattern>> ENTITIES =
-		new ArrayList<Pair<EntityType, Pattern>>();
-	private static final Map<Integer, String> MONTHS = new HashMap<Integer, String>();
-	private static final Map<String, String> MONTHS_ABBR = new HashMap<String, String>();
+	private static final Map<Integer, String> NUMBERS = new HashMap<>();
+	private static final List<Pair<EntityType, Pattern>> ENTITIES = new ArrayList<>();
+	private static final Map<Integer, String> MONTHS = new HashMap<>();
+	private static final Map<String, String> MONTHS_ABBR = new HashMap<>();
+	private static final String IAN_STRCONST = "ianuarie";
+	private static final String FEB_STRCONST = "februarie";
+	private static final String MAR_STRCONST = "martie";
+	private static final String APR_STRCONST = "aprilie";
+	private static final String MAI_STRCONST = "mai";
+	private static final String IUN_STRCONST = "iunie";
+	private static final String IUL_STRCONST = "iulie";
+	private static final String AUG_STRCONST = "august";
+	private static final String SEP_STRCONST = "septembrie";
+	private static final String OCT_STRCONST = "octombrie";
+	private static final String NOI_STRCONST = "noiembrie";
+	private static final String DEC_STRCONST = "decembrie";
 	
 	static {
-		MONTHS.put(1, "ianuarie");
-		MONTHS.put(2, "februarie");
-		MONTHS.put(3, "martie");
-		MONTHS.put(4, "aprilie");
-		MONTHS.put(5, "mai");
-		MONTHS.put(6, "iunie");
-		MONTHS.put(7, "iulie");
-		MONTHS.put(8, "august");
-		MONTHS.put(9, "septembrie");
-		MONTHS.put(10, "octombrie");
-		MONTHS.put(11, "noiembrie");
-		MONTHS.put(12, "decembrie");
+		MONTHS.put(1, IAN_STRCONST);
+		MONTHS.put(2, FEB_STRCONST);
+		MONTHS.put(3, MAR_STRCONST);
+		MONTHS.put(4, APR_STRCONST);
+		MONTHS.put(5, MAI_STRCONST);
+		MONTHS.put(6, IUN_STRCONST);
+		MONTHS.put(7, IUL_STRCONST);
+		MONTHS.put(8, AUG_STRCONST);
+		MONTHS.put(9, SEP_STRCONST);
+		MONTHS.put(10, OCT_STRCONST);
+		MONTHS.put(11, NOI_STRCONST);
+		MONTHS.put(12, DEC_STRCONST);
 
-		MONTHS_ABBR.put("ian", "ianuarie");
-		MONTHS_ABBR.put("ianuarie", "ianuarie");
-		MONTHS_ABBR.put("feb", "februarie");
-		MONTHS_ABBR.put("febr", "februarie");
-		MONTHS_ABBR.put("februarie", "februarie");
-		MONTHS_ABBR.put("mar", "martie");
-		MONTHS_ABBR.put("mart", "martie");
-		MONTHS_ABBR.put("martie", "martie");
-		MONTHS_ABBR.put("apr", "aprilie");
-		MONTHS_ABBR.put("aprilie", "aprilie");
-		MONTHS_ABBR.put("iun", "iunie");
-		MONTHS_ABBR.put("iunie", "iunie");
-		MONTHS_ABBR.put("iul", "iulie");
-		MONTHS_ABBR.put("iulie", "iulie");
-		MONTHS_ABBR.put("aug", "august");
-		MONTHS_ABBR.put("august", "august");
-		MONTHS_ABBR.put("sep", "septembrie");
-		MONTHS_ABBR.put("sept", "septembrie");
-		MONTHS_ABBR.put("septembrie", "septembrie");
-		MONTHS_ABBR.put("oct", "octombrie");
-		MONTHS_ABBR.put("octombrie", "octombrie");
-		MONTHS_ABBR.put("noi", "noiembrie");
-		MONTHS_ABBR.put("nov", "noiembrie");
-		MONTHS_ABBR.put("noiembrie", "noiembrie");
-		MONTHS_ABBR.put("dec", "decembrie");
-		MONTHS_ABBR.put("decembrie", "decembrie");
+		MONTHS_ABBR.put("ian", IAN_STRCONST);
+		MONTHS_ABBR.put(IAN_STRCONST, IAN_STRCONST);
+		MONTHS_ABBR.put("feb", FEB_STRCONST);
+		MONTHS_ABBR.put("febr", FEB_STRCONST);
+		MONTHS_ABBR.put(FEB_STRCONST, FEB_STRCONST);
+		MONTHS_ABBR.put("mar", MAR_STRCONST);
+		MONTHS_ABBR.put("mart", MAR_STRCONST);
+		MONTHS_ABBR.put(MAR_STRCONST, MAR_STRCONST);
+		MONTHS_ABBR.put("apr", APR_STRCONST);
+		MONTHS_ABBR.put(APR_STRCONST, APR_STRCONST);
+		MONTHS_ABBR.put("iun", IUN_STRCONST);
+		MONTHS_ABBR.put(IUN_STRCONST, IUN_STRCONST);
+		MONTHS_ABBR.put("iul", IUL_STRCONST);
+		MONTHS_ABBR.put(IUL_STRCONST, IUL_STRCONST);
+		MONTHS_ABBR.put("aug", AUG_STRCONST);
+		MONTHS_ABBR.put(AUG_STRCONST, AUG_STRCONST);
+		MONTHS_ABBR.put("sep", SEP_STRCONST);
+		MONTHS_ABBR.put("sept", SEP_STRCONST);
+		MONTHS_ABBR.put(SEP_STRCONST, SEP_STRCONST);
+		MONTHS_ABBR.put("oct", OCT_STRCONST);
+		MONTHS_ABBR.put(OCT_STRCONST, OCT_STRCONST);
+		MONTHS_ABBR.put("noi", NOI_STRCONST);
+		MONTHS_ABBR.put("nov", NOI_STRCONST);
+		MONTHS_ABBR.put(NOI_STRCONST, NOI_STRCONST);
+		MONTHS_ABBR.put("dec", DEC_STRCONST);
+		MONTHS_ABBR.put(DEC_STRCONST, DEC_STRCONST);
 
 		// Add new entities here, defining their types in EntityType.java.
-		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.DATE, DATE_RX1));
-		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.DATE, DATE_RX2));
-		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.TIME, TIME_RX));
-		ENTITIES.add(new Pair<EntityType, Pattern>(EntityType.NUMBER, NUMBER_RX));
+		ENTITIES.add(new Pair<>(EntityType.DATE, DATE_RX1));
+		ENTITIES.add(new Pair<>(EntityType.DATE, DATE_RX2));
+		ENTITIES.add(new Pair<>(EntityType.TIME, TIME_RX));
+		ENTITIES.add(new Pair<>(EntityType.NUMBER, NUMBER_RX));
 
 		NUMBERS.put(0, "zero");
 		NUMBERS.put(1, "unu");
@@ -728,7 +739,7 @@ public class RoLexicon implements Lexicon {
 		return
 			word.equals("cine") || word.equals("unde") ||
 			word.equals("când") || word.equals("care") ||
-			word.equals("ce") || word.equals("care");
+			word.equals("ce");
 	}
 
 	@Override
@@ -740,7 +751,7 @@ public class RoLexicon implements Lexicon {
 				return RoLexicon.NUMBERS.get(integer);
 			}
 			else {
-				List<String> saidNumber = new ArrayList<String>();
+				List<String> saidNumber = new ArrayList<>();
 				boolean tenToNineteen = false;
 				int i = 0;
 
@@ -840,7 +851,9 @@ public class RoLexicon implements Lexicon {
 							else {
 								saidNumber.add(RoLexicon.NUMBERS.get(units) + " milioane");
 							}
-							break;							
+							break;
+						default:
+							break;		
 					} // end switch
 
 					i++;
@@ -867,7 +880,7 @@ public class RoLexicon implements Lexicon {
 				hours >= 0 && hours <= 23 &&
 				minutes >= 0 && minutes <= 59
 			) {
-				List<String> saidTime = new ArrayList<String>();
+				List<String> saidTime = new ArrayList<>();
 
 				switch (hours) {
 					case 0:
@@ -976,7 +989,7 @@ public class RoLexicon implements Lexicon {
 				return date;
 			}
 
-			List<String> saidDate = new ArrayList<String>();
+			List<String> saidDate = new ArrayList<>();
 
 			if (day == 2) {
 				saidDate.add("două");
@@ -1011,7 +1024,7 @@ public class RoLexicon implements Lexicon {
 				return date;
 			}
 
-			List<String> saidDate = new ArrayList<String>();
+			List<String> saidDate = new ArrayList<>();
 
 			if (day == 2) {
 				saidDate.add("două");
@@ -1063,7 +1076,7 @@ public class RoLexicon implements Lexicon {
 					if (!result.containsKey(offset)) {
 						result.put(
 							offset,
-							new Pair<EntityType, Integer>(pair.getFirstMember(), length)
+							new Pair<>(pair.getFirstMember(), length)
 						);
 					}
 				}

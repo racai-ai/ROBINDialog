@@ -5,7 +5,9 @@ package ro.racai.robin.dialog;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
- * <p>User intent type: add new types here, as required.</p>
+ *         <p>
+ *         User intent type: add new types here, as required.
+ *         </p>
  */
 public enum UIntentType {
 	// User wants some explanation from Pepper

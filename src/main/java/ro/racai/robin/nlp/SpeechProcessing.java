@@ -36,23 +36,23 @@ import org.apache.log4j.Logger;
 public abstract class SpeechProcessing {
 	private static final Logger LOGGER = Logger.getLogger(SpeechProcessing.class.getName());
 
-	private LinkedList<Float> silenceSamplesStdDevs = new LinkedList<Float>();
+	private LinkedList<Float> silenceSamplesStdDevs = new LinkedList<>();
 
 	/**
 	 * How many silence averages to maintain to get an accurate estimation on what it means to be
 	 * silent, in terms of sample values.
 	 */
-	private final int silenceSamplesStdDevsLength = 100;
+	private static final int SILENCE_SAMPLES_STDDEVS_LENGTH = 100;
 
 	/**
 	 * After how many consecutive silence samples do we stop recording the voice.
 	 */
-	private final int consecutiveSilenceSamples = 20;
+	private static final int CONSECUTIVE_SILENCE_SAMPLES = 20;
 
 	/**
 	 * After how many consecutive speech samples do we start recording speech.
 	 */
-	private final int consecutiveSpeechSamples = 5;
+	private static final int CONSECUTIVE_SPEECH_SAMPLES = 5;
 
 	/**
 	 * Value computed from {@link #silenceSamplesStdDevsLength}.
@@ -63,7 +63,7 @@ public abstract class SpeechProcessing {
 	 * If using a webcam microphone, leave it at {@code 1.5}, if using a dedicated microphone, you
 	 * can raise it to e.g. {@code 10.0}.
 	 */
-	private final float signalToSilenceRatio = 10.0f;
+	private static final float SIGNAL_TO_SILENCE_RATIO = 10.0f;
 
 	protected Clip speakersClipLine = null;
 
@@ -78,7 +78,7 @@ public abstract class SpeechProcessing {
 
 	/**
 	 * <p>
-	 * Takes a Java {@link String} representing a saying the the given language and produces the
+	 * Takes a Java {@link String} representing a saying in the given language and produces the
 	 * corresponding utterance from it.
 	 * </p>
 	 * 
@@ -89,14 +89,14 @@ public abstract class SpeechProcessing {
 
 	// Assumes we have 16 bit samples, 2 bytes/sample, ByteOrder.LITTLE_ENDIAN
 	private List<Float> pcmDataPoints(byte[] vector) {
-		List<Float> dataPoints = new ArrayList<Float>();
+		List<Float> dataPoints = new ArrayList<>();
 
 		for (int i = 0; i < vector.length; i += 2) {
 			// LSB, MSB
 			byte[] twobytes = new byte[] {vector[i], vector[i + 1]};
-			ByteBuffer short_buff =
+			ByteBuffer shortBuff =
 				ByteBuffer.wrap(twobytes).order(ByteOrder.LITTLE_ENDIAN);
-			short dataPoint = short_buff.getShort();
+			short dataPoint = shortBuff.getShort();
 
 			dataPoints.add((float) dataPoint);
 		}
@@ -141,11 +141,8 @@ public abstract class SpeechProcessing {
 
 		silenceSignalLevel = sum / (float) silenceSamplesStdDevs.size();
 
-		if ((sampleStdDev / silenceSignalLevel) >= signalToSilenceRatio) {
-			return false;
-		}
-
-		return true;
+		return !(silenceSignalLevel > 0.0f
+				&& (sampleStdDev / silenceSignalLevel) >= SIGNAL_TO_SILENCE_RATIO);
 	}
 
 	protected Clip findSpeakers() throws LineUnavailableException {
@@ -166,11 +163,11 @@ public abstract class SpeechProcessing {
 				Line line = mixer.getLine(lnf);
 				
 				try {
-					Clip clipLine = (Clip) line;
-
-					return clipLine;
+					return (Clip) line;
 				}
-				catch (ClassCastException e) {}
+				catch (ClassCastException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		
@@ -202,47 +199,57 @@ public abstract class SpeechProcessing {
 				throw new UnsupportedAudioFileException();
 			}
 
-			byte[] pcm_data = original.readAllBytes();
+			byte[] pcmData = original.readAllBytes();
 			// Going from 32 bits to 16 bits
-			byte[] pcm_data_converted = new byte[pcm_data.length / 2];
+			byte[] pcmDataConverted = new byte[pcmData.length / 2];
 			int j = 0;
 
-			for (int i = 0; i < pcm_data.length; i += 4) {
-				byte B0 = pcm_data[i];
-				byte B1 = pcm_data[i + 1];
-				byte B2 = pcm_data[i + 2];
-				byte B3 = pcm_data[i + 3];
-				byte[] pcm_float = new byte[] {B0, B1, B2, B3};
+			for (int i = 0; i < pcmData.length; i += 4) {
+				byte b0 = pcmData[i];
+				byte b1 = pcmData[i + 1];
+				byte b2 = pcmData[i + 2];
+				byte b3 = pcmData[i + 3];
+				byte[] pcmFloat = new byte[] {b0, b1, b2, b3};
 
 				// https://www.scadacore.com/tools/programming-calculators/online-hex-converter/
 				//String bytesPrint = "";
-				//bytesPrint += String.format("%2x", B0).replace(" ", "0");
-				//bytesPrint += String.format("%2x", B1).replace(" ", "0");
-				//bytesPrint += String.format("%2x", B2).replace(" ", "0");
-				//bytesPrint += String.format("%2x", B3).replace(" ", "0");
+				//bytesPrint += String.format("%2x", b0).replace(" ", "0");
+				//bytesPrint += String.format("%2x", b1).replace(" ", "0");
+				//bytesPrint += String.format("%2x", b2).replace(" ", "0");
+				//bytesPrint += String.format("%2x", b3).replace(" ", "0");
 				//System.out.println(bytesPrint);
 
 				// Data comes in LITTLE_ENDIAN
-				ByteBuffer float_buffer =
-					ByteBuffer.wrap(pcm_float).order(ByteOrder.LITTLE_ENDIAN);
+				ByteBuffer floatBuffer =
+					ByteBuffer.wrap(pcmFloat).order(ByteOrder.LITTLE_ENDIAN);
 				// PCM_FLOAT range is -1.0 to 1.0
-				float floatDataPoint = float_buffer.getFloat();
+				float floatDataPoint = floatBuffer.getFloat();
 				// So it has to be scaled with Short.MAX_VALUE
 				// for 16 bit conversion
+				// https://www.kvraudio.com/forum/viewtopic.php?t=414666
+				// http://blog.bjornroche.com/2009/12/int-float-int-its-jungle-out-there.html
 				float scaledDataPoint = Short.MAX_VALUE * floatDataPoint;
-				short shortDataPoint =
-					scaledDataPoint > Short.MAX_VALUE ? Short.MAX_VALUE
-					: scaledDataPoint < Short.MIN_VALUE ? Short.MIN_VALUE
-					: (short) scaledDataPoint;
-				ByteBuffer short_buffer = 
+				short shortDataPoint;
+
+				if (scaledDataPoint > Short.MAX_VALUE) {
+					shortDataPoint = Short.MAX_VALUE;
+				}
+				else if (scaledDataPoint < Short.MIN_VALUE) {
+					shortDataPoint = Short.MIN_VALUE;
+				}
+				else {
+					shortDataPoint = (short) scaledDataPoint;
+				}
+
+				ByteBuffer shortBuffer = 
 					ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
 				
-				short_buffer.putShort(shortDataPoint);
+				shortBuffer.putShort(shortDataPoint);
 
-				byte[] short_buffer_array = short_buffer.array();
+				byte[] shortBufferArray = shortBuffer.array();
 
-				for (int k = 0; k < short_buffer_array.length; k++) {
-					pcm_data_converted[j] = short_buffer_array[k];
+				for (int k = 0; k < shortBufferArray.length; k++) {
+					pcmDataConverted[j] = shortBufferArray[k];
 					j++;
 				}
 			}
@@ -257,14 +264,13 @@ public abstract class SpeechProcessing {
 
 			speakersClipLine.open(
 				pformat,
-				pcm_data_converted, 0, pcm_data_converted.length
+				pcmDataConverted, 0, pcmDataConverted.length
 			);
 			speakersClipLine.start();
 			speakersClipLine.drain();
 
 			// Wait for the clip to play...
-			float waitTimeSecs =
-				(float) (pcm_data_converted.length / 2) / format.getSampleRate();
+			float waitTimeSecs = (pcmDataConverted.length / 2.0f) / format.getSampleRate();
 
 			Thread.sleep((long) (1000.0f * waitTimeSecs));
 			speakersClipLine.stop();
@@ -295,10 +301,9 @@ public abstract class SpeechProcessing {
 	    	// 0.1 Will hold the last 3 data buffers
 	    	// to save them all into the .wav file
 	    	// when speech is detected.
-	    	List<byte[]> dataBuffers = new ArrayList<byte[]>();
+	    	List<byte[]> dataBuffers = new ArrayList<>();
 	    	int dbi = 0;
-	    	final int dbSize =
-	    		consecutiveSpeechSamples + 5 * consecutiveSilenceSamples;
+			final int dbSize = CONSECUTIVE_SPEECH_SAMPLES + 5 * CONSECUTIVE_SILENCE_SAMPLES;
 	    	
 	    	for (int i = 0; i < dbSize; i++) {
 	    		dataBuffers.add(new byte[microphone.getBufferSize() / 5]);
@@ -317,10 +322,7 @@ public abstract class SpeechProcessing {
 	    	
 	    	// 1. Remain in this loop while
 	    	// there is no speech detected.
-			while (
-				silenceFlag ||
-				speechCount < consecutiveSpeechSamples
-			) {
+			while (silenceFlag || speechCount < CONSECUTIVE_SPEECH_SAMPLES) {
 				dbi++;
 				
 				if (dbi % dbSize == 0) {
@@ -338,10 +340,7 @@ public abstract class SpeechProcessing {
 				if (silenceFlag) {
 					speechCount = 0;
 
-					if (
-						silenceSamplesStdDevs.size() ==
-						silenceSamplesStdDevsLength
-					) {
+					if (silenceSamplesStdDevs.size() == SILENCE_SAMPLES_STDDEVS_LENGTH) {
 						silenceSamplesStdDevs.removeFirst();
 					}
 
@@ -360,7 +359,7 @@ public abstract class SpeechProcessing {
 				dataStdDev + ", Silence std. dev. = " + silenceSignalLevel);
 			
 			// 2. Collect speech samples and save them into voiceData
-			LinkedList<Byte> voiceData = new LinkedList<Byte>();
+			LinkedList<Byte> voiceData = new LinkedList<>();
 			int silenceCount = 0;
 			
 			// 2.2 Here we record the actual speech
@@ -385,7 +384,7 @@ public abstract class SpeechProcessing {
 					silenceCount = 0;
 				}
 			} // end speech loop
-			while (!silenceFlag || silenceCount < consecutiveSilenceSamples);
+			while (!silenceFlag || silenceCount < CONSECUTIVE_SILENCE_SAMPLES);
 			
 			LOGGER.info("Speech stopped.");
 			
@@ -395,10 +394,8 @@ public abstract class SpeechProcessing {
 			
 			dbi--;
 			
-			while (
-				dbi >= 0 &&
-				dbc < consecutiveSpeechSamples + (consecutiveSilenceSamples / 2)
-			) {
+			while (dbi >= 0
+					&& dbc < CONSECUTIVE_SPEECH_SAMPLES + (CONSECUTIVE_SILENCE_SAMPLES / 2)) {
 				byte[] pastdata = dataBuffers.get(dbi);
 				
 				for (int i = pastdata.length - 1; i >= 0; i--) {
@@ -410,13 +407,13 @@ public abstract class SpeechProcessing {
 			}
 			
 			// 3. And save it to the .wav file
-			byte[] pcm_data =
+			byte[] pcmData =
 				ArrayUtils.toPrimitive(voiceData.toArray(new Byte[0]));
 			
 			AudioInputStream ais =
 				new AudioInputStream(
-					new ByteArrayInputStream(pcm_data),
-					format, pcm_data.length / format.getFrameSize()
+					new ByteArrayInputStream(pcmData),
+					format, pcmData.length / format.getFrameSize()
 				);
 			File wav = new File("test.wav");
 			AudioSystem.write(

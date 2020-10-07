@@ -8,8 +8,10 @@ import java.util.List;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
- * <p>Concept type: if not a word such as <i>sală</i>, it can
- * be a TIME unit or a PERSON (for now; more to be added as needed).</p>
+ *         <p>
+ *         Concept type: if not a word such as <i>sală</i>, it can be a TIME unit or a PERSON (for
+ *         now; more to be added as needed).
+ *         </p>
  */
 public enum CType {
 	// Any noun here.
@@ -21,14 +23,14 @@ public enum CType {
 	TIME,
 	// e.g. sala 209
 	LOCATION;
-	
+
 	public static String getMemberRegex() {
-		List<String> options = new ArrayList<String>();
-		
+		List<String> options = new ArrayList<>();
+
 		for (CType v : CType.values()) {
 			options.add(v.name());
 		}
-		
+
 		return "(" + String.join("|", options) + ")";
 	}
 }
