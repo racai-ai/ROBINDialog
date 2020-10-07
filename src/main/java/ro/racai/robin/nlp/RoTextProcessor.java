@@ -203,7 +203,7 @@ public class RoTextProcessor extends TextProcessor {
 		for (int i = 0; i < query.size(); i++) {
 			Token t = query.get(i);
 			
-			if (t.head == 0 && t.POS.startsWith("Vm")) {
+			if (t.head == 0 && t.pos.startsWith("Vm")) {
 				result.actionVerb = t.lemma.toLowerCase();
 				// These are 1-based.
 				actionVerbID = i + 1;
@@ -221,7 +221,7 @@ public class RoTextProcessor extends TextProcessor {
 		for (int i = 0; i < query.size(); i++) {
 			Token t = query.get(i);
 
-			if (t.head == actionVerbID && lexicon.isNounPOS(t.POS)) {
+			if (t.head == actionVerbID && lexicon.isNounPOS(t.pos)) {
 				t.isActionVerbDependent = true;
 				
 				List<Integer> belowIndexes = new ArrayList<>();
@@ -251,7 +251,7 @@ public class RoTextProcessor extends TextProcessor {
 		// of the user's sentence.
 		while (
 			fti < query.size() &&
-			lexicon.isSkippablePOS(query.get(fti).POS)
+			lexicon.isSkippablePOS(query.get(fti).pos)
 		) {
 			fti++;
 		}
@@ -272,7 +272,7 @@ public class RoTextProcessor extends TextProcessor {
 		}
 		else if (firstToken.lemma.equals("ce")) {
 			if (
-				lexicon.isPureNounPOS(secondToken.POS) &&
+				lexicon.isPureNounPOS(secondToken.pos) &&
 				universeConcepts != null
 			) {
 				for (RDConcept c : universeConcepts) {
@@ -367,15 +367,15 @@ public class RoTextProcessor extends TextProcessor {
 		) {
 			int firstIndex = 0;
 			
-			if (argument.get(0).POS.startsWith("S")) {
+			if (argument.get(0).pos.startsWith("S")) {
 				// Remove first preposition, if it exists.
 				firstIndex = 1;
 			}
 			
 			// Relative pronoun/determiner/adverb
 			if (
-				argument.get(firstIndex).POS.length() >= 2 &&
-				argument.get(firstIndex).POS.charAt(1) == 'w'
+				argument.get(firstIndex).pos.length() >= 2 &&
+				argument.get(firstIndex).pos.charAt(1) == 'w'
 				
 			) {
 				return true;
@@ -384,9 +384,9 @@ public class RoTextProcessor extends TextProcessor {
 			if (
 				argument.size() == 1 &&
 				(
-					argument.get(0).POS.startsWith("N") ||
-					argument.get(0).POS.startsWith("Y") ||
-					argument.get(0).POS.startsWith("M")
+					argument.get(0).pos.startsWith("N") ||
+					argument.get(0).pos.startsWith("Y") ||
+					argument.get(0).pos.startsWith("M")
 				)
 			) {
 				// If we have a single noun in the argument

@@ -1007,7 +1007,7 @@ public class RoLexicon implements Lexicon {
 				saidDate.add(sayNumber(Integer.toString(day)));
 			}
 
-			saidDate.add(sayNumber(Integer.toString(month)));
+			saidDate.add(MONTHS.get(month));
 			saidDate.add(sayNumber(Integer.toString(year)));
 
 			return String.join(" ", saidDate);
