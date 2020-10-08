@@ -425,6 +425,9 @@ public class RoTextProcessor extends TextProcessor {
 				case NUMBER:
 					eText = lexicon.sayNumber(entityAtOffset);
 					replacements.put(offset, new Pair<>(length, eText));
+					break;
+				default:
+					break;
 			}
 		} // end all offsets
 

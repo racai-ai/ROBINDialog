@@ -15,7 +15,7 @@ import ro.racai.robin.mw.MWFileReader;
 import ro.racai.robin.nlp.Lexicon;
 import ro.racai.robin.nlp.QType;
 import ro.racai.robin.nlp.RoLexicon;
-import ro.racai.robin.nlp.RoSpeechProcessing;
+import ro.racai.robin.nlp.RoSpeechProcessing2;
 import ro.racai.robin.nlp.RoTextProcessor;
 import ro.racai.robin.nlp.RoWordNet;
 import ro.racai.robin.nlp.TextProcessor;
@@ -262,11 +262,14 @@ public class RDManager {
 			UnsupportedAudioFileException, InterruptedException {
 		if (args.length != 1) {
 			System.err.println(
-					"java ROBINDialog-3.0.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
+					"java ROBINDialog-3.1.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
 			return;
 		}
 
-		RoSpeechProcessing speech = new RoSpeechProcessing();
+		RoSpeechProcessing2 speech = new RoSpeechProcessing2();
+
+		speech.textToSpeech("Folosește corect diacriticele și spune ceva frumos.");
+
 		String mwFile = args[0];
 		RoWordNet rown = new RoWordNet();
 		RoLexicon rolex = new RoLexicon();

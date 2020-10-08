@@ -6,3 +6,6 @@ target/
 .vscode/settings.json
 test.wav
 out.wav
+input.lab
+input.txt
+lts.graph
