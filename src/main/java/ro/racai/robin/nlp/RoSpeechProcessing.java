@@ -16,13 +16,21 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Port;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
@@ -210,5 +218,100 @@ public class RoSpeechProcessing extends SpeechProcessing {
 		}
 
 		return null;
+	}
+
+	@Override
+	public void playUtterance(File wavFile) throws LineUnavailableException,
+			UnsupportedAudioFileException, InterruptedException, IOException {
+		if (AudioSystem.isLineSupported(Port.Info.SPEAKER)) {
+			AudioInputStream original = AudioSystem.getAudioInputStream(wavFile);
+			AudioFormat format = original.getFormat();
+
+			// Match this with the incoming TTS WAV format!
+			// PCM_FLOAT 24000.0 Hz, 32 bit, mono, 4 bytes/frame
+			if (format.getFrameSize() != 4 || format.getSampleSizeInBits() != 32
+					|| format.getChannels() != 1 || format.isBigEndian()) {
+				throw new UnsupportedAudioFileException();
+			}
+
+			byte[] pcmData = original.readAllBytes();
+			// Going from 32 bits to 16 bits
+			byte[] pcmDataConverted = new byte[pcmData.length / 2];
+			int j = 0;
+
+			for (int i = 0; i < pcmData.length; i += 4) {
+				byte b0 = pcmData[i];
+				byte b1 = pcmData[i + 1];
+				byte b2 = pcmData[i + 2];
+				byte b3 = pcmData[i + 3];
+				byte[] pcmFloat = new byte[] {b0, b1, b2, b3};
+
+				// https://www.scadacore.com/tools/programming-calculators/online-hex-converter/
+				// String bytesPrint = "";
+				// bytesPrint += String.format("%2x", b0).replace(" ", "0");
+				// bytesPrint += String.format("%2x", b1).replace(" ", "0");
+				// bytesPrint += String.format("%2x", b2).replace(" ", "0");
+				// bytesPrint += String.format("%2x", b3).replace(" ", "0");
+				// System.out.println(bytesPrint);
+
+				// Data comes in LITTLE_ENDIAN
+				ByteBuffer floatBuffer = ByteBuffer.wrap(pcmFloat).order(ByteOrder.LITTLE_ENDIAN);
+				// PCM_FLOAT range is -1.0 to 1.0
+				float floatDataPoint = floatBuffer.getFloat();
+				// So it has to be scaled with Short.MAX_VALUE
+				// for 16 bit conversion
+				// https://www.kvraudio.com/forum/viewtopic.php?t=414666
+				// http://blog.bjornroche.com/2009/12/int-float-int-its-jungle-out-there.html
+				float scaledDataPoint = Short.MAX_VALUE * floatDataPoint;
+				short shortDataPoint;
+
+				if (scaledDataPoint > Short.MAX_VALUE) {
+					shortDataPoint = Short.MAX_VALUE;
+				} else if (scaledDataPoint < Short.MIN_VALUE) {
+					shortDataPoint = Short.MIN_VALUE;
+				} else {
+					shortDataPoint = (short) scaledDataPoint;
+				}
+
+				ByteBuffer shortBuffer = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
+
+				shortBuffer.putShort(shortDataPoint);
+
+				byte[] shortBufferArray = shortBuffer.array();
+
+				for (int k = 0; k < shortBufferArray.length; k++) {
+					pcmDataConverted[j] = shortBufferArray[k];
+					j++;
+				}
+			}
+
+			AudioFormat pformat = new AudioFormat(format.getSampleRate(), 16, 1, true, false);
+
+			if (speakersClipLine == null) {
+				// Only do this once, for the lifetime
+				// of this object.
+				speakersClipLine = findSpeakers();
+			}
+
+			speakersClipLine.open(pformat, pcmDataConverted, 0, pcmDataConverted.length);
+			speakersClipLine.start();
+			speakersClipLine.drain();
+
+			// Wait for the clip to play...
+			float waitTimeSecs = (pcmDataConverted.length / 2.0f) / format.getSampleRate();
+
+			try {
+				Thread.sleep((long) (1000.0f * waitTimeSecs));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				throw e;
+			}
+			speakersClipLine.stop();
+			speakersClipLine.close();
+
+			return;
+		}
+
+		throw new LineUnavailableException();
 	}
 }

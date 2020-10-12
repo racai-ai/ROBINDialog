@@ -99,7 +99,6 @@ public class RoSayings implements RDSayings {
 	public List<String> robotOpeningLines() {
 		List<String> lines = new ArrayList<>();
 
-		lines.add("Bună ziua!");
 		lines.add("Cu ce vă pot ajuta?");
 
 		return lines;
@@ -128,7 +127,6 @@ public class RoSayings implements RDSayings {
 	public List<String> robotDontKnowLines() {
 		List<String> lines = new ArrayList<>();
 
-		lines.add("Nu știu.");
 		lines.add("Această informație nu îmi este disponibilă.");
 
 		return lines;
@@ -143,7 +141,6 @@ public class RoSayings implements RDSayings {
 	public List<String> robotDidntUnderstandLines() {
 		List<String> lines = new ArrayList<>();
 
-		lines.add("Nu am înțeles ce ați întrebat.");
 		lines.add("Vă rog să reformulați.");
 
 		return lines;
