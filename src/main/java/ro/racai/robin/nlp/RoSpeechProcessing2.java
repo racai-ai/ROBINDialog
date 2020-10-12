@@ -1,24 +1,142 @@
 package ro.racai.robin.nlp;
 
 import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import com.ineo.nlp.language.LanguagePipe;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import javax.sound.sampled.LineUnavailableException;
+import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import ssla.SSLA;
 
 public class RoSpeechProcessing2 extends SpeechProcessing {
+    private static final Logger LOGGER = Logger.getLogger(RoSpeechProcessing2.class.getName());
     private static final String SSLA_MODEL = "speech\\ssla\\models\\ro\\anca";
     private static final String MLPLA_MODEL = "speech\\mlpla\\models\\ro";
     private static final String MLPLA_CONF = "speech\\mlpla\\etc\\languagepipe.conf";
     private static final String MLPLA_OUTFILE = "input.lab";
+    private static final String ASR_QUERY = "http://relate.racai.ro:7001/transcribe";
 
     @Override
     public String speechToText() {
-        // TODO Auto-generated method stub
+        StringBuilder content = new StringBuilder();
+
+        try {
+            File wavFile = recordUtterance();
+            String lineFeed = "\r\n";
+
+            LOGGER.info("Doing ASR on the utterance...");
+
+            try {
+                long startTime = System.currentTimeMillis();
+                URL url = new URL(RoSpeechProcessing2.ASR_QUERY);
+                URLConnection conn = url.openConnection();
+                HttpURLConnection http = (HttpURLConnection) conn;
+                String boundary = "===" + System.currentTimeMillis() + "===";
+
+                http.setRequestMethod("POST");
+                http.setDoOutput(true);
+                http.setRequestProperty("Content-Type",
+                        "multipart/form-data; boundary=" + boundary);
+                http.connect();
+
+                OutputStream output = http.getOutputStream();
+                PrintWriter writer = new PrintWriter(
+                        new OutputStreamWriter(output, StandardCharsets.US_ASCII), true);
+
+                writer.append("--" + boundary).append(lineFeed);
+                writer.append("Content-Disposition: form-data; name=\"file\"; filename=\""
+                        + wavFile.getName() + "\"").append(lineFeed);
+                writer.append("Content-Type: audio/wav").append(lineFeed);
+                writer.append("Content-Transfer-Encoding: binary").append(lineFeed);
+                writer.append(lineFeed);
+                writer.flush();
+
+                Files.copy(wavFile.toPath(), output);
+
+                output.flush();
+                writer.flush();
+
+                // Finalizing
+                writer.append(lineFeed).flush();
+                writer.append("--" + boundary + "--").append(lineFeed);
+                writer.close();
+
+                int status = http.getResponseCode();
+
+                if (status == 200) {
+                    try (BufferedReader in = new BufferedReader(
+                            new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8))) {
+                        String line = in.readLine();
+
+                        while (line != null) {
+                            content.append(line);
+                            line = in.readLine();
+                        }
+                    }
+                } else {
+                    LOGGER.error("ASR query error; error code " + status);
+                }
+
+                long endTime = System.currentTimeMillis();
+                long duration = (endTime - startTime);
+
+                LOGGER.info("Elapsed time (s) : " + (duration / 1000));
+            } catch (UnsupportedEncodingException uee) {
+                uee.printStackTrace();
+                return null;
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                return null;
+            }
+        } catch (LineUnavailableException lue) {
+            lue.printStackTrace();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
+        String json = content.toString();
+
+        json = json.replace("\\u0218", "Ș");
+        json = json.replace("\\u00ce", "Î");
+        json = json.replace("\\u00CE", "Î");
+        json = json.replace("\\u00c2", "Â");
+        json = json.replace("\\u00C2", "Â");
+        json = json.replace("\\u0102", "Ă");
+        json = json.replace("\\u021a", "Ț");
+        json = json.replace("\\u021A", "Ț");
+
+        JSONParser parser = new JSONParser();
+
+        try {
+            JSONObject root = (JSONObject) parser.parse(json);
+            String transcription = (String) root.get("transcription");
+            String status = (String) root.get("status");
+
+            if (!status.equals("OK")) {
+                return null;
+            } else {
+                return transcription.trim().replaceFirst("\\s+\\n$", "").toLowerCase();
+            }
+        } catch (ParseException pe) {
+            pe.printStackTrace();
+        }
+
         return null;
     }
 
@@ -27,6 +145,11 @@ public class RoSpeechProcessing2 extends SpeechProcessing {
      */
     @Override
     public File textToSpeech(String text) {
+        // 0. Always append the final period for SSLA to work properly!
+        if (!text.endsWith(".")) {
+            text += ".";
+        }
+        
         // 1. Write the text to the lab.txt file
 		try (BufferedWriter wrt = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream("input.txt"), StandardCharsets.UTF_8))) {

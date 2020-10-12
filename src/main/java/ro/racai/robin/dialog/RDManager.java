@@ -267,9 +267,6 @@ public class RDManager {
 		}
 
 		RoSpeechProcessing2 speech = new RoSpeechProcessing2();
-
-		speech.textToSpeech("Folosește corect diacriticele și spune ceva frumos.");
-
 		String mwFile = args[0];
 		RoWordNet rown = new RoWordNet();
 		RoLexicon rolex = new RoLexicon();
