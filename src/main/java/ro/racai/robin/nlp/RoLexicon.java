@@ -959,7 +959,8 @@ public class RoLexicon implements Lexicon {
 						saidTime.add("cincizeci și două de minute");
 						break;
 					default:
-						saidTime.add(sayNumber(Integer.toString(minutes)) + " de minute");
+						if (minutes > 0)
+							saidTime.add(sayNumber(Integer.toString(minutes)) + " de minute");
 				} // end minutes
 
 				return String.join(" ", saidTime);

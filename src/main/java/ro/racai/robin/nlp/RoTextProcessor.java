@@ -544,7 +544,7 @@ public class RoTextProcessor extends TextProcessor {
 			Pair<EntityType, Integer> pair = e.getValue();
 			EntityType eType = pair.getFirstMember();
 			int length = pair.getSecondMember();
-			String entityAtOffset = text.substring(offset, length);
+			String entityAtOffset = text.substring(offset, offset + length);
 			String eText;
 
 			switch (eType) {

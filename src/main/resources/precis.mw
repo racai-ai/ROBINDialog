@@ -10,12 +10,16 @@ DICT "pe păr" Pepper
 DICT "pe văr" Pepper
 DICT "pe făr" Pepper
 DICT "pe par" Pepper
+DICT "de par" Pepper
 DICT "pe per" Pepper
 DICT "pe ber" Pepper
 DICT "pe para" Pepper
 DICT "pe pare" Pepper
+DICT "pe pară" Pepper
 DICT "col su" cursul
+DICT "cu ursu" cursul
 DICT "ci ne" cine
+DICT "larevedere" la revedere
 
 # Step 1. Define a list of "concepts" that are valid in this MW.
 # A concept is the head of a noun phrase which can be bound to different values.
