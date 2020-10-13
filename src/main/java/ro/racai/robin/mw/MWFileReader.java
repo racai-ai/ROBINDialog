@@ -40,6 +40,8 @@ import ro.racai.robin.nlp.WordNet;
 public class MWFileReader implements RDMicroworld {
 	private static final Logger LOGGER = Logger.getLogger(MWFileReader.class.getName());
 	private String mwFilePath;
+	private static final Pattern DICT_PATT = Pattern.compile("^DICT\\s+\"(.+?)\"\\s+(.+)$");
+	private static final Pattern DICT_PATT2 = Pattern.compile("^DICT\\s+(.+)\\s+(.+)$");
 	// CONCEPT sală, laborator, cameră -> LOCATION
 	private static final Pattern CONCEPT_PATT =
 			Pattern.compile("^CONCEPT\\s+(.+)\\s*->\\s*([A-Z_]+)$");
@@ -75,6 +77,7 @@ public class MWFileReader implements RDMicroworld {
 		try (BufferedReader rdr = new BufferedReader(
 				new InputStreamReader(new FileInputStream(mwFilePath), StandardCharsets.UTF_8))) {
 			String line = rdr.readLine();
+			Map<String, String> asrDictionary = new HashMap<>();
 			List<RDConcept> definedConcepts = new ArrayList<>();
 			List<RDPredicate> definedPredicates = new ArrayList<>();
 			Map<String, RDConcept> referencedConcepts = new HashMap<>();
@@ -91,7 +94,27 @@ public class MWFileReader implements RDMicroworld {
 					continue;
 				} // End comment
 
-				if (line.startsWith("CONCEPT ") || line.startsWith("CONCEPT\t")) {
+				if (line.startsWith("DICT ") || line.startsWith("DICT\t")) {
+					Matcher dm = DICT_PATT.matcher(line);
+
+					if (dm.find()) {
+						String asrPhr = dm.group(1);
+						String crtPhr = dm.group(2);
+
+						asrDictionary.put(asrPhr.trim(), crtPhr.trim());
+					}
+					else {
+						dm = DICT_PATT2.matcher(line);
+
+						if (dm.find()) {
+							String asrPhr = dm.group(1);
+							String crtPhr = dm.group(2);
+
+							asrDictionary.put(asrPhr.trim(), crtPhr.trim());
+						}
+					}
+				}
+				else if (line.startsWith("CONCEPT ") || line.startsWith("CONCEPT\t")) {
 					Matcher cm = CONCEPT_PATT.matcher(line);
 
 					if (cm.find()) {
@@ -267,6 +290,8 @@ public class MWFileReader implements RDMicroworld {
 			for (Map.Entry<String, RDConcept> e : referencedConcepts.entrySet()) {
 				universe.addConcept(e.getValue());
 			}
+
+			universe.setASRRulesMap(asrDictionary);
 
 			return universe;
 		} catch (IOException e) {

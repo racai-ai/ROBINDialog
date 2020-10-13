@@ -14,6 +14,7 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +41,89 @@ public class RoTextProcessor extends TextProcessor {
 		"http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
 	private static final String UTF8_STRCONST = "UTF-8";
+	private static final String CLITIC_QUERY =
+		"https://relate.racai.ro/ws/cratima/asr_cratima.php?text=";
 
 	public RoTextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		super(lex, wn, say);
+	}
+
+	private String insertCliticDash(String text) {
+		StringBuilder content = new StringBuilder();
+
+		try {
+			URL url = new URL(RoTextProcessor.CLITIC_QUERY);
+			URLConnection conn = url.openConnection();
+			HttpURLConnection http = (HttpURLConnection) conn;
+
+			http.setRequestMethod("GET");
+			http.setDoOutput(true);
+
+			Map<String, String> arguments = new HashMap<>();
+
+			arguments.put("text", text);
+
+			StringJoiner sj = new StringJoiner("&");
+
+			for (Map.Entry<String, String> entry : arguments.entrySet()) {
+				sj.add(URLEncoder.encode(entry.getKey(), UTF8_STRCONST) + "="
+						+ URLEncoder.encode(entry.getValue(), UTF8_STRCONST));
+			}
+
+			byte[] out = sj.toString().getBytes(StandardCharsets.UTF_8);
+			int length = out.length;
+
+			http.setFixedLengthStreamingMode(length);
+			http.setRequestProperty("Content-Type",
+					"application/x-www-form-urlencoded; charset=UTF-8");
+			http.connect();
+
+			OutputStream os = http.getOutputStream();
+
+			os.write(out);
+			os.close();
+
+			int status = http.getResponseCode();
+
+			if (status == 200) {
+				BufferedReader in = new BufferedReader(
+						new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
+				String line = in.readLine();
+
+				while (line != null) {
+					content.append(line);
+					line = in.readLine();
+				}
+
+				in.close();
+			} else {
+				LOGGER.error("CLITIC recovery query error for text '" + text + "'; error code " + status);
+			}
+		} catch (UnsupportedEncodingException uee) {
+			uee.printStackTrace();
+			return text;
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			return text;
+		}
+
+		String json = content.toString();
+		JSONParser parser = new JSONParser();
+
+		try {
+			JSONObject root = (JSONObject) parser.parse(json);
+			String textResult = (String) root.get("text");
+
+			textResult = textResult.trim();
+			
+			if (!textResult.equalsIgnoreCase(text)) {
+				text = textResult;
+			}
+		} catch (ParseException pe) {
+			pe.printStackTrace();
+		}
+
+		return text;
 	}
 	
 	/* (non-Javadoc)
@@ -144,10 +225,60 @@ public class RoTextProcessor extends TextProcessor {
 	 */
 	@Override
 	public String textCorrection(String text) {
-		if (text != null && !text.isEmpty()) {
-			// 1. Make first letter upper case.
-			text = text.substring(0, 1).toUpperCase() + text.substring(1);
-			
+		if (!StringUtils.isNullEmptyOrBlank(text)) {
+			List<String> tokens = Arrays.asList(text.split("\\s+"));
+			Map<Pair<Integer, Integer>, String> corrected = new HashMap<>();
+
+			// 1. Replace known ASR errors with the correct Romanian phrases.
+			if (!asrCorrectionDictionary.isEmpty()) {
+				for (int k = asrMaxPhraseLength; k >= 1; k--) {
+					for (int i = 0; i <= tokens.size() - k; i++) {
+						Pair<Integer, Integer> rk = new Pair<>(i, i + k);
+						boolean overlap = false;
+
+						// Check if range i, i + k does not overlap with
+						// an already recognized range
+						for (Map.Entry<Pair<Integer, Integer>, String> e : corrected.entrySet()) {
+							Pair<Integer, Integer> p = e.getKey();
+
+							if ((rk.getFirstMember() >= p.getFirstMember()
+									&& rk.getFirstMember() <= p.getSecondMember())
+									|| (rk.getSecondMember() >= p.getFirstMember()
+											&& rk.getSecondMember() <= p.getSecondMember())) {
+								overlap = true;
+								break;
+							}
+						}
+
+						if (!overlap) {
+							String phr = String.join(" ", tokens.subList(i, i + k)).toLowerCase();
+
+							if (asrCorrectionDictionary.containsKey(phr)) {
+								corrected.put(rk, asrCorrectionDictionary.get(phr));
+								break;
+							}
+						}
+					} // end for i
+				} // end for k
+
+				for (Map.Entry<Pair<Integer, Integer>, String> e : corrected.entrySet()) {
+					Pair<Integer, Integer> p = e.getKey();
+
+					tokens.set(p.getFirstMember(), e.getValue());
+
+					for (int i = p.getFirstMember() + 1; i < p.getSecondMember(); i++) {
+						tokens.set(i, "");
+					}
+				}
+
+				text = String.join(" ", tokens);
+				text = text.replaceAll("\\s+", " ");
+				text = text.trim();
+			}
+
+			// 2. Take care of clitic insertion (done by Vasile Păiș)
+			text = insertCliticDash(text);
+
 			// 2. Add '?' or '.' depending on the statement.
 			String[] spaceTokens = text.split("\\s+");
 
@@ -165,6 +296,9 @@ public class RoTextProcessor extends TextProcessor {
 			}
 			
 			// TODO: make proper names sentence-case...
+
+			// 4. Make first letter upper case.
+			text = text.substring(0, 1).toUpperCase() + text.substring(1);
 		}
 		
 		return text;

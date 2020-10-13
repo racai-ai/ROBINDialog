@@ -154,8 +154,10 @@ public class RDManager {
 		discourseUniverse =
 				mwr.constructUniverse(resouceWordNet, resourceLexicon, resourceTextProc);
 		microworldName = mwr.getMicroworldName();
-		// Set concepts on the text processor...
+		// Set concepts on the text processor
 		resourceTextProc.setConceptList(discourseUniverse.getUniverseConcepts());
+		// Set DICT ASR correction rules on the text processor
+		resourceTextProc.setASRDictionary(discourseUniverse.getASRRulesMap());
 	}
 
 	public String getMicroworldName() {
@@ -183,6 +185,15 @@ public class RDManager {
 	 */
 	public DialogueState doConversation(String userInput) {
 		Query q = resourceTextProc.queryAnalyzer(resourceTextProc.textProcessor(userInput));
+
+		if (q == null) {
+			// No predicate found, this means no
+			// predicate was found in KB. Return this
+			// and say we do not know about it.
+			currentDState = DialogueState.robotSaysSomething(QType.UNKNOWN,
+					resourceSayings.robotDontKnowLines());
+			return currentDState;
+		}
 
 		if (q.queryType == QType.HELLO) {
 			currentDState = DialogueState.robotSaysSomething(q.queryType,

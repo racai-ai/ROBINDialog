@@ -62,6 +62,12 @@ public abstract class TextProcessor {
 	protected Map<String, List<Token>> processedTextCache = new HashMap<>();
 	
 	/**
+	 * The correction dictionary for the ASR module.
+	 */
+	protected Map<String, String> asrCorrectionDictionary = new HashMap<>();
+	protected int asrMaxPhraseLength = 0;
+	
+	/**
 	 * @author Radu Ion ({@code radu@racai.ro})
 	 * <p>Represents an annotated token of the input text.
 	 * The member field names are self explanatory.</p>
@@ -165,6 +171,19 @@ public abstract class TextProcessor {
 		populateProcessedTextCache();
 	}
 	
+	public void setASRDictionary(Map<String, String> dictionary) {
+		asrCorrectionDictionary = dictionary;
+
+		for (Map.Entry<String, String> e : asrCorrectionDictionary.entrySet()) {
+			String[] parts = e.getKey().split("\\s+");
+
+			if (asrMaxPhraseLength < parts.length) {
+				// Establish the maximum length of an erroneous phrase
+				asrMaxPhraseLength = parts.length;
+			}
+		}
+	}
+
 	/**
 	 * <p>Give it a text (from the ASR engine) and get back
 	 * a list of {@link Token}s that are annotated.</p> 

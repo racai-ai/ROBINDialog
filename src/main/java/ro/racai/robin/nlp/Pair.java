@@ -19,4 +19,21 @@ public class Pair<T, S> {
     public S getSecondMember() {
         return memberS;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Pair<?, ?>) {
+            Pair<?, ?> pbj = (Pair<?, ?>) obj;
+
+            return pbj.getFirstMember().equals(getFirstMember())
+                    && pbj.getSecondMember().equals(getSecondMember());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return getFirstMember().hashCode() ^ getSecondMember().hashCode();
+    }
 }

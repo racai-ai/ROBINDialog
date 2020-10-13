@@ -7,9 +7,15 @@ DICT uorcșop workshop
 DICT "pe bar" Pepper
 DICT "pe băr" Pepper
 DICT "pe păr" Pepper
+DICT "pe văr" Pepper
+DICT "pe făr" Pepper
 DICT "pe par" Pepper
 DICT "pe per" Pepper
 DICT "pe ber" Pepper
+DICT "pe para" Pepper
+DICT "pe pare" Pepper
+DICT "col su" cursul
+DICT "ci ne" cine
 
 # Step 1. Define a list of "concepts" that are valid in this MW.
 # A concept is the head of a noun phrase which can be bound to different values.

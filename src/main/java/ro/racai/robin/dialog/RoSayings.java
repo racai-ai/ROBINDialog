@@ -3,6 +3,7 @@
  */
 package ro.racai.robin.dialog;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -98,8 +99,17 @@ public class RoSayings implements RDSayings {
 	@Override
 	public List<String> robotOpeningLines() {
 		List<String> lines = new ArrayList<>();
+		int hourNow = LocalDateTime.now().getHour();
 
-		lines.add("Cu ce vă pot ajuta?");
+		if (hourNow >= 0 && hourNow < 10) {
+			lines.add("Bună dimineața.");
+		}
+		else if (hourNow >= 10 && hourNow < 19) {
+			lines.add("Bună ziua.");
+		}
+		else {
+			lines.add("Bună seara.");
+		}
 
 		return lines;
 	}

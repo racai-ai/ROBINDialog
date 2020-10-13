@@ -27,5 +27,7 @@ public enum QType {
 	// End of conversation
 	GOODBYE,
 	// Start of conversation
-	HELLO;
+	HELLO,
+	// ASR nu a înțeles ce am zis
+	UNKNOWN
 }

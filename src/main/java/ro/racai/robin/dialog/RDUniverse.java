@@ -4,8 +4,10 @@
 package ro.racai.robin.dialog;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import ro.racai.robin.nlp.TextProcessor.Argument;
@@ -66,6 +68,12 @@ public class RDUniverse {
 	private Lexicon lexicon;
 
 	/**
+	 * A static mapping attempting to correct ASR errors
+	 * of the type e.g. "pe păr -> Pepper".
+	 */
+	private Map<String, String> asrCorrectionRules;
+	
+	/**
 	 * <p>
 	 * Universe of discourse constructor.
 	 * </p>
@@ -80,6 +88,25 @@ public class RDUniverse {
 		wordNet = wn;
 		lexicon = lex;
 		textProcessor = proc;
+		asrCorrectionRules = new HashMap<>();
+	}
+
+	/**
+	 * <p>Adds a wrongly recognized source phrase and its correct
+	 * equivalent to the rule map.
+	 * @param wrong   a phrase (space-separated) of lower-cased words
+	 * @param correct the correct corresponding phrase
+	 */
+	public void addASRRule(String wrong, String correct) {
+		asrCorrectionRules.put(wrong, correct);
+	}
+
+	public Map<String, String> getASRRulesMap() {
+		return asrCorrectionRules;
+	}
+
+	public void setASRRulesMap(Map<String, String> dictionary) {
+		asrCorrectionRules = dictionary;
 	}
 
 	/**
@@ -240,7 +267,7 @@ public class RDUniverse {
 		// to predicate arguments
 		// Matrix is symmetrical
 		float[][] matchScores = new float[predArgs.size()][queryArgs.size()];
-		Set<String> ijPairs = new HashSet<String>();
+		Set<String> ijPairs = new HashSet<>();
 
 		for (int i = 0; i < predArgs.size(); i++) {
 			RDConcept pArg = predArgs.get(i);

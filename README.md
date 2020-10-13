@@ -13,3 +13,8 @@ Install the SSLA TTS library in your local Maven repository by running this comm
 Install the MLPLA text text preprocessing library in your local Maven repository by running this command:
 
 `mvn install::install-file -Dfile=speech\mlpla\MLPLA.jar -DgroupId=ro.racai -DartifactId=mlpla -Dversion=1.0.0 -Dpackaging=jar -DgeneratePom=true`
+
+## Other issues
+If you need to rebuild the jar, do the following from the `speech\mlpla` folder (create the `build` folder first and unzip the previous `MLPLA.jar` jar) there:
+
+`jar -c -f MLPLA.jar -m build\META-INF\MANIFEST.MF -C build com\`

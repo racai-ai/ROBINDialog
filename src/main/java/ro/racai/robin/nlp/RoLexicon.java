@@ -736,6 +736,8 @@ public class RoLexicon implements Lexicon {
 
 	@Override
 	public boolean isQuestionFirstWord(String word) {
+		word = word.toLowerCase();
+
 		return
 			word.equals("cine") || word.equals("unde") ||
 			word.equals("când") || word.equals("care") ||

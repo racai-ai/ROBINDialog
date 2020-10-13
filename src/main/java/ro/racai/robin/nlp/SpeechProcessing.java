@@ -182,7 +182,7 @@ public abstract class SpeechProcessing {
 	 */
 	protected File recordUtterance() throws LineUnavailableException, IOException {
 		if (AudioSystem.isLineSupported(Port.Info.MICROPHONE)) {
-			AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
+			AudioFormat format = new AudioFormat(16000.0f, 16, 1, true, false);
 			TargetDataLine microphone = AudioSystem.getTargetDataLine(format);
 
 			// 0. Open and start the microphone
