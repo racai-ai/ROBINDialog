@@ -324,7 +324,7 @@ public class RDUniverse {
 		}
 
 		// 1.0 for the predicate name and 1.0 of the query variable.
-		result.isValidMatch = (result.matchScore > 2.0f);
+		result.isValidMatch = (result.matchScore >= 2.0f);
 		return result;
 	}
 

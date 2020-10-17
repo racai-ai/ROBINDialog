@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -29,6 +30,7 @@ import org.json.simple.parser.ParseException;
 
 import ro.racai.robin.dialog.CType;
 import ro.racai.robin.dialog.RDConcept;
+import ro.racai.robin.dialog.RDResponseGenerator;
 import ro.racai.robin.dialog.RDSayings;
 
 /**
@@ -336,11 +338,17 @@ public class RoTextProcessor extends TextProcessor {
 		// 1. Find the root of the sentence. This has to be a main verb.
 		for (int i = 0; i < query.size(); i++) {
 			Token t = query.get(i);
-			
-			if (t.head == 0 && t.pos.startsWith("Vm")) {
+
+			if ((t.head == 0 && t.pos.startsWith("Vm")) || t.drel.equals("cop")) {
 				result.actionVerb = t.lemma.toLowerCase();
-				// These are 1-based.
-				actionVerbID = i + 1;
+
+				if (t.drel.equals("cop")) {
+					actionVerbID = t.head;
+				} else {
+					// These are 1-based.
+					actionVerbID = i + 1;
+				}
+
 				break;
 			}
 		}
@@ -373,9 +381,8 @@ public class RoTextProcessor extends TextProcessor {
 					//.filter((x) -> !lexicon.isFunctionalPOS(query.get(x - 1).POS))
 					.map(x -> query.get(x - 1))
 					.collect(Collectors.toList());
-				Argument pArg = new Argument(nounPhrase, isQueryVariable(nounPhrase));
 				
-				result.predicateArguments.add(pArg);
+				result.predicateArguments.add(new Argument(nounPhrase, isQueryVariable(nounPhrase)));
 			}
 		}
 		
@@ -396,6 +403,17 @@ public class RoTextProcessor extends TextProcessor {
 		
 		Token firstToken = query.get(fti);
 		Token secondToken = query.get(fti + 1);
+
+		if (firstToken.lemma.equals("cât") && firstToken.pos.startsWith("R")) {
+			// The "second" token here is the subject of the sentence.
+			// Cât e ceasul? Cât e ora?
+			for (Token t : query) {
+				if (t.drel.equals("nsubj")) {
+					secondToken = t;
+					break;
+				}
+			}
+		}
 		
 		// 3. Determine the query type.
 		if (lexicon.isCommandVerb(result.actionVerb)) {
@@ -404,38 +422,38 @@ public class RoTextProcessor extends TextProcessor {
 		else if (firstToken.lemma.equals("cine")) {
 			result.queryType = QType.PERSON;
 		}
-		else if (firstToken.lemma.equals("ce")) {
-			if (
-				lexicon.isPureNounPOS(secondToken.pos) &&
-				universeConcepts != null
-			) {
+		else if (firstToken.lemma.equals("ce") || firstToken.lemma.equals("cât")
+				|| firstToken.lemma.equals("care")) {
+			// Default that's a WHAT type question.
+			// It may be specialized on PERSON, LOCATION or TIME, otherwise it's WORD.
+			result.queryType = QType.WHAT;
+			
+			if (lexicon.isPureNounPOS(secondToken.pos) && universeConcepts != null) {
 				for (RDConcept c : universeConcepts) {
-					if (
-						c.isThisConcept(secondToken.lemma, wordNet) &&
-						c.getType() != CType.WORD
-					) {
+					if (c.isThisConcept(secondToken.lemma, wordNet) && c.getType() != CType.WORD) {
+						boolean wasSet = false;
+
 						switch (c.getType()) {
 						case PERSON:
 							result.queryType = QType.PERSON;
+							wasSet = true;
 							break;
 						case LOCATION:
 							result.queryType = QType.LOCATION;
+							wasSet = true;
 							break;
 						case TIME:
 							result.queryType = QType.TIME;
+							wasSet = true;
 							break;
 						default:
-							result.queryType = QType.WHAT;
 						}
 						
-						if (result.queryType != null) {
+						if (wasSet) {
 							break;
 						}
 					}
-				}
-			}
-			else {
-				result.queryType = QType.WHAT;
+				} // end all concepts
 			}
 		}
 		else if (firstToken.lemma.equals("unde")) {
@@ -495,45 +513,52 @@ public class RoTextProcessor extends TextProcessor {
 
 	@Override
 	public boolean isQueryVariable(List<Token> argument) {
-		if (
-			argument != null &&
-			!argument.isEmpty()
-		) {
+		if (argument != null && !argument.isEmpty()) {
 			int firstIndex = 0;
-			
+
 			if (argument.get(0).pos.startsWith("S")) {
 				// Remove first preposition, if it exists.
 				firstIndex = 1;
 			}
-			
+
 			// Relative pronoun/determiner/adverb
-			if (
-				argument.get(firstIndex).pos.length() >= 2 &&
-				argument.get(firstIndex).pos.charAt(1) == 'w'
-				
+			if (argument.get(firstIndex).pos.length() >= 2
+					&& argument.get(firstIndex).pos.charAt(1) == 'w'
+
 			) {
 				return true;
 			}
-			
-			if (
-				argument.size() == 1 &&
-				(
-					argument.get(0).pos.startsWith("N") ||
-					argument.get(0).pos.startsWith("Y") ||
-					argument.get(0).pos.startsWith("M")
-				)
-			) {
+
+			if (argument.size() == 1
+					&& (argument.get(0).pos.startsWith("N") || argument.get(0).pos.startsWith("Y")
+							|| argument.get(0).pos.startsWith("M"))) {
 				// If we have a single noun in the argument
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
 	@Override
 	public String expandEntities(String text) {
 		text = text.trim();
+
+		// 0. Text may be an instantiation of a response generator
+		if (text.startsWith("ro.racai.robin.dialog.generators.")) {
+			try {
+				Class<?> clazz = Class.forName(text);
+				RDResponseGenerator generator =
+						(RDResponseGenerator) clazz.getDeclaredConstructor().newInstance();
+				
+				text = generator.generate();
+			}
+			catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
+					| IllegalAccessException | InvocationTargetException e) {
+				e.printStackTrace();
+				return "Eroare de inițializare a generatorului de răspuns.";
+			}
+		}
 
 		Map<Integer, Pair<EntityType, Integer>> entities = lexicon.markEntities(text);
 		Map<Integer, Pair<Integer, String>> replacements = new HashMap<>();
@@ -604,6 +629,10 @@ public class RoTextProcessor extends TextProcessor {
 			walkIndex = offset + length;
 		}
 		
+		if (walkIndex < text.length()) {
+			result.append(text.substring(walkIndex));
+		}
+
 		if (result.length() == 0) {
 			return text;
 		}

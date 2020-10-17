@@ -16,9 +16,13 @@ DICT "pe ber" Pepper
 DICT "pe para" Pepper
 DICT "pe pare" Pepper
 DICT "pe pară" Pepper
+DICT "pe păra" Pepper
 DICT "col su" cursul
 DICT "cu ursu" cursul
 DICT "ci ne" cine
+DICT "ce asul" ceasul
+DICT pepare Pepper
+DICT "pe văra" Pepper
 DICT "larevedere" la revedere
 
 # Step 1. Define a list of "concepts" that are valid in this MW.
@@ -37,10 +41,11 @@ DICT "larevedere" la revedere
 CONCEPT sală, laborator, cameră -> LOCATION
 CONCEPT curs, materie, seminar, laborator -> WORD
 CONCEPT conferință, workshop -> WORD
+CONCEPT grad, temperatură -> WORD
 CONCEPT cine -> PERSON
 CONCEPT unde -> LOCATION
 CONCEPT când -> TIME
-CONCEPT oră -> TIME
+CONCEPT oră, ceas -> TIME
 
 # Step 2. Define possible values of concepts in this MW.
 # A "value" is a list of words, a description of the value in your language.
@@ -60,6 +65,8 @@ REFERENCE curs cursul de limbaje formale și translatoare = C6
 REFERENCE curs cursul de algebră = C7
 REFERENCE curs cursul de inteligență artificială = C8
 REFERENCE conferință Workshop-ul de Robotică, UPB 2019 = W1
+REFERENCE oră ro.racai.robin.dialog.generators.TimeNow = G1
+REFERENCE grad ro.racai.robin.dialog.generators.DegreesNow = G2
 
 # Step 3. Define person names and time stamps that the dialogue
 # system is aware of. You can use days, months, years, hours and minutes.
@@ -107,6 +114,8 @@ PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
 # There is only one predicate in the Knowledge Base which can match: ține(C1, S1, T1).
 # Pepper> 209, marți 8:00
 
+TRUE fi G1
+TRUE fi G2
 TRUE ține C8 S1 T1 P4
 TRUE ține C1 S1 T2 P1
 TRUE ține C1 S1 T1 P2

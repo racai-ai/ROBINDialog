@@ -713,7 +713,7 @@ public class RoLexicon implements Lexicon {
 	public boolean isNounPOS(String pos) {
 		// Some extensions for Romanian, to accommodate
 		// words such as "unde" and "când"
-		return pos.matches("^(N|P[^x]|M|Rw|Yn?).*$");
+		return pos.matches("^(N|P[^x]|M|R[wg]|Yn?).*$");
 	}
 
 	@Override
@@ -738,10 +738,11 @@ public class RoLexicon implements Lexicon {
 	public boolean isQuestionFirstWord(String word) {
 		word = word.toLowerCase();
 
-		return
-			word.equals("cine") || word.equals("unde") ||
-			word.equals("când") || word.equals("care") ||
-			word.equals("ce");
+		return word.equals("cine") || word.equals("unde") || word.equals("când")
+				|| word.equals("care") || word.equals("cui") || word.equals("cărui")
+				|| word.equals("cărei") || word.equals("căror") || word.equals("ce")
+				|| word.equals("cât") || word.equals("câte") || word.equals("câți")
+				|| word.equals("câtor");
 	}
 
 	@Override
