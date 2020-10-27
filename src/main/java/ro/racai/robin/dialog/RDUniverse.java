@@ -281,11 +281,16 @@ public class RDUniverse {
 				if (ijPairs.contains(j + "#" + i)) {
 					// Matrix is symmetrical, where it can.
 					matchScores[i][j] = matchScores[j][i];
-				} else if (
-				// A query type that matches argument
-				// is counted as a argument match.
-				qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType)) {
+				} else if (qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType)) {
+					// A query type that matches argument
+					// is counted as a argument match.
 					matchScores[i][j] = 1.0f;
+
+					if (pArg.hasJavaClassReference()) {
+						// Also a "full" match because this a Java class reference.
+						matchScores[i][j] += 1.0f;
+					}
+
 					ijPairs.add(i + "#" + j);
 				} else if (isConceptInstance(qArgToks, pArg)) {
 					// Else, the argument is fuzzy scored against user's description.
@@ -312,9 +317,9 @@ public class RDUniverse {
 					maxScore = matchScores[i][j];
 				}
 
-				if (qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType) &&
-				// Only set this once.
-						result.saidArgumentIndex == -1) {
+				if (qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType)
+						&& result.saidArgumentIndex == -1) {
+					// Only set this once.							
 					result.saidArgumentIndex = i;
 				}
 			}
@@ -324,7 +329,8 @@ public class RDUniverse {
 		}
 
 		// 1.0 for the predicate name and 1.0 of the query variable.
-		result.isValidMatch = (result.matchScore >= 2.0f);
+		// Anything extra is reference matching, the more, the better.
+		result.isValidMatch = (result.matchScore > 2.0f);
 		return result;
 	}
 

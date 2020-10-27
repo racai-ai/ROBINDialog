@@ -118,20 +118,27 @@ public class RDConcept {
 	/**
 	 * <p>
 	 * Create a deep copy of this concept. All internal data structure are allocated on the heap for
-	 * the new object.
+	 * the new object, except for immutable types.
 	 * </p>
 	 * 
 	 * @return a deep copy of this object.
 	 */
 	public RDConcept deepCopy() {
-		RDConcept concept =
-				new RDConcept(conceptType, canonicalForm != null ? new String(canonicalForm) : null,
-						assignedReference != null ? new String(assignedReference) : null);
+		RDConcept concept = new RDConcept(conceptType, canonicalForm, assignedReference);
 
+		// 1. Copy sysnonyms
 		if (synonymsOfCanonicalForm != null) {
 			for (String s : synonymsOfCanonicalForm) {
-				concept.addSynonym(new String(s));
+				concept.addSynonym(s);
 			}
+		}
+
+		// 2. Copy Java class status
+		concept.setJavaClass(isJavaClass);
+
+		// 3. Copy the reference processing, if it's available.
+		for (Token t : getTokenizedReference()) {
+			concept.getTokenizedReference().add(t);
 		}
 
 		return concept;
@@ -166,9 +173,23 @@ public class RDConcept {
 			if (assignedReference.startsWith("ro.racai.robin.dialog.generators.")) {
 				isJavaClass = true;
 			}
-			
+
 			assignedReferenceTokens = proc.textProcessor(assignedReference);
 		}
+	}
+	
+	protected void setJavaClass(boolean value) {
+		isJavaClass = value;
+	}
+
+	/**
+	 * Returns the value of the {@link #isJavaClass} member field. That is, if the reference of this
+	 * concept is to be obtained by executing the provided Java class, return {@code true}.
+	 * 
+	 * @return {@code true} if the reference of this concept is a Java class name.
+	 */
+	public boolean hasJavaClassReference() {
+		return isJavaClass;
 	}
 
 	/**

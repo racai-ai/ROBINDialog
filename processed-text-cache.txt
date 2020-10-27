@@ -14,6 +14,14 @@ La	la	Spsa	case	2	false
 revedere	revedere	Ncfsrn	root	0	false
 .	.	PERIOD	punct	2	false
 
+Cine predă laboratorul de informatica?
+Cine	cine	Pw3--r	obj	2	true
+predă	preda	Vmis3s	root	0	false
+laboratorul	laborator	Ncmsry	nsubj	2	true
+de	de	Spsa	case	5	false
+informatica	informatică	Ncfsry	nmod	3	false
+?	?	QUEST	punct	2	false
+
 Salut!
 Salut	salut	Ncms-n	root	0	false
 !	!	EXCL	punct	1	false
@@ -62,6 +70,24 @@ de	de	Spsa	case	3	false
 inteligență	inteligență	Ncfsrn	nmod	1	false
 artificială	artificial	Afpfsrn	amod	1	false
 
+Cine ține cursul de sistarea de operare?
+Cine	cine	Pw3--r	obj	2	true
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	obj	2	true
+de	de	Spsa	case	5	false
+sistarea	sistare	Ncfsry	nmod:pmod	2	true
+de	de	Spsa	case	7	false
+operare	operare	Ncfsrn	nmod	5	false
+?	?	QUEST	punct	2	false
+
+Cine predă laboratorul de SDA?
+Cine	cine	Pw3--r	obj	2	true
+predă	preda	Vmis3s	root	0	false
+laboratorul	laborator	Ncmsry	nsubj	2	true
+de	de	Spsa	case	5	false
+SDA	SDA	Np	nmod	3	false
+?	?	QUEST	punct	2	false
+
 113
 113	113	Mc	root	0	false
 
@@ -101,11 +127,22 @@ ro.racai.robin.dialog.generators.TimeNow
 ro	ro	Rgp	root	0	false
 .	.	PERIOD	punct	1	false
 
+Când ultima?
+Când	când	Rw	advmod:tmod	2	false
+ultima	ultima	Mofsrly	root	0	false
+?	?	QUEST	punct	2	false
+
 Cine ține cursul?
 Cine	cine	Pw3--r	obj	2	true
 ține	ține	Vmip3s	root	0	false
 cursul	curs	Ncmsry	obj	2	true
 ?	?	QUEST	punct	2	false
+
+Unde îl ține?
+Unde	unde	Rw	advmod:tmod	3	true
+îl	el	Pp3msa--------w	obj	3	true
+ține	ține	Vmip3s	root	0	false
+?	?	QUEST	punct	3	false
 
 Când se ține cursul de sisteme de operare?
 Când	când	Rw	advmod:tmod	3	true
@@ -172,6 +209,12 @@ Noroc Pepper!
 Noroc	noroc	Ncms-n	root	0	false
 Pepper	Pepper	Np	nmod	1	false
 !	!	EXCL	punct	1	false
+
+Când îl ține?
+Când	când	Rw	advmod:tmod	3	true
+îl	el	Pp3msa--------w	obj	3	true
+ține	ține	Vmip3s	root	0	false
+?	?	QUEST	punct	3	false
 
 Servus
 Servus	servus	I	root	0	false
