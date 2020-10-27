@@ -40,21 +40,23 @@ import ro.racai.robin.dialog.RDSayings;
  */
 public class RoTextProcessor extends TextProcessor {
 	private static final String TEPROLIN_QUERY =
-		"http://relate.racai.ro:5000/process";
+			"http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
 	private static final String UTF8_STRCONST = "UTF-8";
 	private static final String CLITIC_QUERY =
-		"https://relate.racai.ro/ws/cratima/asr_cratima.php?text=";
-
+			"https://relate.racai.ro/ws/cratima/asr_cratima.php";
+	private static final String UNKWORD_QUERY =
+			"https://relate.racai.ro/ws/cratima/asr_correct.php";
+		
 	public RoTextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		super(lex, wn, say);
 	}
 
-	private String insertCliticDash(String text) {
+	private String improveASRDetection(String text, String queryUrl) {
 		StringBuilder content = new StringBuilder();
 
 		try {
-			URL url = new URL(RoTextProcessor.CLITIC_QUERY);
+			URL url = new URL(queryUrl);
 			URLConnection conn = url.openConnection();
 			HttpURLConnection http = (HttpURLConnection) conn;
 
@@ -99,7 +101,7 @@ public class RoTextProcessor extends TextProcessor {
 
 				in.close();
 			} else {
-				LOGGER.error("CLITIC recovery query error for text '" + text + "'; error code " + status);
+				LOGGER.error("ASR improvement query error for text '" + text + "'; error code " + status);
 			}
 		} catch (UnsupportedEncodingException uee) {
 			uee.printStackTrace();
@@ -228,10 +230,15 @@ public class RoTextProcessor extends TextProcessor {
 	@Override
 	public String textCorrection(String text) {
 		if (!StringUtils.isNullEmptyOrBlank(text)) {
+			// 1. Take care of clitic insertion (done by Vasile Păiș)
+			text = improveASRDetection(text, CLITIC_QUERY);
+			// 1.1 And further unknown word correction (also done by Vasile Păiș)
+			text = improveASRDetection(text, UNKWORD_QUERY);
+
+			// 2. Replace known ASR errors with the correct Romanian phrases.
 			List<String> tokens = Arrays.asList(text.split("\\s+"));
 			Map<Pair<Integer, Integer>, String> corrected = new HashMap<>();
 
-			// 1. Replace known ASR errors with the correct Romanian phrases.
 			if (!asrCorrectionDictionary.isEmpty()) {
 				for (int k = asrMaxPhraseLength; k >= 1; k--) {
 					for (int i = 0; i <= tokens.size() - k; i++) {
@@ -278,10 +285,7 @@ public class RoTextProcessor extends TextProcessor {
 				text = text.trim();
 			}
 
-			// 2. Take care of clitic insertion (done by Vasile Păiș)
-			text = insertCliticDash(text);
-
-			// 2. Add '?' or '.' depending on the statement.
+			// 3. Add '?' or '.' depending on the statement.
 			String[] spaceTokens = text.split("\\s+");
 
 			if (spaceTokens.length == 1) {

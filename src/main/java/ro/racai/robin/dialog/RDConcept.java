@@ -50,10 +50,16 @@ public class RDConcept {
 	protected String assignedReference;
 
 	/**
+	 * This is set to {@code true} if ths concept reference is to be resolved
+	 * by running the specified Java class.
+	 */
+	protected boolean isJavaClass;
+
+	/**
 	 * The processed version of the {@link #assignedReference}. To be filled in at the first
 	 * request.
 	 */
-	List<Token> assignedReferenceTokens;
+	protected List<Token> assignedReferenceTokens;
 
 	/**
 	 * <p>
@@ -156,6 +162,11 @@ public class RDConcept {
 	public void setReference(String value, TextProcessor proc) {
 		if (value != null && (assignedReference == null || !value.equals(assignedReference))) {
 			assignedReference = value;
+
+			if (assignedReference.startsWith("ro.racai.robin.dialog.generators.")) {
+				isJavaClass = true;
+			}
+			
 			assignedReferenceTokens = proc.textProcessor(assignedReference);
 		}
 	}

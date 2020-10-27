@@ -32,6 +32,10 @@ se	sine	Px3--a--------w	expl:pv	4	false
 ține	ține	Vmip3s	root	0	false
 ?	?	QUEST	punct	4	false
 
+sala 209
+sala	sală	Ncfsry	root	0	false
+209	209	Mc	nummod	1	false
+
 Unde se desfășoară laboratorul de informatică?
 Unde	unde	Rw	advmod	3	true
 se	sine	Px3--a--------w	expl:pass	3	false
@@ -47,6 +51,16 @@ de	de	Spsa	case	3	false
 sisteme	sistem	Ncfp-n	nmod	1	false
 de	de	Spsa	case	5	false
 operare	operare	Ncfsrn	nmod	3	false
+
+sala 13
+sala	sală	Ncfsry	root	0	false
+13	13	Mc	nummod	1	false
+
+cursul de inteligență artificială
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+inteligență	inteligență	Ncfsrn	nmod	1	false
+artificială	artificial	Afpfsrn	amod	1	false
 
 113
 113	113	Mc	root	0	false
@@ -79,6 +93,14 @@ de	de	Spsa	case	7	false
 operare	operare	Ncfsrn	nmod	5	false
 ?	?	QUEST	punct	2	false
 
+ro.racai.robin.dialog.generators.DegreesNow
+ro	ro	Rgp	root	0	false
+.	.	PERIOD	punct	1	false
+
+ro.racai.robin.dialog.generators.TimeNow
+ro	ro	Rgp	root	0	false
+.	.	PERIOD	punct	1	false
+
 Cine ține cursul?
 Cine	cine	Pw3--r	obj	2	true
 ține	ține	Vmip3s	root	0	false
@@ -106,6 +128,10 @@ translatoare	translatoare	Ncf--n	conj	4	false
 
 Salut
 Salut	saluta	Vmip1s	root	0	false
+
+sala 113
+sala	sală	Ncfsry	root	0	false
+113	113	Mc	nummod	1	false
 
 Cine ține cursuri de sisteme de operare.
 Cine	cine	Pw3--r	nsubj	2	true

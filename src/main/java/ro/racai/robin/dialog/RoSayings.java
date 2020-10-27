@@ -85,6 +85,14 @@ public class RoSayings implements RDSayings {
 	 */
 	@Override
 	public boolean userClosingStatement(List<String> words) {
+		String lastWord = words.get(words.size() - 1);
+
+		// The text corrector adds final punctuation.
+		// Remove it so that we can match the phrase.
+		if (lastWord.matches("^.+[.?!]$")) {
+			words.set(words.size() - 1, lastWord.substring(0, lastWord.length() - 1));
+		}
+
 		String lcExpression = String.join(" ", words.stream().filter(x -> !x.matches("^\\W+$"))
 				.map(x -> x.trim().toLowerCase()).collect(Collectors.toList()));
 

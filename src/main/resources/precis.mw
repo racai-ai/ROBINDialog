@@ -20,10 +20,17 @@ DICT "pe păra" Pepper
 DICT "col su" cursul
 DICT "cu ursu" cursul
 DICT "ci ne" cine
+DICT "și ne" cine
 DICT "ce asul" ceasul
+DICT "est de a" SDA
+DICT "es de a" SDA
+DICT "sebea" SDA
+DICT "setea" SDA
 DICT pepare Pepper
+DICT pepara Pepper
 DICT "pe văra" Pepper
 DICT "larevedere" la revedere
+DICT "la revederea" la revedere
 
 # Step 1. Define a list of "concepts" that are valid in this MW.
 # A concept is the head of a noun phrase which can be bound to different values.
@@ -117,8 +124,9 @@ PREDICATE duce, conduce -> TAKE_ME_SOMEWHERE
 TRUE fi G1
 TRUE fi G2
 TRUE ține C8 S1 T1 P4
-TRUE ține C1 S1 T2 P1
-TRUE ține C1 S1 T1 P2
+TRUE ține C1 S1 T2 P3
+TRUE ține C2 S3 T5 P2
+TRUE ține C3 S2 T2 P2
 TRUE fi P1 S4 T1
 TRUE ține W1 S2 T2
 TRUE ține C5 S3 T5 P1
