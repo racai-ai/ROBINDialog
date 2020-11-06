@@ -21,6 +21,8 @@ public enum CType {
 	PERSON,
 	// e.g. 8:15
 	TIME,
+	// e.g. azi, astăzi IS-A zi
+	ISA,
 	// e.g. sala 209
 	LOCATION;
 

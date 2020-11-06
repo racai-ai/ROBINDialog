@@ -1,29 +1,54 @@
+DICT "pe bar" Pepper
+DICT "pe băr" Pepper
+DICT "pe păr" Pepper
+DICT "pe văr" Pepper
+DICT "pe făr" Pepper
+DICT "pe par" Pepper
+DICT "de par" Pepper
+DICT "pe per" Pepper
+DICT "pe ber" Pepper
+DICT "pe para" Pepper
+DICT "pe pare" Pepper
+DICT "pe pară" Pepper
+DICT "pe păra" Pepper
+DICT pepare Pepper
+DICT pepara Pepper
+DICT "pe văra" Pepper
+DICT "larevedere" la revedere
+DICT "la revederea" la revedere
+DICT "dare vedere" la revedere
+
 CONCEPT cine -> PERSON
 CONCEPT unde -> LOCATION
 CONCEPT când -> TIME
 CONCEPT oră, ceas -> TIME
-CONCEPT zi, azi, astăzi -> TIME
+CONCEPT zi -> WORD
+# IS-A relationships
+# Works only on canonical forms of CONCEPTs
+# Super-type concept must have been already defined!
+CONCEPT azi, astăzi -> zi
 CONCEPT grad, temperatură -> WORD
 CONCEPT medicament -> WORD
 CONCEPT masă -> WORD
 
 REFERENCE oră ro.racai.robin.dialog.generators.TimeNow = G1
 REFERENCE grad ro.racai.robin.dialog.generators.DegreesNow = G2
-REFERENCE zi ro.racai.robin.dialog.generators.DayNow = G3
+REFERENCE azi ro.racai.robin.dialog.generators.DayNow = G3
 REFERENCE medicament Extraveral = M1
 REFERENCE medicament Thyrozol = M2
+REFERENCE medicament aspirină = M3
 REFERENCE masă prânz, masa de prânz = E1
 REFERENCE masă cină, masa de seară = E2
+REFERENCE zi luni = Z1
+REFERENCE zi marți = Z2
+REFERENCE zi miercuri = Z3
+REFERENCE zi joi = Z4
+REFERENCE zi vineri = Z5
+REFERENCE zi sâmbătă = Z6
+REFERENCE zi duminică = Z7
 
 TIME ora 06:00 dimineața = T1
 TIME ora 06:00 după-amiază = T2
-TIME luni = Z1
-TIME marți = Z2
-TIME miercuri = Z3
-TIME joi = Z4
-TIME vineri = Z5
-TIME sâmbătă = Z6
-TIME duminică = Z7
 
 PERSON fratele meu = P1
 PERSON sora mea = P2
@@ -31,8 +56,15 @@ PERSON părinții mei = P3
 
 PREDICATE lua, administra -> SAY_SOMETHING
 PREDICATE veni -> SAY_SOMETHING
+PREDICATE fi -> SAY_SOMETHING
+
+# Pepper știe cât e ceasul, câte grade sunt afară și ce zi este.
+TRUE fi G1
+TRUE fi G2
+TRUE fi G3
 
 # Pepper știe când utilizatorul trebuie să ia medicamentele
+TRUE lua M3 T1
 TRUE lua M1 Z1
 TRUE lua M1 Z3
 TRUE lua M1 Z5

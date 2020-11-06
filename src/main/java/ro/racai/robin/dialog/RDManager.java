@@ -117,10 +117,10 @@ public class RDManager {
 			state.inferredPredicate = pm.matchedPredicate;
 			state.robotReply = new ArrayList<>();
 			state.robotReply.add(state.inferredPredicate.getArguments()
-					.get(pm.saidArgumentIndex).assignedReference);
+					.get(pm.saidArgumentIndex).getPreferredReference());
 			state.inferredBehaviour = new RDRobotBehaviour(state.inferredPredicate.getUserIntent(),
 					state.inferredPredicate.getArguments()
-							.get(pm.saidArgumentIndex).assignedReference);
+							.get(pm.saidArgumentIndex).getPreferredReference());
 
 			state.previousQueryType = qtyp;
 			return state;

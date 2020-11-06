@@ -40,11 +40,12 @@ import ro.racai.robin.nlp.WordNet;
 public class MWFileReader implements RDMicroworld {
 	private static final Logger LOGGER = Logger.getLogger(MWFileReader.class.getName());
 	private String mwFilePath;
+	private static final String COMMA_RX_STR = ",\\s*";
 	private static final Pattern DICT_PATT = Pattern.compile("^DICT\\s+\"(.+?)\"\\s+(.+)$");
 	private static final Pattern DICT_PATT2 = Pattern.compile("^DICT\\s+(.+)\\s+(.+)$");
 	// CONCEPT sală, laborator, cameră -> LOCATION
 	private static final Pattern CONCEPT_PATT =
-			Pattern.compile("^CONCEPT\\s+(.+)\\s*->\\s*([A-Z_]+)$");
+			Pattern.compile("^CONCEPT\\s+(.+)\\s*->\\s*([A-Za-zșțăîâȘȚĂÎÂ_-]+)$");
 	// REFERENCE curs laboratorul de informatică = C1
 	private static final Pattern REFERENCE_PATT =
 			Pattern.compile("^REFERENCE\\s+([^ \\t]+)\\s+([^=]+?)\\s*=\\s*([a-zA-Z0-9]+)$");
@@ -121,27 +122,40 @@ public class MWFileReader implements RDMicroworld {
 						String csyn = cm.group(1);
 						String ctyp = cm.group(2);
 						CType conceptType = null;
+						RDConcept scls = null;
 
 						try {
 							conceptType = CType.valueOf(ctyp);
 						} catch (IllegalArgumentException iae) {
-							LOGGER.error("'" + ctyp + "' "
-									+ "is not a recognized ro.racai.robin.dialog.CType "
-									+ "member at line " + lineCount + "!");
-							iae.printStackTrace();
-							return null;
+							// Check for an IS-A relation
+							for (RDConcept c : definedConcepts) {
+								if (c.getCanonicalName().equals(ctyp)) {
+									// Found our IS-A relationship
+									conceptType = CType.ISA;
+									scls = c;
+									break;
+								}
+							}
+
+							if (scls == null) {
+								LOGGER.error("'" + ctyp + "' "
+										+ "is not a recognized ro.racai.robin.dialog.CType "
+										+ "member at line " + lineCount + "!");
+								iae.printStackTrace();
+								return null;
+							}
 						}
 
 						if (csyn.contains(",")) {
 							List<String> synParts =
-									new ArrayList<>(Arrays.asList(csyn.split(",\\s*")));
+									new ArrayList<>(Arrays.asList(csyn.split(COMMA_RX_STR)));
 							String canonName = synParts.remove(0);
 
 							definedConcepts.add(RDConcept.conceptBuilder(conceptType, canonName,
-									synParts, null));
+									synParts, null, scls));
 						} else {
 							definedConcepts.add(RDConcept.conceptBuilder(conceptType, csyn,
-									new ArrayList<>(), null));
+									new ArrayList<>(), null, scls));
 						}
 					} else {
 						LOGGER.warn("CONCEPT line is not well-formed at line " + lineCount + "...");
@@ -158,7 +172,8 @@ public class MWFileReader implements RDMicroworld {
 
 					if (rm.find()) {
 						String canonName = rm.group(1);
-						String reference = rm.group(2);
+						String allReferences = rm.group(2);
+						List<String> references = Arrays.asList(allReferences.split(COMMA_RX_STR));
 						String refCode = rm.group(3);
 						boolean conceptFound = false;
 
@@ -166,7 +181,7 @@ public class MWFileReader implements RDMicroworld {
 							if (c.getCanonicalName().equals(canonName)) {
 								RDConcept nc = c.deepCopy();
 
-								nc.setReference(reference, proc);
+								nc.setReferences(references, proc);
 
 								if (!referencedConcepts.containsKey(refCode)) {
 									referencedConcepts.put(refCode, nc);
@@ -229,7 +244,7 @@ public class MWFileReader implements RDMicroworld {
 
 						if (psyn.contains(",")) {
 							List<String> synParts =
-									new ArrayList<>(Arrays.asList(psyn.split(",\\s*")));
+									new ArrayList<>(Arrays.asList(psyn.split(COMMA_RX_STR)));
 							String canonName = synParts.remove(0);
 
 							definedPredicates.add(RDPredicate.predicateBuilder(userIntent,

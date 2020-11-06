@@ -1,37 +1,7 @@
-Unde se ține cursul de sisteme de operare?
-Unde	unde	Rw	advmod	3	true
-se	sine	Px3--a--------w	expl:pass	3	false
-ține	ține	Vmip3s	root	0	false
-cursul	curs	Ncmsry	nsubj:pass	3	true
-de	de	Spsa	case	6	false
-sisteme	sistem	Ncfp-n	nmod	4	false
-de	de	Spsa	case	8	false
-operare	operare	Ncfsrn	nmod	6	false
-?	?	QUEST	punct	3	false
-
 La revedere.
 La	la	Spsa	case	2	false
 revedere	revedere	Ncfsrn	root	0	false
 .	.	PERIOD	punct	2	false
-
-Cine predă laboratorul de informatica?
-Cine	cine	Pw3--r	obj	2	true
-predă	preda	Vmis3s	root	0	false
-laboratorul	laborator	Ncmsry	nsubj	2	true
-de	de	Spsa	case	5	false
-informatica	informatică	Ncfsry	nmod	3	false
-?	?	QUEST	punct	2	false
-
-Salut!
-Salut	salut	Ncms-n	root	0	false
-!	!	EXCL	punct	1	false
-
-Și cine îl ține?
-Și	și	Crssp	cc	4	false
-cine	cine	Pw3--r	obj	4	true
-îl	el	Pp3msa--------w	obj	4	true
-ține	ține	Vmip3s	root	0	false
-?	?	QUEST	punct	4	false
 
 Și unde se ține?
 Și	și	Crssp	cc	4	false
@@ -39,10 +9,6 @@ unde	unde	Rw	advmod	4	true
 se	sine	Px3--a--------w	expl:pv	4	false
 ține	ține	Vmip3s	root	0	false
 ?	?	QUEST	punct	4	false
-
-sala 209
-sala	sală	Ncfsry	root	0	false
-209	209	Mc	nummod	1	false
 
 Unde se desfășoară laboratorul de informatică?
 Unde	unde	Rw	advmod	3	true
@@ -60,15 +26,12 @@ sisteme	sistem	Ncfp-n	nmod	1	false
 de	de	Spsa	case	5	false
 operare	operare	Ncfsrn	nmod	3	false
 
+prânz
+prânz	prânz	Ncms-n	root	0	false
+
 sala 13
 sala	sală	Ncfsry	root	0	false
 13	13	Mc	nummod	1	false
-
-cursul de inteligență artificială
-cursul	curs	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-inteligență	inteligență	Ncfsrn	nmod	1	false
-artificială	artificial	Afpfsrn	amod	1	false
 
 Cine ține cursul de sistarea de operare?
 Cine	cine	Pw3--r	obj	2	true
@@ -88,13 +51,21 @@ de	de	Spsa	case	5	false
 SDA	SDA	Np	nmod	3	false
 ?	?	QUEST	punct	2	false
 
+Cine vine luni la masa de prins?
+Cine	cine	Pw3--r	nsubj	2	true
+vine	veni	Vmip3s	root	0	false
+luni	lună	Ncfp-n	nsubj	2	true
+la	la	Spsa	case	5	false
+masa	masă	Ncfsry	obl	2	true
+de	de	Spsa	mark	7	false
+prins	prinde	Vmp--sm	acl	5	false
+?	?	QUEST	punct	2	false
+
 113
 113	113	Mc	root	0	false
 
-cursul de algebră
-cursul	curs	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-algebră	algebră	Ncfsrn	nmod	1	false
+cină
+cină	cina	Vmis3s	root	0	false
 
 În ce sală se desfășoară cursul de sisteme de operare?
 În	în	Spsa	case	3	false
@@ -127,33 +98,11 @@ ro.racai.robin.dialog.generators.TimeNow
 ro	ro	Rgp	root	0	false
 .	.	PERIOD	punct	1	false
 
-Când ultima?
-Când	când	Rw	advmod:tmod	2	false
-ultima	ultima	Mofsrly	root	0	false
-?	?	QUEST	punct	2	false
-
 Cine ține cursul?
 Cine	cine	Pw3--r	obj	2	true
 ține	ține	Vmip3s	root	0	false
 cursul	curs	Ncmsry	obj	2	true
 ?	?	QUEST	punct	2	false
-
-Unde îl ține?
-Unde	unde	Rw	advmod:tmod	3	true
-îl	el	Pp3msa--------w	obj	3	true
-ține	ține	Vmip3s	root	0	false
-?	?	QUEST	punct	3	false
-
-Când se ține cursul de sisteme de operare?
-Când	când	Rw	advmod:tmod	3	true
-se	sine	Px3--a--------w	expl:pass	3	false
-ține	ține	Vmip3s	root	0	false
-cursul	curs	Ncmsry	nsubj:pass	3	true
-de	de	Spsa	case	6	false
-sisteme	sistem	Ncfp-n	nmod	4	false
-de	de	Spsa	case	8	false
-operare	operare	Ncfsrn	nmod	6	false
-?	?	QUEST	punct	3	false
 
 cursul de limbaje formale și translatoare
 cursul	curs	Ncmsry	root	0	false
@@ -163,12 +112,20 @@ formale	formal	Afpfp-n	amod	3	false
 și	și	Crssp	cc	6	false
 translatoare	translatoare	Ncf--n	conj	4	false
 
-Salut
-Salut	saluta	Vmip1s	root	0	false
+marți
+marți	marți	Ncf--n	root	0	false
 
 sala 113
 sala	sală	Ncfsry	root	0	false
 113	113	Mc	nummod	1	false
+
+Ce ridica mei au astăzi?
+Ce	ce	Pw3--r	obj	2	false
+ridica	ridica	Vmii3s	ccomp	4	false
+mei	meu	Ps1mp-s	det	2	false
+au	avea	Va--3p	root	0	false
+astăzi	astăzi	Rgp	advmod:tmod	4	false
+?	?	QUEST	punct	4	false
 
 Cine ține cursuri de sisteme de operare.
 Cine	cine	Pw3--r	nsubj	2	true
@@ -180,11 +137,16 @@ de	de	Spsa	case	7	false
 operare	operare	Ncfsrn	nmod	5	false
 .	.	PERIOD	punct	2	true
 
-seminarul de analiză matematică
-seminarul	seminar	Ncmsry	root	0	false
-de	de	Spsa	case	3	false
-analiză	analiză	Ncfsrn	nmod	1	false
-matematică	matematic	Afpfsrn	amod	3	false
+ro.racai.robin.dialog.generators.DayNow
+ro	ro	Rgp	root	0	false
+.	.	PERIOD	punct	1	false
+
+Ce zi este astăzi?
+Ce	ce	Dw3--r---e	det	2	false
+zi	zi	Ncfsrn	nsubj	3	true
+este	fi	Vmip3s	root	0	false
+astăzi	astăzi	Rgp	advmod	3	true
+?	?	QUEST	punct	3	false
 
 laboratorul de informatică
 laboratorul	laborator	Ncmsry	root	0	false
@@ -200,6 +162,12 @@ Robotică	robotică	Ncfsrn	nmod	1	false
 UPB	UPB	Np	appos	1	false
 2019	2019	Mc	flat	6	false
 
+Cât e ceasul?
+Cât	cât	Rgp	root	0	false
+e	fi	Vmip3s	cop	1	false
+ceasul	ceas	Ncmsry	nsubj	1	true
+?	?	QUEST	punct	1	false
+
 laboratorul de SDA
 laboratorul	laborator	Ncmsry	root	0	false
 de	de	Spsa	case	3	false
@@ -210,14 +178,147 @@ Noroc	noroc	Ncms-n	root	0	false
 Pepper	Pepper	Np	nmod	1	false
 !	!	EXCL	punct	1	false
 
+Ce zi este?
+Ce	ce	Dw3--r---e	det	2	false
+zi	zi	Ncfsrn	root	0	false
+este	fi	Vmip3s	cop	2	false
+?	?	QUEST	punct	2	false
+
+Ce medicament iau astăzi?
+Ce	ce	Dw3--r---e	det	2	false
+medicament	medicament	Ncms-n	nsubj	3	true
+iau	lua	Vmip3p	root	0	false
+astăzi	astăzi	Rgp	advmod	3	true
+?	?	QUEST	punct	3	false
+
+Servus
+Servus	servus	I	root	0	false
+
+luni
+luni	lună	Ncfp-n	root	0	false
+
+vineri
+
+sala de consiliu
+sala	sală	Ncfsry	root	0	false
+de	de	Spsa	case	3	false
+consiliu	consiliu	Ncms-n	nmod	1	false
+
+Noroc
+Noroc	noroc	Ncms-n	root	0	false
+
+209
+209	209	Mc	root	0	false
+
+Extraveral
+Extraveral	Extraveral	Np	root	0	false
+
+Unde se ține cursul de sisteme de operare?
+Unde	unde	Rw	advmod	3	true
+se	sine	Px3--a--------w	expl:pass	3	false
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	nsubj:pass	3	true
+de	de	Spsa	case	6	false
+sisteme	sistem	Ncfp-n	nmod	4	false
+de	de	Spsa	case	8	false
+operare	operare	Ncfsrn	nmod	6	false
+?	?	QUEST	punct	3	false
+
+duminică
+duminică	duminică	Ncfsrn	root	0	false
+
+Cine predă laboratorul de informatica?
+Cine	cine	Pw3--r	obj	2	true
+predă	preda	Vmis3s	root	0	false
+laboratorul	laborator	Ncmsry	nsubj	2	true
+de	de	Spsa	case	5	false
+informatica	informatică	Ncfsry	nmod	3	false
+?	?	QUEST	punct	2	false
+
+joi
+joi	joi	Ncf--n	root	0	false
+
+Salut!
+Salut	salut	Ncms-n	root	0	false
+!	!	EXCL	punct	1	false
+
+Și cine îl ține?
+Și	și	Crssp	cc	4	false
+cine	cine	Pw3--r	obj	4	true
+îl	el	Pp3msa--------w	obj	4	true
+ține	ține	Vmip3s	root	0	false
+?	?	QUEST	punct	4	false
+
+sala 209
+sala	sală	Ncfsry	root	0	false
+209	209	Mc	nummod	1	false
+
+cursul de inteligență artificială
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+inteligență	inteligență	Ncfsrn	nmod	1	false
+artificială	artificial	Afpfsrn	amod	1	false
+
+Câte grade sunt afară?
+Câte	cât	Dw3fpr	det	2	false
+grade	grad	Ncfp-n	nsubj	3	true
+sunt	fi	Vmip3p	root	0	false
+afară	afară	Rgp	advmod	3	true
+?	?	QUEST	punct	3	false
+
+cursul de algebră
+cursul	curs	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+algebră	algebră	Ncfsrn	nmod	1	false
+
+Când ultima?
+Când	când	Rw	advmod:tmod	2	false
+ultima	ultima	Mofsrly	root	0	false
+?	?	QUEST	punct	2	false
+
+Unde îl ține?
+Unde	unde	Rw	advmod:tmod	3	true
+îl	el	Pp3msa--------w	obj	3	true
+ține	ține	Vmip3s	root	0	false
+?	?	QUEST	punct	3	false
+
+masa de seară
+masa	masă	Ncfsry	root	0	false
+de	de	Spsa	case	1	false
+seară	seară	Rgp	nmod	1	false
+
+Când se ține cursul de sisteme de operare?
+Când	când	Rw	advmod:tmod	3	true
+se	sine	Px3--a--------w	expl:pass	3	false
+ține	ține	Vmip3s	root	0	false
+cursul	curs	Ncmsry	nsubj:pass	3	true
+de	de	Spsa	case	6	false
+sisteme	sistem	Ncfp-n	nmod	4	false
+de	de	Spsa	case	8	false
+operare	operare	Ncfsrn	nmod	6	false
+?	?	QUEST	punct	3	false
+
+Salut
+Salut	saluta	Vmip1s	root	0	false
+
+seminarul de analiză matematică
+seminarul	seminar	Ncmsry	root	0	false
+de	de	Spsa	case	3	false
+analiză	analiză	Ncfsrn	nmod	1	false
+matematică	matematic	Afpfsrn	amod	3	false
+
+Thyrozol
+
+sâmbătă
+sâmbătă	sâmbătă	Ncfsrn	root	0	false
+
+miercuri
+
 Când îl ține?
 Când	când	Rw	advmod:tmod	3	true
 îl	el	Pp3msa--------w	obj	3	true
 ține	ține	Vmip3s	root	0	false
 ?	?	QUEST	punct	3	false
-
-Servus
-Servus	servus	I	root	0	false
 
 Unde se ține cursul de sisteme de operare.
 Unde	unde	Rw	advmod	3	true
@@ -235,10 +336,7 @@ Salut	salut	Ncms-n	root	0	false
 Pepper	Pepper	Np	flat	1	false
 !	!	EXCL	punct	1	false
 
-sala de consiliu
-sala	sală	Ncfsry	root	0	false
-de	de	Spsa	case	3	false
-consiliu	consiliu	Ncms-n	nmod	1	false
+masa de prânz
 
 În ce sală se ține cursul de PLN?
 În	în	Spsa	case	3	false
@@ -261,9 +359,18 @@ Bună	bun	Afpfsrn	amod	2	false
 Pepper	Pepper	Np	root	0	false
 .	.	PERIOD	punct	2	false
 
-Noroc
-Noroc	noroc	Ncms-n	root	0	false
+Ce medicament trebuie să iau astăzi?
+Ce	ce	Dw3--r---e	det	2	false
+medicament	medicament	Ncms-n	obj	5	false
+trebuie	trebui	Vmip3	root	0	false
+să	să	Qs	mark	5	false
+iau	lua	Vmip3p	csubj	3	false
+astăzi	astăzi	Rgp	advmod	5	false
+?	?	QUEST	punct	3	false
 
-209
-209	209	Mc	root	0	false
+Ce zi astăzi?
+Ce	ce	Dw3--r---e	det	2	false
+zi	zi	Ncfsrn	root	0	false
+astăzi	astăzi	Rgp	advmod	2	false
+?	?	QUEST	punct	2	false
 

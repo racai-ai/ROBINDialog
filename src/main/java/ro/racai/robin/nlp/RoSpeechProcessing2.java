@@ -35,7 +35,9 @@ public class RoSpeechProcessing2 extends SpeechProcessing {
 	private static final String MLPLA_MODEL = "speech\\mlpla\\models\\ro";
 	private static final String MLPLA_CONF = "speech\\mlpla\\etc\\languagepipe.conf";
 	private static final String MLPLA_OUTFILE = "input.lab";
-	private static final String ASR_QUERY = "http://relate.racai.ro:7001/transcribe";
+	// 7002 is able to do Romanian dash recognition by itself.
+	// 7001 is the old ASR, with no dash recognition.
+	private static final String ASR_QUERY = "http://relate.racai.ro:7002/transcribe";
 
 	@Override
 	public String speechToText() {

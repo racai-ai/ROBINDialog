@@ -32,7 +32,8 @@ public class RDConstant extends RDConcept {
 
 	@Override
 	public RDConstant deepCopy() {
-		return new RDConstant(conceptType, assignedReference);
+		// For constants, there is only one reference.
+		return new RDConstant(conceptType, getPreferredReference());
 	}
 
 	/**
@@ -60,9 +61,7 @@ public class RDConstant extends RDConcept {
 				return false;
 			}
 
-			if ((rdc.assignedReference == null && assignedReference == null)
-					|| (rdc.assignedReference != null && assignedReference != null
-							&& rdc.assignedReference.equalsIgnoreCase(assignedReference))) {
+			if (rdc.getPreferredReference().equals(this.getPreferredReference())) {
 				return true;
 			}
 		}
@@ -77,6 +76,6 @@ public class RDConstant extends RDConcept {
 	 */
 	@Override
 	public int hashCode() {
-		return assignedReference.hashCode();
+		return getPreferredReference().hashCode();
 	}
 }

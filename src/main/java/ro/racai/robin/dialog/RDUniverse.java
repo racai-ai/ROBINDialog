@@ -294,8 +294,14 @@ public class RDUniverse {
 					ijPairs.add(i + "#" + j);
 				} else if (isConceptInstance(qArgToks, pArg)) {
 					// Else, the argument is fuzzy scored against user's description.
-					matchScores[i][j] =
-							descriptionSimilarity(pArg.getTokenizedReference(), qArgToks);
+					for (List<Token> tokRef : pArg.getTokenizedReferences()) {
+						float ms = descriptionSimilarity(tokRef, qArgToks);
+
+						if (ms > matchScores[i][j]) {
+							matchScores[i][j] = ms;
+						}
+					}
+							
 					ijPairs.add(i + "#" + j);
 				}
 			}
@@ -344,6 +350,11 @@ public class RDUniverse {
 	 * @return {@code true} if query is asking for this.
 	 */
 	public boolean isOfSameType(RDConcept con, Argument arg, QType qtyp) {
+		// Go to the top-level, non-ISA concept to do comparisons.
+		while (con.getType() == CType.ISA && con.getSuperClass() != null) {
+			con = con.getSuperClass();
+		}
+
 		if (con.getType() == CType.WORD && qtyp == QType.WHAT) {
 			for (Token t : arg.argTokens) {
 				if (lexicon.isNounPOS(t.pos) && t.lemma.equalsIgnoreCase(con.canonicalForm)) {
