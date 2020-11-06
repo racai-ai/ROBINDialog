@@ -1,0 +1,47 @@
+CONCEPT cine -> PERSON
+CONCEPT unde -> LOCATION
+CONCEPT când -> TIME
+CONCEPT oră, ceas -> TIME
+CONCEPT zi, azi, astăzi -> TIME
+CONCEPT grad, temperatură -> WORD
+CONCEPT medicament -> WORD
+CONCEPT masă -> WORD
+
+REFERENCE oră ro.racai.robin.dialog.generators.TimeNow = G1
+REFERENCE grad ro.racai.robin.dialog.generators.DegreesNow = G2
+REFERENCE zi ro.racai.robin.dialog.generators.DayNow = G3
+REFERENCE medicament Extraveral = M1
+REFERENCE medicament Thyrozol = M2
+REFERENCE masă prânz, masa de prânz = E1
+REFERENCE masă cină, masa de seară = E2
+
+TIME ora 06:00 dimineața = T1
+TIME ora 06:00 după-amiază = T2
+TIME luni = Z1
+TIME marți = Z2
+TIME miercuri = Z3
+TIME joi = Z4
+TIME vineri = Z5
+TIME sâmbătă = Z6
+TIME duminică = Z7
+
+PERSON fratele meu = P1
+PERSON sora mea = P2
+PERSON părinții mei = P3
+
+PREDICATE lua, administra -> SAY_SOMETHING
+PREDICATE veni -> SAY_SOMETHING
+
+# Pepper știe când utilizatorul trebuie să ia medicamentele
+TRUE lua M1 Z1
+TRUE lua M1 Z3
+TRUE lua M1 Z5
+TRUE lua M1 Z7
+TRUE lua M2 Z2
+TRUE lua M2 Z4
+TRUE lua M2 Z6
+
+# Pepper știe cine vine la masă și în ce zi
+TRUE veni P1 E1 Z1
+TRUE veni P2 E2 Z3
+TRUE veni P3 E2 Z6
