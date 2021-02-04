@@ -1,6 +1,8 @@
 113#sală	false
+ceas#când	false
 zi#astăzi	true
 el#sală	false
+ceas#unde	false
 sistare#sală	false
 luni#zi	false
 ține#fi	false
@@ -19,6 +21,7 @@ zi#grad	false
 zi#oră	false
 operare#robotică	false
 sală#cursul	false
+grad#când	false
 îl#curs	false
 seară#masă	false
 SDA#laborator	false
@@ -32,6 +35,8 @@ azi#ceas	false
 cine#sală	false
 curs#sistem	false
 grad#masa	false
+unde#grad	false
+grad#unde	false
 ține#duce	true
 luni#oră	false
 curs#.	false
@@ -39,6 +44,7 @@ laborator#sală	false
 laborator#SDA	false
 laborator#113	false
 oră#grad	false
+ceas#cine	false
 unde#curs	false
 zi#medicament	false
 masă#luni	false
@@ -56,6 +62,7 @@ duce#preda	false
 grade#masă	false
 desfășura#fi	false
 zi#cine	false
+unde#ceas	false
 curs#sală	false
 sistarea#curs	false
 ceasul#masă	false
@@ -143,6 +150,7 @@ conferință#el	false
 conferință#unde	false
 medicament#ceas	false
 curs#informatică	false
+cine#ceas	false
 ceas#zi	false
 când#conferință	false
 grad#medicament	false
@@ -273,6 +281,7 @@ cina#prinde	false
 masa#grad	false
 oră#afară	false
 robotică#SDA	false
+când#grad	false
 astăzi#marți	false
 azi#ceasul	false
 operare#artificial	false
@@ -296,6 +305,7 @@ lună#astăzi	false
 inteligență#operare	false
 oră#masă	false
 zi#ceas	false
+când#ceas	false
 masa#azi	false
 inteligență#informatică	false
 .#curs	false

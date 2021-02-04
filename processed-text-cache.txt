@@ -64,6 +64,12 @@ prins	prinde	Vmp--sm	acl	5	false
 113
 113	113	Mc	root	0	false
 
+Workshop-ul de Robotică
+Workshop	Workshop	Np	root	0	false
+-ul	-ul	Tfmsry	det	1	false
+de	de	Spsa	case	4	false
+Robotică	robotică	Ncfsrn	nmod	1	false
+
 cină
 cină	cina	Vmis3s	root	0	false
 
@@ -90,14 +96,6 @@ de	de	Spsa	case	7	false
 operare	operare	Ncfsrn	nmod	5	false
 ?	?	QUEST	punct	2	false
 
-ro.racai.robin.dialog.generators.DegreesNow
-ro	ro	Rgp	root	0	false
-.	.	PERIOD	punct	1	false
-
-ro.racai.robin.dialog.generators.TimeNow
-ro	ro	Rgp	root	0	false
-.	.	PERIOD	punct	1	false
-
 Cine ține cursul?
 Cine	cine	Pw3--r	obj	2	true
 ține	ține	Vmip3s	root	0	false
@@ -111,6 +109,10 @@ limbaje	limbaj	Ncfp-n	nmod	1	false
 formale	formal	Afpfp-n	amod	3	false
 și	și	Crssp	cc	6	false
 translatoare	translatoare	Ncf--n	conj	4	false
+
+sora dumneavoastră
+sora	sora	Ncfsry	root	0	false
+dumneavoastră	dumneavoastră	Pp2-----------s	nmod	1	false
 
 marți
 marți	marți	Ncf--n	root	0	false
@@ -137,10 +139,6 @@ de	de	Spsa	case	7	false
 operare	operare	Ncfsrn	nmod	5	false
 .	.	PERIOD	punct	2	true
 
-ro.racai.robin.dialog.generators.DayNow
-ro	ro	Rgp	root	0	false
-.	.	PERIOD	punct	1	false
-
 Ce zi este astăzi?
 Ce	ce	Dw3--r---e	det	2	false
 zi	zi	Ncfsrn	nsubj	3	true
@@ -153,20 +151,11 @@ laboratorul	laborator	Ncmsry	root	0	false
 de	de	Spsa	case	3	false
 informatică	informatică	Ncfsrn	nmod	1	false
 
-Workshop-ul de Robotică, UPB 2019
-Workshop	Workshop	Np	root	0	false
--ul	-ul	Tfmsry	det	1	false
-de	de	Spsa	case	4	false
-Robotică	robotică	Ncfsrn	nmod	1	false
-,	,	COMMA	punct	6	false
-UPB	UPB	Np	appos	1	false
-2019	2019	Mc	flat	6	false
-
 Cât e ceasul?
-Cât	cât	Rgp	root	0	false
-e	fi	Vmip3s	cop	1	false
-ceasul	ceas	Ncmsry	nsubj	1	true
-?	?	QUEST	punct	1	false
+Cât	cât	Rgp	cop	2	true
+e	fi	Vmip3s	root	0	false
+ceasul	ceas	Ncmsry	nsubj	2	true
+?	?	QUEST	punct	2	false
 
 laboratorul de SDA
 laboratorul	laborator	Ncmsry	root	0	false
@@ -184,6 +173,9 @@ zi	zi	Ncfsrn	root	0	false
 este	fi	Vmip3s	cop	2	false
 ?	?	QUEST	punct	2	false
 
+aspirină
+aspirină	aspirină	Ncfsrn	root	0	false
+
 Ce medicament iau astăzi?
 Ce	ce	Dw3--r---e	det	2	false
 medicament	medicament	Ncms-n	nsubj	3	true
@@ -191,13 +183,34 @@ iau	lua	Vmip3p	root	0	false
 astăzi	astăzi	Rgp	advmod	3	true
 ?	?	QUEST	punct	3	false
 
+ora șapte după-amiază
+oră	oră	Vmis3p	root	0	false
+șapte	șapte	Mc-p-l	nsubj	1	false
+?	?	QUEST	advmod	1	false
+
+părinții dumneavoastră
+părinții	părinte	Ncmpry	root	0	false
+dumneavoastră	dumneavoastră	Pp2-----------s	nmod	1	false
+
+Cât este ceasul?
+Cât	cât	Rw	cop	2	true
+este	fi	Vmip3s	root	0	false
+ceasul	ceas	Ncmsry	nsubj	2	true
+?	?	QUEST	punct	2	false
+
 Servus
 Servus	servus	I	root	0	false
 
+ora șase dimineața
+oră	oră	Ncfsrn	root	0	false
+șase	șase	Mc-p-l	nummod	1	false
+dimineață	dimineața	Ncfsrn	nmod	1	false
+
 luni
-luni	lună	Ncfp-n	root	0	false
+luni	luni	Ncms-n	root	0	false
 
 vineri
+vineri	vineri	Ncms-n	root	0	false
 
 sala de consiliu
 sala	sală	Ncfsry	root	0	false
@@ -307,18 +320,24 @@ de	de	Spsa	case	3	false
 analiză	analiză	Ncfsrn	nmod	1	false
 matematică	matematic	Afpfsrn	amod	3	false
 
-Thyrozol
-
 sâmbătă
 sâmbătă	sâmbătă	Ncfsrn	root	0	false
 
+Thyrozol
+Thyrozol	Thyrozol	Ncms-n	root	0	false
+
 miercuri
+miercuri	miercuri	Ncf--n	root	0	false
 
 Când îl ține?
 Când	când	Rw	advmod:tmod	3	true
 îl	el	Pp3msa--------w	obj	3	true
 ține	ține	Vmip3s	root	0	false
 ?	?	QUEST	punct	3	false
+
+fratele dumneavoastră
+fratele	frate	Ncmsry	root	0	false
+dumneavoastră	dumneavoastră	Pp2-----------s	nmod	1	false
 
 Unde se ține cursul de sisteme de operare.
 Unde	unde	Rw	advmod	3	true
@@ -337,6 +356,9 @@ Pepper	Pepper	Np	flat	1	false
 !	!	EXCL	punct	1	false
 
 masa de prânz
+masa	masă	Ncfsry	root	0	false
+de	de	Spsa	case	3	false
+prânz	prânz	Ncms-n	nmod	1	false
 
 În ce sală se ține cursul de PLN?
 În	în	Spsa	case	3	false
@@ -358,6 +380,11 @@ Bună Pepper.
 Bună	bun	Afpfsrn	amod	2	false
 Pepper	Pepper	Np	root	0	false
 .	.	PERIOD	punct	2	false
+
+Salut pepper.
+Salut	Sale	Vmp--sm	root	0	false
+pepper	pepper	Spsa	advmod	1	false
+?	?	QUEST	punct	1	false
 
 Ce medicament trebuie să iau astăzi?
 Ce	ce	Dw3--r---e	det	2	false

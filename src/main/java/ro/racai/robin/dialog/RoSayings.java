@@ -163,4 +163,22 @@ public class RoSayings implements RDSayings {
 
 		return lines;
 	}
+
+	@Override
+	public List<String> robotSayYes() {
+		List<String> lines = new ArrayList<>();
+
+		lines.add("Da așa este.");
+
+		return lines;
+	}
+
+	@Override
+	public List<String> robotSayNo() {
+		List<String> lines = new ArrayList<>();
+
+		lines.add("Nu este adevărat.");
+
+		return lines;
+	}
 }

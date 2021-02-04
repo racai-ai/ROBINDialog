@@ -55,4 +55,17 @@ public interface RDSayings {
 	 * @return the list of string to be said; each string is sent separately to the TTS module.
 	 */
 	public List<String> robotDidntUnderstandLines();
+
+	/**
+	 * Just say "Yes.""
+	 * @return the language-dependent "Yes." string.
+	 */
+	public List<String> robotSayYes();
+
+	/**
+	 * Just say "No.""
+	 * 
+	 * @return the language-dependent "No." string.
+	 */
+	public List<String> robotSayNo();
 }

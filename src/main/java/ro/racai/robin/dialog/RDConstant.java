@@ -3,8 +3,6 @@
  */
 package ro.racai.robin.dialog;
 
-import ro.racai.robin.nlp.StringUtils;
-
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  *         <p>
@@ -22,18 +20,8 @@ public class RDConstant extends RDConcept {
 	 * @param ctyp the type of the constant being created;
 	 * @param ref  the reference for this constant, it has to be non-null!
 	 */
-	public RDConstant(CType ctyp, String ref) {
-		super(ctyp, ref);
-
-		if (StringUtils.isNullEmptyOrBlank(ref)) {
-			throw new RuntimeException("Reference cannot be null, empty or blank!");
-		}
-	}
-
-	@Override
-	public RDConstant deepCopy() {
-		// For constants, there is only one reference.
-		return new RDConstant(conceptType, getPreferredReference());
+	public RDConstant(CType ctyp) {
+		super(ctyp);
 	}
 
 	/**
@@ -61,7 +49,7 @@ public class RDConstant extends RDConcept {
 				return false;
 			}
 
-			if (rdc.getPreferredReference().equals(this.getPreferredReference())) {
+			if (rdc.getReference().equals(this.getReference())) {
 				return true;
 			}
 		}
@@ -76,6 +64,11 @@ public class RDConstant extends RDConcept {
 	 */
 	@Override
 	public int hashCode() {
-		return getPreferredReference().hashCode();
+		return getReference().hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "``" + assignedReference + "''" + "/" + conceptType.name();
 	}
 }

@@ -28,6 +28,6 @@ public enum QType {
 	GOODBYE,
 	// Start of conversation
 	HELLO,
-	// ASR nu a înțeles ce am zis
+	// ASR transcription error
 	UNKNOWN
 }

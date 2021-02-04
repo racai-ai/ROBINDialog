@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 import ro.racai.robin.dialog.RDConcept;
@@ -30,14 +29,6 @@ import ro.racai.robin.dialog.RDSayings;
 public abstract class TextProcessor {
 	private static final Logger LOGGER =
 		Logger.getLogger(TextProcessor.class.getName());
-	
-	/**
-	 * This is the list of instantiated concepts constructed
-	 * during the creation of the micro-world. The text processor
-	 * must know about them to properly set the query type.
-	 * If {@code null}, it will NOT be used.
-	 */
-	protected List<RDConcept> universeConcepts;
 	
 	/**
 	 * Lexicon to use for text processing. 
@@ -162,9 +153,23 @@ public abstract class TextProcessor {
 		 * against a concept, e.g. "laboratorul de robotică".
 		 */
 		public List<Argument> predicateArguments = new ArrayList<>();
+
+		/**
+		 * Checks for a factual question, e.g. Cine/Ce/Când/Cât ...
+		 * @return {@code true} if query has an unbound variable to be resolved.
+		 */
+		public boolean hasQueryVariable() {
+			for (Argument a : predicateArguments) {
+				if (a.isQueryVariable) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}
 	
-	public TextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
+	protected TextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		lexicon = lex;
 		sayings = say;
 		wordNet = wn;
@@ -185,47 +190,105 @@ public abstract class TextProcessor {
 	}
 
 	/**
-	 * <p>Give it a text (from the ASR engine) and get back
-	 * a list of {@link Token}s that are annotated.</p> 
-	 * @param text        the text to be analyzed
-	 * @return            the list of tokens to work with
+	 * <p>
+	 * Give it a text (from the ASR engine or from the .mw file) and get back a list of
+	 * {@link Token}s that are annotated.
+	 * </p>
+	 * 
+	 * @param text the text to be analyzed
+	 * @param isJavaRef if {@code true}, special, one-token processing is performed.
+	 * @param isFromMW   if {@code true}, no text normalization and correction is performed.
+	 * @return the list of tokens to work with.
 	 */
-	public List<Token> textProcessor(String text) {
-		text = normalizeText(text);
-		
+	public List<Token> textProcessor(String text, boolean isJavaRef, boolean isFromMW) {
+		if (isJavaRef) {
+			// This is a Java class name
+			Token t = new Token(text, text, "Nc", 0, "root", false);
+			List<Token> procText = new ArrayList<>();
+
+			procText.add(t);
+			return procText;
+		}
+
+		if (!isFromMW) {
+			// This is a piece of text coming from the .mw file
+			text = normalizeText(text);
+			text = textCorrection(text);
+		}
+
 		if (processedTextCache.containsKey(text)) {
 			return processedTextCache.get(text);
 		}
-		
+
 		List<Token> procText = processText(text);
-		
+
+		procText = postProcessing(procText);
 		processedTextCache.put(text, procText);
-		
+
 		return procText;
 	}
 	
 	/**
-	 * <p>Returns the length of a sentence disregarding
-	 * functional words.</p>
-	 * @param sentence       the sentence to compute length
-	 *                       for;
-	 * @return               the number of content words
-	 *                       in the sentence.
+	 * Call this to pretty-print the prompt to the user.
+	 * 
+	 * @param tokens the list of tokens to print.
+	 * @return prompt {@link String}.
 	 */
-	public int noFunctionalWordsLength(List<Token> sentence) {
-		int len = 0;
-		
-		if (sentence == null) {
-			return len;
+	public String toPromptString(List<Token> tokens) {
+		if (tokens.isEmpty()) {
+			return "";
 		}
-		
-		for (Token t : sentence) {
-			if (!lexicon.isFunctionalPOS(t.pos)) {
-				len++;
+
+		StringBuilder result = new StringBuilder();
+
+		result.append(tokens.get(0).wform);
+
+		for (int i = 1; i < tokens.size(); i++) {
+			Token t = tokens.get(i);
+
+			if (t.wform.matches("^\\W+$")) {
+				result.append(t.wform);
+			}
+			else {
+				result.append(" " + t.wform);
 			}
 		}
-		
-		return len;
+
+		return result.toString();
+	}
+
+	/**
+	 * If more post-processing of the text is needed, put it into this method.
+	 * By default, it does nothing.
+	 * @param tokens the list of tokens to modify.
+	 * @return the modified token list.
+	 */
+	protected List<Token> postProcessing(List<Token> tokens) {
+		return tokens;
+	}
+	
+	/**
+	 * <p>
+	 * Returns a version of the {@code sentence} disregarding functional words.
+	 * </p>
+	 * 
+	 * @param sentence the sentence to filter;
+	 * @return the filtered sentence.
+	 */
+	public List<Token> noFunctionalWordsFilter(List<Token> sentence) {
+		if (sentence == null || sentence.isEmpty()) {
+			return sentence;
+		}
+
+		List<Token> result = new ArrayList<>();
+
+		for (Token t : sentence) {
+			if (!lexicon.isFunctionalPOS(t.pos)) {
+				result.add(t);
+			}
+		}
+
+		return result;
 	}
 	
 	private void populateProcessedTextCache() {
@@ -303,7 +366,7 @@ public abstract class TextProcessor {
 	 * @param text          text to be corrected
 	 * @return              the fixed text
 	 */
-	public abstract String textCorrection(String text);
+	protected abstract String textCorrection(String text);
 	
 	/**
 	 * <p>When saying e.g. '245', we need to transform
@@ -314,15 +377,16 @@ public abstract class TextProcessor {
 	public abstract String expandEntities(String text);
 
 	/**
-	 * <p>Main method of query analysis. This method will
-	 * construct a "parse" of the text query received,
-	 * in the instance of a {@link Query} object.</p>
-	 * @param query      the text query to be mined for the
-	 *                   action verb and its arguments.
-	 * @return           the {@link Query} object or {@code null}
-	 *                   if something went wrong.
+	 * <p>
+	 * Main method of query analysis. This method will construct a "parse" of the text query
+	 * received, in the instance of a {@link Query} object.
+	 * </p>
+	 * 
+	 * @param query    the text query to be mined for the action verb and its arguments.
+	 * @param concepts the defined concepts in the universe of discourse (not the bound ones).
+	 * @return the {@link Query} object or {@code null} if something went wrong.
 	 */
-	public abstract Query queryAnalyzer(List<Token> query);
+	public abstract Query queryAnalyzer(List<Token> query, List<RDConcept> concepts);
 	
 	/**
 	 * <p>Optional call before calling {@link #processText(String)}.</p>
@@ -343,12 +407,4 @@ public abstract class TextProcessor {
 	 * @return              {@code true} if this list of tokens represents a variable.
 	 */
 	public abstract boolean isQueryVariable(List<Token> argument);
-	
-	/**
-	 * <p>Used to the the concept list to be used in this processor.</p>
-	 * @param conList        the concept list to be set.
-	 */
-	public void setConceptList(List<RDConcept> conList) {
-		universeConcepts = conList;
-	}
 }

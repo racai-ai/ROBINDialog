@@ -37,8 +37,10 @@ REFERENCE azi ro.racai.robin.dialog.generators.DayNow = G3
 REFERENCE medicament Extraveral = M1
 REFERENCE medicament Thyrozol = M2
 REFERENCE medicament aspirină = M3
-REFERENCE masă prânz, masa de prânz = E1
-REFERENCE masă cină, masa de seară = E2
+REFERENCE masă prânz = E11
+REFERENCE masă masa de prânz = E12
+REFERENCE masă cină = E21
+REFERENCE masă masa de seară = E22
 REFERENCE zi luni = Z1
 REFERENCE zi marți = Z2
 REFERENCE zi miercuri = Z3
@@ -47,12 +49,12 @@ REFERENCE zi vineri = Z5
 REFERENCE zi sâmbătă = Z6
 REFERENCE zi duminică = Z7
 
-TIME ora 06:00 dimineața = T1
-TIME ora 06:00 după-amiază = T2
+TIME ora șase dimineața = T1
+TIME ora șapte după-amiază = T2
 
-PERSON fratele meu = P1
-PERSON sora mea = P2
-PERSON părinții mei = P3
+PERSON fratele dumneavoastră = P1
+PERSON sora dumneavoastră = P2
+PERSON părinții dumneavoastră = P3
 
 PREDICATE lua, administra -> SAY_SOMETHING
 PREDICATE veni -> SAY_SOMETHING
@@ -74,6 +76,9 @@ TRUE lua M2 Z4
 TRUE lua M2 Z6
 
 # Pepper știe cine vine la masă și în ce zi
-TRUE veni P1 E1 Z1
-TRUE veni P2 E2 Z3
-TRUE veni P3 E2 Z6
+TRUE veni P1 E11 Z1
+TRUE veni P1 E12 Z1
+TRUE veni P2 E21 Z3
+TRUE veni P3 E21 Z6
+TRUE veni P2 E22 Z3
+TRUE veni P3 E22 Z6

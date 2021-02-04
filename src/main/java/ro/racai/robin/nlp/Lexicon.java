@@ -12,6 +12,15 @@ import java.util.Map;
  */
 public interface Lexicon {
 	/**
+	 * For words that the POS tagger gets it wrong, get the right tag from here.
+	 * @param word the word to get the tag for.
+	 * @return
+	 */
+	public default Pair<String, String> getPOSAndLemmaForWord(String word) {
+		return new Pair<>("X", word);
+	}
+
+	/**
 	 * Checks a verb lemma for a "command" verb.
 	 * 
 	 * @param verbLemma the verb lemma to check

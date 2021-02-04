@@ -152,10 +152,10 @@ public class MWFileReader implements RDMicroworld {
 							String canonName = synParts.remove(0);
 
 							definedConcepts.add(RDConcept.conceptBuilder(conceptType, canonName,
-									synParts, null, scls));
+									synParts, scls));
 						} else {
 							definedConcepts.add(RDConcept.conceptBuilder(conceptType, csyn,
-									new ArrayList<>(), null, scls));
+									new ArrayList<>(), scls));
 						}
 					} else {
 						LOGGER.warn("CONCEPT line is not well-formed at line " + lineCount + "...");
@@ -172,8 +172,7 @@ public class MWFileReader implements RDMicroworld {
 
 					if (rm.find()) {
 						String canonName = rm.group(1);
-						String allReferences = rm.group(2);
-						List<String> references = Arrays.asList(allReferences.split(COMMA_RX_STR));
+						String refString = rm.group(2);
 						String refCode = rm.group(3);
 						boolean conceptFound = false;
 
@@ -181,7 +180,7 @@ public class MWFileReader implements RDMicroworld {
 							if (c.getCanonicalName().equals(canonName)) {
 								RDConcept nc = c.deepCopy();
 
-								nc.setReferences(references, proc);
+								nc.setReference(refString, proc);
 
 								if (!referencedConcepts.containsKey(refCode)) {
 									referencedConcepts.put(refCode, nc);
@@ -213,7 +212,10 @@ public class MWFileReader implements RDMicroworld {
 
 					CType constType = CType.valueOf(ctm.group(1));
 					String constValue = ctm.group(2);
-					RDConstant constant = new RDConstant(constType, constValue);
+					RDConstant constant = new RDConstant(constType);
+
+					constant.setReference(constValue, proc);
+
 					String constCode = ctm.group(3);
 
 					if (!referencedConcepts.containsKey(constCode)) {
@@ -248,10 +250,10 @@ public class MWFileReader implements RDMicroworld {
 							String canonName = synParts.remove(0);
 
 							definedPredicates.add(RDPredicate.predicateBuilder(userIntent,
-									canonName, synParts, null));
+									canonName, synParts));
 						} else {
 							definedPredicates.add(RDPredicate.predicateBuilder(userIntent, psyn,
-									new ArrayList<>(), null));
+									new ArrayList<>()));
 						}
 					} else {
 						LOGGER.warn(
@@ -300,10 +302,14 @@ public class MWFileReader implements RDMicroworld {
 
 			RDUniverse universe = new RDUniverse(wn, lex, proc);
 
-			universe.addPredicates(truePredicates);
+			universe.addBoundPredicates(truePredicates);
 
 			for (Map.Entry<String, RDConcept> e : referencedConcepts.entrySet()) {
-				universe.addConcept(e.getValue());
+				universe.addBoundConcept(e.getValue());
+			}
+
+			for (RDConcept c : definedConcepts) {
+				universe.addConcept(c);
 			}
 
 			universe.setASRRulesMap(asrDictionary);

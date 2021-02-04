@@ -29,20 +29,21 @@ import ro.racai.robin.nlp.WordNet;
  *         our PRECIS scenario, for the <i>sală</i> concept, we could have values such as
  *         <i>209</i>, <i>laboratorul de SDA</i>, etc.
  *         </p>
- *         <p>
- *         This class has to be sub-classed so that the correspondence is made by database
- *         interrogation, XML files, etc.
- *         </p>
  */
 public class RDUniverse {
 	/**
-	 * Bound concepts in this universe of discourse. Fill in this list using
-	 * {@link #addConcept(RDConcept)}.
+	 * Bound concepts (defined with REFERENCE or constants) in this universe of discourse.
+	 * Fill in this list using {@link #addBoundConcept(RDConcept)}.
 	 */
-	private List<RDConcept> concepts;
+	private List<RDConcept> boundConcepts;
 
 	/**
-	 * Predicates that are true in this universe. Use {@link #addPredicate()} method to fill in this
+	 * Concept definitions (using CONCEPT keyword) that hold in this universe of discourse.
+	 */
+	private List<RDConcept> definedConcepts;
+
+	/**
+	 * Predicates that are TRUE in this universe. Use {@link #addPredicate()} method to fill in this
 	 * list.
 	 */
 	private List<RDPredicate> predicates;
@@ -82,7 +83,8 @@ public class RDUniverse {
 	 * @param lex a lexicon instance for your language.
 	 */
 	public RDUniverse(WordNet wn, Lexicon lex, TextProcessor proc) {
-		concepts = new ArrayList<>();
+		boundConcepts = new ArrayList<>();
+		definedConcepts = new ArrayList<>();
 		predicates = new ArrayList<>();
 		wordDistance = new Levenshtein();
 		wordNet = wn;
@@ -116,8 +118,12 @@ public class RDUniverse {
 	 * 
 	 * @return the list of bound concepts that exist in this universe.
 	 */
-	public List<RDConcept> getUniverseConcepts() {
-		return concepts;
+	public List<RDConcept> getBoundConcepts() {
+		return boundConcepts;
+	}
+
+	public List<RDConcept> getDefinedConcepts() {
+		return definedConcepts;
 	}
 
 	/**
@@ -127,33 +133,38 @@ public class RDUniverse {
 	 * 
 	 * @return the list of bound predicates that exist in this universe.
 	 */
-	public List<RDPredicate> getUniversePredicates() {
+	public List<RDPredicate> getBoundPredicates() {
 		return predicates;
 	}
 
 	/**
 	 * <p>
-	 * Adds a concept built with {@link RDConcept#Builder(CType, String, List, String)} to this
-	 * universe of discourse. Note that the textual description {@link RDConcept#getReference()}
-	 * must not be null!
+	 * Adds a bound concept to this universe of discourse.
+	 * Note that the textual description {@link RDConcept#getReference()} must not be null or empty!
+	 * </p>
 	 * 
 	 * @param conc the bound (instantiated) concept to be added to this universe
 	 */
+	public void addBoundConcept(RDConcept conc) {
+		boundConcepts.add(conc);
+	}
+
 	public void addConcept(RDConcept conc) {
-		concepts.add(conc);
+		definedConcepts.add(conc);
 	}
 
 	/**
 	 * <p>
 	 * Adds a ``true'' predicate to this universe of discourse.
+	 * </p>
 	 * 
 	 * @param pred the predicate to add to this universe
 	 */
-	public void addPredicate(RDPredicate pred) {
+	public void addBoundPredicate(RDPredicate pred) {
 		predicates.add(pred);
 	}
 
-	public void addPredicates(List<RDPredicate> preds) {
+	public void addBoundPredicates(List<RDPredicate> preds) {
 		predicates.clear();
 		predicates.addAll(preds);
 	}
@@ -206,14 +217,14 @@ public class RDUniverse {
 		List<RDConcept> predArgs = pred.getArguments();
 		// User query tokens making up syntactic arguments of the verb
 		List<Argument> queryArgs = query.predicateArguments;
-		PMatch result = new PMatch(pred);
+		PMatch result = new PMatch(pred, query.hasQueryVariable());
 
 		for (Argument qArg : queryArgs) {
 			if (qArg.isQueryVariable) {
 				for (int i = 0; i < predArgs.size(); i++) {
 					RDConcept pArg = predArgs.get(i);
 
-					if (qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType)) {
+					if (isOfSameQueryType(pArg, qArg, query.queryType)) {
 						result.saidArgumentIndex = i;
 						break;
 					}
@@ -233,18 +244,59 @@ public class RDUniverse {
 
 	/**
 	 * <p>
-	 * Verifies if the user description of a concept matches the given bound concept.
+	 * Verifies if the user description of a concept (which is a query {@link Argument}) matches the
+	 * given bound concept. Also checks for type equality.
 	 * </p>
 	 * 
-	 * @param userTokens   the user description of the concept;
+	 * @param argument     the user description of the concept;
 	 * @param boundConcept the target bound concept to do the matching against.
 	 * @return {@code true} if description matches the concept.
 	 */
-	private boolean isConceptInstance(List<Token> userTokens, RDConcept boundConcept) {
-		for (Token tok : userTokens) {
-			if (tok.isActionVerbDependent && !lexicon.isFunctionalPOS(tok.pos)
-					&& (boundConcept.isThisConcept(tok.lemma, wordNet)
-							|| boundConcept.isThisConcept(tok.wform, wordNet))) {
+	private boolean isConceptInstance(Argument argument, RDConcept boundConcept) {
+		List<RDConcept> argumentConcepts = findSimilarBoundConcepts(argument);
+
+		for (RDConcept argumentConcept : argumentConcepts) {
+			// Check for type equality first!
+			if (boundConcept.getType().equals(argumentConcept.getType())
+					&& (boundConcept instanceof RDConstant
+							|| boundConcept.isThisConcept(argumentConcept, wordNet))) {
+				// If bound concept is a constant,
+				// let the description similarity tell the match story.
+				return true;
+			}
+		}
+
+		return false;
+	}
+	
+	/**
+	 * <p>
+	 * Will say {@code true} if this concept is of the same type as the query, that is if query
+	 * could be asking for this concept.
+	 * </p>
+	 * 
+	 * @param con the concept to be matched against;
+	 * @param arg the argument that was extracted from the user's query;
+	 * @return {@code true} if query is asking for this.
+	 */
+	public boolean isOfSameQueryType(RDConcept con, Argument arg, QType typ) {
+		if (arg.isQueryVariable) {
+			// Go to the top-level, non-ISA concept to do comparisons.
+			while (con.getType() == CType.ISA && con.getSuperClass() != null) {
+				con = con.getSuperClass();
+			}
+
+			if (typ == QType.WHAT) {
+				for (Token t : arg.argTokens) {
+					if (t.isActionVerbDependent && lexicon.isNounPOS(t.pos)
+							&& con.isThisConcept(t.lemma, wordNet)) {
+						return true;
+					}
+				}
+			}
+			else if ((typ == QType.PERSON && con.getType() == CType.PERSON)
+					|| (typ == QType.LOCATION && con.getType() == CType.LOCATION)
+					|| (typ == QType.TIME && con.getType() == CType.TIME)) {
 				return true;
 			}
 		}
@@ -252,36 +304,75 @@ public class RDUniverse {
 		return false;
 	}
 
-	private PMatch scoreQueryAgainstPredicate(Query query, RDPredicate pred) {
+	/**
+	 * Finds the bound concepts which resemble the given {@code arg}ument.
+	 * 
+	 * @param arg the query argument;
+	 * @return {@link RDConcept}s that are similar to the given argument.
+	 */
+	public List<RDConcept> findSimilarBoundConcepts(Argument arg) {
+		List<RDConcept> result = new ArrayList<>();
+
+		// Let's see if we can be a bit more specific than CType.WORD.
+		// We only compare the noun heads of the reference vs. the argument.
+		for (RDConcept c : boundConcepts) {
+			for (Token t1 : c.getTokenizedReference()) {
+				if (t1.drel.equals("root") && lexicon.isNounPOS(t1.pos)) {
+					for (Token t2 : arg.argTokens) {
+						if (t2.isActionVerbDependent && lexicon.isNounPOS(t2.pos)
+								&& (t1.wform.equalsIgnoreCase(t2.wform)
+										|| t1.lemma.equalsIgnoreCase(t2.lemma))) {
+							// If c has ISA type, get the superclass.
+							while (c.getType() == CType.ISA && c.getSuperClass() != null) {
+								c = c.getSuperClass();
+							}
+
+							result.add(c);
+						}
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * This method will return a {@link PMatch} object that describes a match
+	 * between the {@code query} and a given {@code pred}icate.
+	 * @param query the analyzed query that came from the NLP module.
+	 * @param pred the predicated that came from the .mw file.
+	 * @return a {@link PMatch} object containing match information.
+	 */
+	private PMatch scoreQueryAgainstPredicate(Query query, RDPredicate predicate) {
 		// 1. Match the action verb of the query with the one of the predicate
-		if (!pred.isThisPredicate(query.actionVerb, wordNet)) {
+		if (!predicate.isThisPredicate(query.actionVerb, wordNet)) {
 			return null;
 		}
 
 		// 2. Match the syntactic arguments with logical (bound) arguments
 		// Predicate bound arguments
-		List<RDConcept> predArgs = pred.getArguments();
+		List<RDConcept> predicateArgs = predicate.getArguments();
 		// User query tokens making up syntactic arguments of the verb
 		List<Argument> queryArgs = query.predicateArguments;
 		// Find the maximal sum assignment of query arguments
 		// to predicate arguments
 		// Matrix is symmetrical
-		float[][] matchScores = new float[predArgs.size()][queryArgs.size()];
+		float[][] matchScores = new float[predicateArgs.size()][queryArgs.size()];
 		Set<String> ijPairs = new HashSet<>();
 
-		for (int i = 0; i < predArgs.size(); i++) {
-			RDConcept pArg = predArgs.get(i);
+		for (int i = 0; i < predicateArgs.size(); i++) {
+			RDConcept pArg = predicateArgs.get(i);
 
 			for (int j = 0; j < queryArgs.size(); j++) {
 				Argument qArg = queryArgs.get(j);
-				List<Token> qArgToks = queryArgs.get(j).argTokens;
 
 				matchScores[i][j] = 0.0f;
 
 				if (ijPairs.contains(j + "#" + i)) {
 					// Matrix is symmetrical, where it can.
 					matchScores[i][j] = matchScores[j][i];
-				} else if (qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType)) {
+				} else if (isOfSameQueryType(pArg, qArg, query.queryType)) {
 					// A query type that matches argument
 					// is counted as a argument match.
 					matchScores[i][j] = 1.0f;
@@ -292,28 +383,21 @@ public class RDUniverse {
 					}
 
 					ijPairs.add(i + "#" + j);
-				} else if (isConceptInstance(qArgToks, pArg)) {
+				} else if (isConceptInstance(qArg, pArg)) {
 					// Else, the argument is fuzzy scored against user's description.
-					for (List<Token> tokRef : pArg.getTokenizedReferences()) {
-						float ms = descriptionSimilarity(tokRef, qArgToks);
-
-						if (ms > matchScores[i][j]) {
-							matchScores[i][j] = ms;
-						}
-					}
-							
+					matchScores[i][j] = descriptionSimilarity(pArg, qArg);
 					ijPairs.add(i + "#" + j);
 				}
 			}
 		}
 
-		PMatch result = new PMatch(pred);
+		PMatch result = new PMatch(predicate, query.hasQueryVariable());
 
-		// Predicate has matched, at least with its name.
-		result.matchScore = 1.0f;
+		// Predicate has matched with its name.
+		result.matchScore = 0.0f;
 
-		for (int i = 0; i < predArgs.size(); i++) {
-			RDConcept pArg = predArgs.get(i);
+		for (int i = 0; i < predicateArgs.size(); i++) {
+			RDConcept pArg = predicateArgs.get(i);
 			float maxScore = 0.0f;
 
 			for (int j = 0; j < queryArgs.size(); j++) {
@@ -323,7 +407,7 @@ public class RDUniverse {
 					maxScore = matchScores[i][j];
 				}
 
-				if (qArg.isQueryVariable && isOfSameType(pArg, qArg, query.queryType)
+				if (isOfSameQueryType(pArg, qArg, query.queryType)
 						&& result.saidArgumentIndex == -1) {
 					// Only set this once.							
 					result.saidArgumentIndex = i;
@@ -334,42 +418,10 @@ public class RDUniverse {
 			result.argMatchScores[i] = maxScore;
 		}
 
-		// 1.0 for the predicate name and 1.0 of the query variable.
-		// Anything extra is reference matching, the more, the better.
-		result.isValidMatch = (result.matchScore > 2.0f);
+		// 1.0 for the query variable.
+		// Anything extra is reference matching or Java references, the more, the better.
+		result.isValidMatch = (result.matchScore > 1.0f);
 		return result;
-	}
-
-	/**
-	 * <p>
-	 * Will say {@code true} if this concept is of the same type as the query, that is if query
-	 * could be asking for this concept.
-	 * 
-	 * @param con  the concept to be matched against...
-	 * @param qarg the argument that was extracted from the user's query;
-	 * @return {@code true} if query is asking for this.
-	 */
-	public boolean isOfSameType(RDConcept con, Argument arg, QType qtyp) {
-		// Go to the top-level, non-ISA concept to do comparisons.
-		while (con.getType() == CType.ISA && con.getSuperClass() != null) {
-			con = con.getSuperClass();
-		}
-
-		if (con.getType() == CType.WORD && qtyp == QType.WHAT) {
-			for (Token t : arg.argTokens) {
-				if (lexicon.isNounPOS(t.pos) && t.lemma.equalsIgnoreCase(con.canonicalForm)) {
-					return true;
-				}
-			}
-		} else if (qtyp == QType.PERSON && con.getType() == CType.PERSON) {
-			return true;
-		} else if (qtyp == QType.LOCATION && con.getType() == CType.LOCATION) {
-			return true;
-		} else if (qtyp == QType.TIME && con.getType() == CType.TIME) {
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
@@ -379,53 +431,70 @@ public class RDUniverse {
 	 * </p>
 	 * <p>
 	 * If {@code i, j} are the indexes of the words aligning with the lowest Levenshtein distance L,
-	 * we output sum((|i - j| + 1) * (L + 1)) / (length(description) + length(reference)).
+	 * we output {@code sum((|i - j| + 1) * (L + 1)) / (length(description) + length(reference))}.
 	 * </p>
 	 * 
-	 * @param description list of description tokens that is to be matched;
-	 * @param reference   list of reference tokens that is to be matched;
+	 * @param con the bound concept to get the reference from;
+	 * @param arg the query argument reference;
 	 * @return a real number that is 1.0f if the two entities are exactly equal and less than 1 for
-	 *         a degree of similarity.
+	 *         a percent of similarity.
 	 */
-	private float descriptionSimilarity(List<Token> description, List<Token> reference) {
-		int sum = 0;
-		int dLen = textProcessor.noFunctionalWordsLength(description);
-		int rLen = textProcessor.noFunctionalWordsLength(reference);
+	private float descriptionSimilarity(RDConcept con, Argument arg) {
+		List<Token> description = textProcessor.noFunctionalWordsFilter(con.assignedReferenceTokens);
+		int dLen = description.size();
+		List<Token> reference = textProcessor.noFunctionalWordsFilter(arg.argTokens);
+		int rLen = reference.size();
+		int[][] ldMatrix = new int[description.size()][reference.size()];
+		final int maxLD = 5;
 
 		for (int i = 0; i < description.size(); i++) {
-			int ld = 1000;
-			int j = reference.size();
 			String li = description.get(i).lemma;
 			String wi = description.get(i).wform;
 
-			if (lexicon.isFunctionalPOS(description.get(i).pos)) {
-				// Skip functional words from match.
-				continue;
-			}
+			for (int j = 0; j < reference.size(); j++) {
+				String wj = reference.get(j).wform;
+				String lj = reference.get(j).lemma;
 
-			for (int jj = 0; jj < reference.size(); jj++) {
-				if (!lexicon.isFunctionalPOS(reference.get(jj).pos)) {
-					// Skip functional words from match.
-					String wjj = reference.get(jj).wform;
-					String ljj = reference.get(jj).lemma;
+				ldMatrix[i][j] = maxLD + 1;
 
-					if (li.equalsIgnoreCase(ljj) || wordNet.wordnetEquals(li, ljj)) {
-						ld = 0;
-						j = jj;
-						break;
-					} else {
-						int d = wordDistance.distance(wi.toLowerCase(), wjj.toLowerCase(), 5);
+				if (li.equalsIgnoreCase(lj) || wordNet.wordnetEquals(li, lj)) {
+					ldMatrix[i][j] = 0;
+				} else {
+					// This one returns maxLD + 1 if there's no similarity between inputs.
+					int d = wordDistance.distance(wi.toLowerCase(), wj.toLowerCase(), maxLD);
 
-						if (d < ld) {
-							ld = d;
-							j = jj;
-						}
+					if (d < ldMatrix[i][j]) {
+						ldMatrix[i][j] = d;
 					}
 				}
-			} // end jj
-
-			sum += (Math.abs(i - j) + 1) * (ld + 1);
+			} // end j
 		} // end i
+
+		int sum = 0;
+		Set<Integer> alreadyPaired = new HashSet<>();
+
+		for (int i = 0; i < description.size(); i++) {
+			int minLD = maxLD + 1;
+			int minJ = -1;
+
+			for (int j = 0; j < reference.size(); j++) {
+				if (!alreadyPaired.contains(j)) {
+					if (minLD > ldMatrix[i][j]) {
+						minLD = ldMatrix[i][j];
+						minJ = j;
+					}
+
+					if (minLD == 0) {
+						break;
+					}
+				}
+			}
+
+			if (minJ >= 0) {
+				alreadyPaired.add(minJ);
+				sum += (Math.abs(i - minJ) + 1) * (minLD + 1);
+			}
+		}
 
 		float dScore = (float) sum / (float) dLen;
 		float rScore = (float) sum / (float) rLen;

@@ -71,7 +71,7 @@ REFERENCE curs cursul de sisteme de operare = C5
 REFERENCE curs cursul de limbaje formale și translatoare = C6
 REFERENCE curs cursul de algebră = C7
 REFERENCE curs cursul de inteligență artificială = C8
-REFERENCE conferință Workshop-ul de Robotică, UPB 2019 = W1
+REFERENCE conferință Workshop-ul de Robotică = W1
 REFERENCE oră ro.racai.robin.dialog.generators.TimeNow = G1
 REFERENCE grad ro.racai.robin.dialog.generators.DegreesNow = G2
 

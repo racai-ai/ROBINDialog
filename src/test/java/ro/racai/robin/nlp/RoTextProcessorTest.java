@@ -21,7 +21,7 @@ public class RoTextProcessorTest {
 	@Test
 	public void testTEPROLIN() {
 		TextProcessor tp = new RoTextProcessor(new RoLexicon(), new RoWordNet(), new RoSayings());
-		List<Token> tokens = tp.textProcessor("Unde se află laboratorul de SDA?");
+		List<Token> tokens = tp.textProcessor("Unde se află laboratorul de SDA?", false, false);
 
 		assertEquals(7, tokens.size());
 		assertEquals("Unde", tokens.get(0).wform);

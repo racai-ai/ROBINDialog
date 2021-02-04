@@ -11,28 +11,19 @@ import java.util.regex.Pattern;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
- * <p>Romanian action verbs to be used in ROBIN Dialog.</p>
+ *         <p>
+ *         Romanian action verbs to be used in ROBIN Dialog.
+ *         </p>
  */
 public class RoLexicon implements Lexicon {
 	private static final Set<String> STOP_WORDS = new HashSet<>();
 	private static final Pattern DATE_RX1 =
-		Pattern.compile("([0-9]{1,2})[/:-]([0-9]{1,2})[/:-]([0-9]{4})");
-	private static final Pattern DATE_RX2 =
-		Pattern.compile(
-			"([0-9]{1,2})\\s(" +
-			"ian[.]?|ianuarie|" +
-			"feb[.]?|febr[.]?|februarie|" +
-			"mar[.]?|mart[.]?|martie|" +
-			"apr[.]?|aprilie|" +
-			"mai|" +
-			"iun[.]?|iunie|" +
-			"iul[.]?|iulie|" +
-			"aug[.]?|august|" +
-			"sep[.]?|sept[.]?|septembrie|" +
-			"oct[.]?|octombrie|" +
-			"noi[.]?|nov[.]?|noiembrie|" +
-			"dec[.]?|decembrie" +
-			")\\s([0-9]{4})", Pattern.CASE_INSENSITIVE);
+			Pattern.compile("([0-9]{1,2})[/:-]([0-9]{1,2})[/:-]([0-9]{4})");
+	private static final Pattern DATE_RX2 = Pattern.compile("([0-9]{1,2})\\s(" + "ian[.]?|ianuarie|"
+			+ "feb[.]?|febr[.]?|februarie|" + "mar[.]?|mart[.]?|martie|" + "apr[.]?|aprilie|"
+			+ "mai|" + "iun[.]?|iunie|" + "iul[.]?|iulie|" + "aug[.]?|august|"
+			+ "sep[.]?|sept[.]?|septembrie|" + "oct[.]?|octombrie|" + "noi[.]?|nov[.]?|noiembrie|"
+			+ "dec[.]?|decembrie" + ")\\s([0-9]{4})", Pattern.CASE_INSENSITIVE);
 	private static final Pattern TIME_RX = Pattern.compile("([0-9]{1,2}):([0-9]{1,2})");
 	private static final Pattern NUMBER_RX = Pattern.compile("([0-9]+)");
 	private static final Map<Integer, String> NUMBERS = new HashMap<>();
@@ -51,8 +42,13 @@ public class RoLexicon implements Lexicon {
 	private static final String OCT_STRCONST = "octombrie";
 	private static final String NOI_STRCONST = "noiembrie";
 	private static final String DEC_STRCONST = "decembrie";
-	
+	private static final Map<String, Pair<String, String>> POS_TAGS = new HashMap<>();
+	private static final String ASPIRINA_STRCONST = "aspirină";
+
 	static {
+		POS_TAGS.put(ASPIRINA_STRCONST, new Pair<>("Ncfsrn", ASPIRINA_STRCONST));
+		POS_TAGS.put("aspirina", new Pair<>("Ncfsry", ASPIRINA_STRCONST));
+
 		MONTHS.put(1, IAN_STRCONST);
 		MONTHS.put(2, FEB_STRCONST);
 		MONTHS.put(3, MAR_STRCONST);
@@ -691,17 +687,16 @@ public class RoLexicon implements Lexicon {
 		STOP_WORDS.add("vreunul");
 		STOP_WORDS.add("vre-unul");
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see ro.racai.robin.nlp.Lexicon#isCommandVerb(java.lang.String)
 	 */
 	@Override
 	public boolean isCommandVerb(String verbLemma) {
-		return
-			verbLemma.equalsIgnoreCase("duce") ||
-			verbLemma.equalsIgnoreCase("conduce") ||
-			verbLemma.equalsIgnoreCase("arăta") ||
-			verbLemma.equalsIgnoreCase("aduce");
+		return verbLemma.equalsIgnoreCase("duce") || verbLemma.equalsIgnoreCase("conduce")
+				|| verbLemma.equalsIgnoreCase("arăta") || verbLemma.equalsIgnoreCase("aduce");
 	}
 
 	@Override
@@ -720,13 +715,10 @@ public class RoLexicon implements Lexicon {
 	public boolean isPureNounPOS(String pos) {
 		return pos.matches("^(N|Yn?).*$");
 	}
-	
+
 	@Override
 	public boolean isSkippablePOS(String pos) {
-		return
-			pos.startsWith("Sp") ||
-			pos.startsWith("C") ||
-			pos.startsWith("I");
+		return pos.startsWith("Sp") || pos.startsWith("C") || pos.startsWith("I");
 	}
 
 	@Override
@@ -749,19 +741,17 @@ public class RoLexicon implements Lexicon {
 	public String sayNumber(String number) {
 		if (NUMBER_RX.matcher(number).matches()) {
 			int integer = Integer.parseInt(number);
-			
+
 			if (integer >= 0 && integer <= 20) {
 				return RoLexicon.NUMBERS.get(integer);
-			}
-			else {
+			} else {
 				List<String> saidNumber = new ArrayList<>();
 				boolean tenToNineteen = false;
 				int i = 0;
 
 				while (i < number.length()) {
 					int tenPower = number.length() - i - 1;
-					int units =
-						Integer.parseInt(Character.toString(number.charAt(i)));
+					int units = Integer.parseInt(Character.toString(number.charAt(i)));
 
 					switch (tenPower) {
 						case 0:
@@ -774,12 +764,10 @@ public class RoLexicon implements Lexicon {
 							if (units >= 2) {
 								if (number.endsWith("0")) {
 									saidNumber.add(RoLexicon.NUMBERS.get(units * 10));
-								}
-								else {
+								} else {
 									saidNumber.add(RoLexicon.NUMBERS.get(units * 10) + " și");
 								}
-							}
-							else if (units == 1) {
+							} else if (units == 1) {
 								int lasttwodigits = Integer.parseInt(number.substring(i));
 
 								tenToNineteen = true;
@@ -790,11 +778,9 @@ public class RoLexicon implements Lexicon {
 						case 2:
 							if (units == 1) {
 								saidNumber.add("o sută");
-							}
-							else if (units == 2) {
+							} else if (units == 2) {
 								saidNumber.add("două sute");
-							}
-							else if (units >= 3){
+							} else if (units >= 3) {
 								saidNumber.add(RoLexicon.NUMBERS.get(units) + " sute");
 							}
 							break;
@@ -802,11 +788,9 @@ public class RoLexicon implements Lexicon {
 						case 3:
 							if (units == 1) {
 								saidNumber.add("o mie");
-							}
-							else if (units == 2) {
+							} else if (units == 2) {
 								saidNumber.add("două mii");
-							}
-							else {
+							} else {
 								saidNumber.add(RoLexicon.NUMBERS.get(units) + " mii");
 							}
 							break;
@@ -817,16 +801,16 @@ public class RoLexicon implements Lexicon {
 
 								saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits) + " mii");
 								i++;
-							}
-							else if (units >= 2) {
+							} else if (units >= 2) {
 								int nexttwodigits = Integer.parseInt(number.substring(i, i + 2));
 
 								if (nexttwodigits % 10 == 0) {
-									saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits) + " de mii");
-								}
-								else {
+									saidNumber
+											.add(RoLexicon.NUMBERS.get(nexttwodigits) + " de mii");
+								} else {
 									saidNumber.add(RoLexicon.NUMBERS.get(units * 10) + " și");
-									saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits - units * 10) + " de mii");
+									saidNumber.add(RoLexicon.NUMBERS.get(nexttwodigits - units * 10)
+											+ " de mii");
 								}
 								i++;
 							}
@@ -835,11 +819,9 @@ public class RoLexicon implements Lexicon {
 						case 5:
 							if (units == 1) {
 								saidNumber.add("o sută");
-							}
-							else if (units == 2) {
+							} else if (units == 2) {
 								saidNumber.add("două sute");
-							}
-							else {
+							} else {
 								saidNumber.add(RoLexicon.NUMBERS.get(units) + " sute");
 							}
 							break;
@@ -847,16 +829,14 @@ public class RoLexicon implements Lexicon {
 						case 6:
 							if (units == 1) {
 								saidNumber.add("un milion");
-							}
-							else if (units == 2) {
+							} else if (units == 2) {
 								saidNumber.add("două milioane");
-							}
-							else {
+							} else {
 								saidNumber.add(RoLexicon.NUMBERS.get(units) + " milioane");
 							}
 							break;
 						default:
-							break;		
+							break;
 					} // end switch
 
 					i++;
@@ -864,8 +844,7 @@ public class RoLexicon implements Lexicon {
 
 				return String.join(" ", saidNumber);
 			}
-		}
-		else {
+		} else {
 			return number;
 		}
 	}
@@ -879,42 +858,35 @@ public class RoLexicon implements Lexicon {
 			int hours = Integer.parseInt(m.group(1));
 			int minutes = Integer.parseInt(m.group(2));
 
-			if (
-				hours >= 0 && hours <= 23 &&
-				minutes >= 0 && minutes <= 59
-			) {
+			if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
 				List<String> saidTime = new ArrayList<>();
 
 				switch (hours) {
 					case 0:
 						if (minutes == 0) {
 							saidTime.add("ora douăsprezece noaptea");
-						}
-						else {
+						} else {
 							saidTime.add("ora zero și");
 						}
 						break;
 					case 12:
 						if (minutes == 0) {
 							saidTime.add("ora douăsprezece fix");
-						}
-						else {
+						} else {
 							saidTime.add("ora douăsprezece și");
 						}
 						break;
 					case 2:
 						if (minutes == 0) {
 							saidTime.add("ora două fix");
-						}
-						else {
+						} else {
 							saidTime.add("ora două și");
 						}
 						break;
 					default:
 						if (minutes == 0) {
 							saidTime.add("ora " + sayNumber(Integer.toString(hours)) + " fix");
-						}
-						else {
+						} else {
 							saidTime.add("ora " + sayNumber(Integer.toString(hours)) + " și");
 						}
 				} // end hours
@@ -997,17 +969,13 @@ public class RoLexicon implements Lexicon {
 
 			if (day == 2) {
 				saidDate.add("două");
-			}
-			else if (day == 12) {
+			} else if (day == 12) {
 				saidDate.add("douăsprezece");
-			}
-			else if (day == 22) {
+			} else if (day == 22) {
 				saidDate.add("douăzeci și două");
-			}
-			else if (day == 1) {
+			} else if (day == 1) {
 				saidDate.add("întâi");
-			}
-			else {
+			} else {
 				saidDate.add(sayNumber(Integer.toString(day)));
 			}
 
@@ -1032,17 +1000,13 @@ public class RoLexicon implements Lexicon {
 
 			if (day == 2) {
 				saidDate.add("două");
-			}
-			else if (day == 12) {
+			} else if (day == 12) {
 				saidDate.add("douăsprezece");
-			}
-			else if (day == 22) {
+			} else if (day == 22) {
 				saidDate.add("douăzeci și două");
-			}
-			else if (day == 1) {
+			} else if (day == 1) {
 				saidDate.add("întâi");
-			}
-			else {
+			} else {
 				saidDate.add(sayNumber(Integer.toString(day)));
 			}
 
@@ -1064,29 +1028,29 @@ public class RoLexicon implements Lexicon {
 			Matcher m = p.matcher(text);
 
 			while (m.find()) {
-				if (
-					(
-						m.start() == 0 ||
-						Character.isWhitespace(text.charAt(m.start() - 1))
-					) &&
-					(
-						m.end() == text.length() ||
-						Character.isWhitespace(text.charAt(m.end()))
-					)
-				) {
+				if ((m.start() == 0 || Character.isWhitespace(text.charAt(m.start() - 1)))
+						&& (m.end() == text.length()
+								|| Character.isWhitespace(text.charAt(m.end())))) {
 					int offset = m.start();
 					int length = m.end() - m.start();
 
 					if (!result.containsKey(offset)) {
-						result.put(
-							offset,
-							new Pair<>(pair.getFirstMember(), length)
-						);
+						result.put(offset, new Pair<>(pair.getFirstMember(), length));
 					}
 				}
 			}
 		}
 
 		return result;
+	}
+
+	@Override
+	public Pair<String, String> getPOSAndLemmaForWord(String word) {
+		if (POS_TAGS.containsKey(word)) {
+			return POS_TAGS.get(word);
+		}
+		else {
+			return null;
+		}
 	}
 }

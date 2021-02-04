@@ -3,6 +3,8 @@
  */
 package ro.racai.robin.dialog;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +12,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import ro.racai.robin.dialog.RDPredicate.PMatch;
 import ro.racai.robin.mw.MWFileReader;
 import ro.racai.robin.nlp.Lexicon;
@@ -18,9 +23,12 @@ import ro.racai.robin.nlp.RoLexicon;
 import ro.racai.robin.nlp.RoSpeechProcessing2;
 import ro.racai.robin.nlp.RoTextProcessor;
 import ro.racai.robin.nlp.RoWordNet;
+import ro.racai.robin.nlp.SpeechProcessing;
 import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.TextProcessor.Query;
+import ro.racai.robin.nlp.TextProcessor.Token;
 import ro.racai.robin.nlp.WordNet;
+import org.apache.log4j.Logger;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
@@ -29,6 +37,14 @@ import ro.racai.robin.nlp.WordNet;
  *         </p>
  */
 public class RDManager {
+	private static final Logger LOG = Logger.getLogger(RDManager.class.getName());
+
+	/**
+	 * Set this to true to use ASR and TTS when calling the constructor. Else, use the standard
+	 * input to type user input.
+	 */
+	private boolean confUseSpeech;
+	private SpeechProcessing speechProcessor;
 	private RDUniverse discourseUniverse;
 	private WordNet resouceWordNet;
 	private Lexicon resourceLexicon;
@@ -116,11 +132,11 @@ public class RDManager {
 
 			state.inferredPredicate = pm.matchedPredicate;
 			state.robotReply = new ArrayList<>();
-			state.robotReply.add(state.inferredPredicate.getArguments()
-					.get(pm.saidArgumentIndex).getPreferredReference());
+			state.robotReply.add(state.inferredPredicate.getArguments().get(pm.saidArgumentIndex)
+					.getReference());
 			state.inferredBehaviour = new RDRobotBehaviour(state.inferredPredicate.getUserIntent(),
-					state.inferredPredicate.getArguments()
-							.get(pm.saidArgumentIndex).getPreferredReference());
+					state.inferredPredicate.getArguments().get(pm.saidArgumentIndex)
+							.getReference());
 
 			state.previousQueryType = qtyp;
 			return state;
@@ -133,12 +149,15 @@ public class RDManager {
 	 */
 	private DialogueState currentDState;
 
-	public RDManager(WordNet wn, Lexicon lex, TextProcessor tproc, RDSayings say) {
+	public RDManager(WordNet wn, Lexicon lex, TextProcessor tproc, RDSayings say,
+			SpeechProcessing sproc, boolean speech) {
 		resouceWordNet = wn;
 		resourceLexicon = lex;
 		resourceTextProc = tproc;
 		currentDState = new DialogueState();
 		resourceSayings = say;
+		confUseSpeech = speech;
+		speechProcessor = sproc;
 	}
 
 	/**
@@ -154,8 +173,6 @@ public class RDManager {
 		discourseUniverse =
 				mwr.constructUniverse(resouceWordNet, resourceLexicon, resourceTextProc);
 		microworldName = mwr.getMicroworldName();
-		// Set concepts on the text processor
-		resourceTextProc.setConceptList(discourseUniverse.getUniverseConcepts());
 		// Set DICT ASR correction rules on the text processor
 		resourceTextProc.setASRDictionary(discourseUniverse.getASRRulesMap());
 	}
@@ -165,13 +182,13 @@ public class RDManager {
 	}
 
 	public String getConceptsAsString() {
-		return String.join(System.lineSeparator(), discourseUniverse.getUniverseConcepts().stream()
+		return String.join(System.lineSeparator(), discourseUniverse.getBoundConcepts().stream()
 				.map(RDConcept::toString).collect(Collectors.toList()));
 	}
 
 	public String getPredicatesAsString() {
-		return String.join(System.lineSeparator(), discourseUniverse.getUniversePredicates()
-				.stream().map(RDPredicate::toString).collect(Collectors.toList()));
+		return String.join(System.lineSeparator(), discourseUniverse.getBoundPredicates().stream()
+				.map(RDPredicate::toString).collect(Collectors.toList()));
 	}
 
 	/**
@@ -179,22 +196,23 @@ public class RDManager {
 	 * This is the main method of the {@link RDManager}: it processes a textual user input are
 	 * returns a {@link DialogueState} object.
 	 * 
-	 * @param userInput user input to operate with, comes from the ASR module; <b>it is assumed to
-	 *                  be correct!</b>
+	 * @param userProcessedInput user processed input to operate with, comes from the ASR module;
+	 *                           <b>it is assumed to be correct!</b>
 	 * @return a current state of the dialogue.
 	 */
-	public DialogueState doConversation(String userInput) {
-		Query q = resourceTextProc.queryAnalyzer(resourceTextProc.textProcessor(userInput));
+	public DialogueState doConversation(List<Token> userProcessedInput) {
+		Query q = resourceTextProc.queryAnalyzer(userProcessedInput,
+				discourseUniverse.getDefinedConcepts());
 
 		if (q == null) {
-			// No predicate found, this means no
-			// predicate was found in KB. Return this
-			// and say we do not know about it.
+			// 1. No predicate found, this means no predicate was found in KB. Return this and say
+			// we do not know about it.
 			currentDState = DialogueState.robotSaysSomething(QType.UNKNOWN,
 					resourceSayings.robotDontKnowLines());
 			return currentDState;
 		}
 
+		// 2. Hello or Goodbye
 		if (q.queryType == QType.HELLO) {
 			currentDState = DialogueState.robotSaysSomething(q.queryType,
 					resourceSayings.robotOpeningLines());
@@ -209,26 +227,32 @@ public class RDManager {
 					resourceSayings.robotClosingLines());
 		}
 
-		// 1. Try and match the query first...
+		// 3. Match the query first...
 		PMatch pm = discourseUniverse.resolveQuery(q);
 
-		if (pm.matchedPredicate == null) {
-			// No predicate found, this means no
-			// predicate was found in KB. Return this
-			// and say we do not know about it.
+		if (pm == null || pm.matchedPredicate == null) {
+			// 4. No predicate found, this means no predicate was found in KB. Return this and say
+			// we
+			// do not know about it.
 			currentDState = DialogueState.robotSaysSomething(q.queryType,
 					resourceSayings.robotDontKnowLines());
 
 			return currentDState;
 		}
 
-		if (pm.saidArgumentIndex >= 0 && pm.isValidMatch) {
-			// 2. Some predicate matched. If we have an
+		if (pm.isFullMatch() && !pm.containsJavaReference() && !pm.hasUnresolvedVariable) {
+			// 5. Some predicate from KB matched fully. Just answer "Yes."
+			currentDState =
+					DialogueState.robotSaysSomething(q.queryType, resourceSayings.robotSayYes());
+
+			return currentDState;
+		} else if (pm.saidArgumentIndex >= 0 && pm.isValidMatch) {
+			// 3. Some predicate matched. If we have an
 			// argument that we could return, that's
 			// a success.
 			currentDState = DialogueState.robotInformedResponse(q.queryType, pm);
 		} else if (currentDState.inferredPredicate != null) {
-			// 3. Some predicate matched but we don't have
+			// 4. Some predicate matched but we don't have
 			// enough information specified. Try to do a
 			// match in the context of the previously
 			// matched predicate.
@@ -241,7 +265,7 @@ public class RDManager {
 						resourceSayings.robotDontKnowLines());
 			}
 		} else {
-			// No predicate found, this means no
+			// 5. No predicate found, this means no
 			// predicate was found in KB. Return this
 			// and say we do not know about it.
 			currentDState = DialogueState.robotSaysSomething(q.queryType,
@@ -262,6 +286,102 @@ public class RDManager {
 		resouceWordNet.dumpWordNetCache();
 	}
 
+	private String getUserInput() {
+		if (confUseSpeech) {
+			return speechProcessor.speechToText();
+		} else {
+			System.out.print("Text input> ");
+			System.out.flush();
+			// Could not make UTF-8 console read work in Windows 10...
+			String input = System.console().readLine();
+
+			input = input.replace("i^", "î");
+			input = input.replace("a^", "â");
+			input = input.replace("a@", "ă");
+			input = input.replace("s~", "ș");
+			input = input.replace("t~", "ț");
+			input = input.replace("I^", "Î");
+			input = input.replace("A^", "Â");
+			input = input.replace("A@", "Ă");
+			input = input.replace("S~", "Ș");
+			input = input.replace("T~", "Ț");
+
+			return input;
+		}
+	}
+
+	/**
+	 * Convenience method to output the reply and say it if it is such desired.
+	 * 
+	 * @param replies the reply lines from the manager.
+	 * @throws IOException
+	 * @throws LineUnavailableException
+	 * @throws UnsupportedAudioFileException
+	 * @throws InterruptedException
+	 */
+	private void produceOutput(List<String> replies) throws IOException, LineUnavailableException,
+			UnsupportedAudioFileException, InterruptedException {
+		
+		for (int i = 0; i < replies.size(); i++) {
+			String pepperTalk = resourceTextProc.expandEntities(replies.get(i));
+
+			System.out.println("Pepper> " + pepperTalk);
+
+			if (confUseSpeech) {
+				speechProcessor.playUtterance(speechProcessor.textToSpeech(pepperTalk));
+			}
+		}
+	}
+
+	private static String getROBINDialogVersion() {
+		try {
+			File pom = new File("pom.xml");
+
+			if (pom.exists()) {
+				MavenXpp3Reader reader = new MavenXpp3Reader();
+				Model model = reader.read(new FileReader(pom));
+
+				return model.getVersion();
+			} else {
+				// TODO: read version information from jar
+			}
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		} catch (XmlPullParserException xppe) {
+			xppe.printStackTrace();
+		}
+
+		return "?.?.?-SNAPSHOT";
+	}
+
+	/**
+	 * Call this method to instantiate an {@link RDManager} object.
+	 * 
+	 * @return an {@link RDManager} application (Java actionable object).
+	 */
+	public static RDManager createApplication(String mwFile) {
+		String version = getROBINDialogVersion();
+
+		LOG.info(String.format("ROBINDialog version %s", version));
+
+		RoSpeechProcessing2 speech = new RoSpeechProcessing2();
+		RoWordNet rown = new RoWordNet();
+		RoLexicon rolex = new RoLexicon();
+		RoSayings say = new RoSayings();
+		RoTextProcessor rotp = new RoTextProcessor(rolex, rown, say);
+		RDManager dman = new RDManager(rown, rolex, rotp, say, speech, false);
+
+		dman.loadMicroworld(mwFile);
+
+		LOG.info(String.format("Running with the %s microworld", dman.getMicroworldName()));
+
+		return dman;
+	}
+
+	public List<Token> processPrompt(String prompt) {
+		return resourceTextProc.textProcessor(prompt, false, false);
+	}
+
 	/**
 	 * @param args
 	 * @throws IOException
@@ -272,61 +392,32 @@ public class RDManager {
 	public static void main(String[] args) throws IOException, LineUnavailableException,
 			UnsupportedAudioFileException, InterruptedException {
 		if (args.length != 1) {
+			String version = getROBINDialogVersion();
 			System.err.println(
-					"java ROBINDialog-3.1.0-SNAPSHOT-jar-with-dependencies.jar <.mw file>");
+					"java ROBINDialog-" + version + "-jar-with-dependencies.jar <.mw file>");
 			return;
 		}
 
-		RoSpeechProcessing2 speech = new RoSpeechProcessing2();
 		String mwFile = args[0];
-		RoWordNet rown = new RoWordNet();
-		RoLexicon rolex = new RoLexicon();
-		RDSayings say = new RoSayings();
-		RoTextProcessor rotp = new RoTextProcessor(rolex, rown, say);
-		RDManager dman = new RDManager(rown, rolex, rotp, say);
+		RDManager dman = createApplication(mwFile);
+		String prompt = dman.getUserInput();
 
-		dman.loadMicroworld(mwFile);
-
-		// A text-based dialogue loop with speech input and output.
-		System.out.println("Running with the " + dman.getMicroworldName() + " microworld");
-		String prompt = speech.speechToText();
-
-		prompt = prompt.trim();
-		prompt = rotp.textCorrection(prompt);
-		System.out.println("User> " + prompt);
-
+		// A text-based dialogue loop with speech/console input and output.
 		while (!prompt.isEmpty()
-				&& !say.userClosingStatement(Arrays.asList(prompt.split("\\s+")))) {
-			/*
-			 * if (prompt.startsWith("dump")) { String[] parts = prompt.split("\\s+");
-			 * 
-			 * switch (parts[1]) { case "concepts": System.out.println(dman.getConceptsAsString());
-			 * break; case "predicates": System.out.println(dman.getPredicatesAsString()); break;
-			 * default: System.out.println("Dialogue Manager> Unknown 'dump' command."); } }
-			 */
+				&& !dman.resourceSayings.userClosingStatement(Arrays.asList(prompt.split("\\s+")))) {
+			List<Token> pprompt = dman.processPrompt(prompt);
 
-			DialogueState dstat = dman.doConversation(prompt);
+			System.out.println("User> " + dman.resourceTextProc.toPromptString(pprompt));
 
-			System.out.print("Pepper> ");
-			System.out.println(String.join(" ", dstat.getReply()));
+			DialogueState dstat = dman.doConversation(pprompt);
 
-			// Say the replies as well.
-			List<String> replies = dstat.getReply();
-
-			for (int i = 0; i < replies.size(); i++) {
-				String pepperTalk = rotp.expandEntities(replies.get(i));
-
-				speech.playUtterance(speech.textToSpeech(pepperTalk));
-			}
+			dman.produceOutput(dstat.getReply());
 
 			if (dstat.isDialogueDone()) {
 				System.out.print(dstat.getBehaviour());
 			}
 
-			prompt = speech.speechToText();
-			prompt = prompt.trim();
-			prompt = rotp.textCorrection(prompt);
-			System.out.println("User> " + prompt);
+			prompt = dman.getUserInput();
 		} // end demo dialogue loop
 
 		System.out.println("Pepper> La revedere.");

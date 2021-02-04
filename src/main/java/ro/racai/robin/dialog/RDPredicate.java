@@ -54,6 +54,7 @@ public class RDPredicate {
 
 	/**
 	 * The arguments of this predicate, in no special order.
+	 * To be populated from TRUE definitions.
 	 */
 	private List<RDConcept> predicateArguments;
 
@@ -69,6 +70,12 @@ public class RDPredicate {
 		 * The predicate which matched.
 		 */
 		public RDPredicate matchedPredicate;
+
+		/**
+		 * This is set to {@code true} if the generating {@link Query}
+		 * object had a query variable to be resolved by finding its reference.
+		 */
+		public boolean hasUnresolvedVariable;
 
 		/**
 		 * For a predicate to match, at least one referenced argument must match against what user
@@ -95,12 +102,50 @@ public class RDPredicate {
 		 */
 		public int saidArgumentIndex;
 
-		public PMatch(RDPredicate pred) {
+		public PMatch(RDPredicate pred, boolean unres) {
 			matchedPredicate = pred;
 			argMatchScores = new float[pred.getArguments().size()];
+
+			for (int i = 0; i < argMatchScores.length; i++) {
+				argMatchScores[i] = 0.0f;
+			}
+
 			matchScore = 0.0f;
 			saidArgumentIndex = -1;
 			isValidMatch = false;
+			hasUnresolvedVariable = unres;
+		}
+
+		/**
+		 * For a predicate match, if all bound arguments were matched, this returns {@code true}.
+		 * This is a valid "Yes." answer.
+		 * @return {@code true} if all arguments were matched.
+		 */
+		public boolean isFullMatch() {
+			int matchCount = 0;
+
+			for (int i = 0; i < argMatchScores.length; i++) {
+				if (argMatchScores[i] > 0.0f) {
+					matchCount++;
+				}
+			}
+
+			return matchCount == argMatchScores.length;
+		}
+
+		/**
+		 * If all arguments have matched but at least one of them is a
+		 * Java runtime reference, we cannot answer "Yes."
+		 * @return {@code true} if {@link #matchedPredicate} contains a Java reference.
+		 */
+		public boolean containsJavaReference() {
+			for (RDConcept arg : matchedPredicate.getArguments()) {
+				if (arg.hasJavaClassReference()) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 
@@ -167,29 +212,21 @@ public class RDPredicate {
 
 	/**
 	 * <p>
-	 * Convenience static method for building a predicate.
+	 * Convenience static method for building a predicate with no bound arguments.
+	 * Use this to build {@link RDPredicate} objects from PREDICATE definitions.
 	 * </p>
 	 * 
 	 * @param uint  user intent defined in {@link UIntentType};
 	 * @param pform canonical form (lemma) for this predicate, e.g. <i>duce</i>;
 	 * @param syns  synonyms for the canonical form (may be null or empty);
-	 * @param args  the list of fully instantiated {@link RDConcept}s which are bound already, e.g.
-	 *              <i>laboratorul de informatică</i>.
 	 * @return an {@link RDPredicate}.
 	 */
-	public static RDPredicate predicateBuilder(UIntentType uint, String pform, List<String> syns,
-			List<RDConcept> args) {
+	public static RDPredicate predicateBuilder(UIntentType uint, String pform, List<String> syns) {
 		RDPredicate predicate = new RDPredicate(uint, pform);
 
 		if (syns != null) {
 			for (String s : syns) {
 				predicate.addSynonym(s);
-			}
-		}
-
-		if (args != null) {
-			for (RDConcept cpt : args) {
-				predicate.addArgument(cpt);
 			}
 		}
 
@@ -199,22 +236,20 @@ public class RDPredicate {
 	/**
 	 * <p>
 	 * Convenience method for returning a deep copy of this object.
+	 * Arguments are not copied, if they exist. Use this to instantiate predicates
+	 * from the TRUE definitions.
 	 * </p>
 	 * 
 	 * @return an exact duplicate of this object.
 	 */
 	public RDPredicate deepCopy() {
 		RDPredicate predicate =
-				new RDPredicate(userIntention, actionVerb != null ? new String(actionVerb) : null);
+				new RDPredicate(userIntention, actionVerb != null ? actionVerb : null);
 
 		if (synonymsOfActionVerb != null) {
 			for (String s : synonymsOfActionVerb) {
-				predicate.addSynonym(new String(s));
+				predicate.addSynonym(s);
 			}
-		}
-
-		for (RDConcept cpt : predicateArguments) {
-			predicate.addArgument(cpt.deepCopy());
 		}
 
 		return predicate;

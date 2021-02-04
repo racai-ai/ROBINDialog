@@ -5,7 +5,6 @@ package ro.racai.robin.dialog;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import ro.racai.robin.nlp.StringUtils;
 import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.TextProcessor.Token;
@@ -49,10 +48,16 @@ public class RDConcept {
 	protected List<String> synonymsOfCanonicalForm;
 
 	/**
-	 * This is the reference(s) of the concept from the micro-world.
-	 * If no reference has been assigned yet, leave this to empty.
+	 * This is the reference of the concept from the micro-world.
+	 * If no reference has been assigned yet, leave this to null.
 	 */
-	protected List<String> assignedReferences;
+	protected String assignedReference;
+
+	/**
+	 * The processed version of the {@link #assignedReferences}. To be filled in at the first
+	 * request.
+	 */
+	protected List<Token> assignedReferenceTokens;
 
 	/**
 	 * This is set to {@code true} if the concept reference <i>i</i> from {@link assignedReferences}
@@ -61,51 +66,21 @@ public class RDConcept {
 	protected boolean isJavaClass;
 
 	/**
-	 * The processed version of the {@link #assignedReferences}. To be filled in at the first
-	 * request.
-	 */
-	protected List<List<Token>> assignedReferencesTokens;
-
-	/**
-	 * <p>
-	 * This one is for creating a {@link RDConstant}.
-	 * </p>
-	 * 
-	 * @param ctyp the type of the concept constant.
-	 * @param refs the list of references for the constant.
-	 * @param sup  the superclass concept, if applicable.
-	 */
-	public RDConcept(CType ctyp, List<String> refs, RDConcept sup) {
-		conceptType = ctyp;
-		synonymsOfCanonicalForm = new ArrayList<>();
-		canonicalForm = null;
-		superClass = sup;
-		assignedReferences = refs;
-
-		if (assignedReferences == null) {
-			assignedReferences = new ArrayList<>();
-		}
-
-		assignedReferencesTokens = new ArrayList<>();
-	}
-
-	/**
 	 * Used to create {@link RDConstant}s.
 	 * 
 	 * @param ctyp the type of the constant.
-	 * @param ref  the reference (value) of the constant.
 	 */
-	public RDConcept(CType ctyp, String ref) {
+	public RDConcept(CType ctyp) {
 		conceptType = ctyp;
 		synonymsOfCanonicalForm = new ArrayList<>();
 		canonicalForm = null;
 		superClass = null;
-		assignedReferences = new ArrayList<>();
-		assignedReferences.add(ref);
-		assignedReferencesTokens = new ArrayList<>();
+		assignedReference = null;
+		assignedReferenceTokens = new ArrayList<>();
+		isJavaClass = false;
 	}
 
-	private RDConcept(CType ctyp, String cform, List<String> refs, RDConcept sup) {
+	private RDConcept(CType ctyp, String cform, RDConcept sup) {
 		conceptType = ctyp;
 
 		if (StringUtils.isNullEmptyOrBlank(cform)) {
@@ -115,31 +90,24 @@ public class RDConcept {
 		canonicalForm = cform.trim().toLowerCase();
 		synonymsOfCanonicalForm = new ArrayList<>();
 		superClass = sup;
-		assignedReferences = refs;
-
-		if (assignedReferences == null) {
-			assignedReferences = new ArrayList<>();
-		}
-
-		assignedReferencesTokens = new ArrayList<>();
+		assignedReference = null;
+		assignedReferenceTokens = new ArrayList<>();
+		isJavaClass = false;
 	}
 
 	/**
 	 * <p>
-	 * Convenience static method for building a concept.
+	 * Convenience static method for building a concept from CONCEPT definitions.
 	 * </p>
 	 * 
 	 * @param ctyp  type of the concept defined in {@link CType};
 	 * @param cform canonical form (lemma) for this concept, e.g. <i>sală</i>;
 	 * @param syns  synonyms for the canonical form (may be null or empty);
-	 * @param refs  the assigned (reference) values to this concept: a list of space-separated
-	 *              words, e.g. <i>laboratorul de informatică</i>, <i>laboratorul de programare</i>.
 	 * @param scls  the superclass concept of this one.
-	 * @return an {@link RDConcept}.
+	 * @return an {@link RDConcept} that has no reference assigned yet.
 	 */
-	public static RDConcept conceptBuilder(CType ctyp, String cform, List<String> syns,
-			List<String> refs, RDConcept scls) {
-		RDConcept concept = new RDConcept(ctyp, cform, refs, scls);
+	public static RDConcept conceptBuilder(CType ctyp, String cform, List<String> syns, RDConcept scls) {
+		RDConcept concept = new RDConcept(ctyp, cform, scls);
 
 		if (syns != null) {
 			for (String s : syns) {
@@ -152,14 +120,14 @@ public class RDConcept {
 
 	/**
 	 * <p>
-	 * Create a deep copy of this concept. All internal data structure are allocated on the heap for
-	 * the new object, except for immutable types.
+	 * Create a deep copy of this concept in order to assign a reference to it.
+	 * All internal data structure are allocated on the heap for the new object, except for immutable types.
 	 * </p>
 	 * 
-	 * @return a deep copy of this object.
+	 * @return a deep copy of this object, with no assigned reference.
 	 */
 	public RDConcept deepCopy() {
-		RDConcept concept = new RDConcept(conceptType, canonicalForm, assignedReferences, superClass);
+		RDConcept concept = new RDConcept(conceptType, canonicalForm, superClass);
 
 		// 1. Copy sysnonyms
 		if (synonymsOfCanonicalForm != null) {
@@ -170,17 +138,6 @@ public class RDConcept {
 
 		// 2. Copy Java class status
 		concept.setJavaClass(isJavaClass);
-
-		// 3. Copy the references processing, if it's available.
-		for (List<Token> tref : getTokenizedReferences()) {
-			List<Token> cref = new ArrayList<>();
-
-			for (Token t : tref) {
-				cref.add(t);
-			}
-
-			concept.getTokenizedReferences().add(cref);
-		}
 
 		return concept;
 	}
@@ -202,35 +159,51 @@ public class RDConcept {
 
 	/**
 	 * <p>
-	 * Sets the references for this concept.
+	 * Sets the reference for this concept from a REFERENCE definition.
 	 * </p>
 	 * 
-	 * @param values the references to be set.
+	 * @param value the reference to be set.
 	 */
-	public void setReferences(List<String> values, TextProcessor proc) {
-		if (values != null && !values.isEmpty()) {
-			for (String value : values) {
-				if (!StringUtils.isNullEmptyOrBlank(value) && !assignedReferences.contains(value)) {
-					assignedReferences.add(value);
+	public void setReference(String value, TextProcessor proc) {
+		if (!StringUtils.isNullEmptyOrBlank(value)) {
+			assignedReference = value.trim();
 
-					if (value.startsWith("ro.racai.robin.dialog.generators.")) {
-						isJavaClass = true;
-					}
-
-					assignedReferencesTokens.add(proc.textProcessor(value));
-				}
+			if (value.startsWith("ro.racai.robin.dialog.generators.")) {
+				isJavaClass = true;
 			}
+
+			assignedReferenceTokens = proc.textProcessor(value, isJavaClass, true);
 		}
 	}
 
 	/**
-	 * Out of multiple, synonymous references, only use one for replying to the user.
-	 * @return the preferred reference {@link String}.
+	 * Gets the reference. Throws {@link RuntimeException} if the reference is null or empty!
+	 * One cannot use {@link RDCon}
+	 * @return the reference {@link String}.
 	 */
-	public String getPreferredReference() {
-		return assignedReferences.get(0);
+	public String getReference() {
+		if (StringUtils.isNullEmptyOrBlank(assignedReference)) {
+			throw new RuntimeException(String.format("RDConcept %s is not bound!", toString()));
+		}
+
+		return assignedReference;
 	}
 	
+	/**
+	 * <p>
+	 * Gets the tokenized version of the reference for matching with user's sayings.
+	 * </p>
+	 * 
+	 * @return the processed version of the {@link #assignedReference} member field.
+	 */
+	public List<Token> getTokenizedReference() {
+		if (assignedReferenceTokens.isEmpty()) {
+			throw new RuntimeException(String.format("RDConcept %s has not been processed!", toString()));
+		}
+
+		return assignedReferenceTokens;
+	}
+
 	protected void setJavaClass(boolean value) {
 		isJavaClass = value;
 	}
@@ -243,17 +216,6 @@ public class RDConcept {
 	 */
 	public boolean hasJavaClassReference() {
 		return isJavaClass;
-	}
-
-	/**
-	 * <p>
-	 * Gets the tokenized versions of the references for matching with user's sayings.
-	 * </p>
-	 * 
-	 * @return the processed version of the {@link #assignedReferences} member field.
-	 */
-	public List<List<Token>> getTokenizedReferences() {
-		return assignedReferencesTokens;
 	}
 
 	/**
@@ -282,6 +244,10 @@ public class RDConcept {
 		return synonymsOfCanonicalForm;
 	}
 
+	public boolean isThisConcept(RDConcept another, WordNet wn) {
+		return another.equals(this) || isThisConcept(another.getCanonicalName(), wn);
+	}
+
 	/**
 	 * <p>
 	 * Tests if an arbitrary word refers to this concept.
@@ -299,7 +265,7 @@ public class RDConcept {
 		word = word.trim().toLowerCase();
 
 		if (word.equals(canonicalForm)) {
-			return true;
+			return true; 
 		}
 
 		for (String syn : synonymsOfCanonicalForm) {
@@ -343,19 +309,11 @@ public class RDConcept {
 	 */
 	@Override
 	public String toString() {
-		if (!assignedReferences.isEmpty()) {
-			List<String> resultingString = new ArrayList<>();
-
-			for (String assignedReference : assignedReferences) {
-				if (!StringUtils.isNullEmptyOrBlank(assignedReference)) {
-					resultingString.add("\"" + assignedReference + "\"" + "/" + conceptType.name());
-				}
-			}
-
-			return String.join(", ", resultingString);
+		if (!StringUtils.isNullEmptyOrBlank(assignedReference)) {
+			return  canonicalForm + "/" + conceptType.name() + " -> ``" + assignedReference + "''";
 		}
 		else {
-			return "\"" + canonicalForm + "\"" + "/" + conceptType.name();
+			return canonicalForm + "/" + conceptType.name();
 		}
 	}
 
@@ -369,20 +327,19 @@ public class RDConcept {
 		if (obj instanceof RDConcept) {
 			RDConcept rdc = (RDConcept) obj;
 
+			if (rdc == this) {
+				return true;
+			}
+
 			if (conceptType != rdc.conceptType) {
 				// Types have to be the same, as well.
 				return false;
 			}
 
-			if (rdc.canonicalForm.equals(canonicalForm)) {
-				if (rdc.assignedReferences.size() == this.assignedReferences.size()) {
-					for (String ref : this.assignedReferences) {
-						if (!rdc.assignedReferences.contains(ref)) {
-							return false;
-						}
-					}
-				}
-
+			if (rdc.canonicalForm.equals(canonicalForm)
+					&& ((this.assignedReference == null && rdc.assignedReference == null)
+							|| (this.assignedReference != null && rdc.assignedReference != null
+									&& this.assignedReference.equals(rdc.assignedReference)))) {
 				return true;
 			}
 		}

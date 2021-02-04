@@ -4,12 +4,12 @@
 
   <groupId>ro.racai.robin</groupId>
   <artifactId>ROBINDialog</artifactId>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>5.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>14</maven.compiler.release>
+    <maven.compiler.release>15</maven.compiler.release>
   </properties>
 
   <dependencies>
@@ -19,10 +19,16 @@
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.maven/maven-model -->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-model</artifactId>
+      <version>3.6.3</version>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.26</version>
+      <version>1.7.30</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
     <dependency>
@@ -59,9 +65,9 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
+          <version>3.8.1</version>
           <configuration>
-            <release>14</release>
+            <release>15</release>
           </configuration>
         </plugin>
         <plugin>
@@ -71,32 +77,50 @@
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>3.1.1</version>
-          <configuration>
-            <archive>
-              <manifest>
-                <mainClass>ro.racai.robin.dialog.RDManager</mainClass>
-              </manifest>
-            </archive>
-            <!-- get all project dependencies -->
-            <descriptorRefs>
-              <descriptorRef>jar-with-dependencies</descriptorRef>
-            </descriptorRefs>
-            <outputDirectory>${project.build.directory}</outputDirectory>
-            <finalName>${project.build.finalName}</finalName>
-          </configuration>
-          <executions>
-            <execution>
-              <id>make-assembly</id>
-              <!-- bind to the packaging phase -->
-              <phase>package</phase>
-              <goals>
-                <goal>single</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>ro.racai.robin.dialog.RDManager</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>ro.racai.robin.dialog.RDManager</mainClass>
+            </manifest>
+          </archive>
+          <!-- get all project dependencies -->
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <outputDirectory>${project.build.directory}</outputDirectory>
+          <finalName>${project.build.finalName}</finalName>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <!-- bind to the packaging phase -->
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
   <description>This is the RACAI-developed dialogue manager for the ROBIN Dialog project. It supports micro-worlds and it uses the TEPROLIN platform for Romanian text pre-processing. It also uses external web services for ASR and TTS of Romanian speech.</description>
   <name>The ROBIN Dialogue manager for Pepper</name>

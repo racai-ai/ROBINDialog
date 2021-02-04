@@ -1,12 +1,14 @@
 package ro.racai.robin.dialog.generators;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -21,10 +23,22 @@ public class DegreesNow implements RDResponseGenerator {
 	private static final String IP_QUERY =
 			"http://api.ipstack.com/check?access_key=";
 	// Add here your own ipstack.com API key...
-	private static final String IP_API_KEY = "";
+	private static String confIPAPIKey = "";
 	private static final String DOESNOTWORKCONST = "Pagina de internet nu funcționează.";
 	private static final Logger LOGGER = Logger.getLogger(DegreesNow.class.getName());
 	private String currentCity = "București";
+
+	static {
+		File apiKeyFile = new File("IP-info-API-Key.txt");
+
+		if (apiKeyFile.exists()) {
+			try {
+				confIPAPIKey = Files.readAllLines(apiKeyFile.toPath()).get(0).trim();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public DegreesNow() {
 		setCity();
@@ -48,7 +62,7 @@ public class DegreesNow implements RDResponseGenerator {
 		StringBuilder content = new StringBuilder();
 
 		try {
-			URL url = new URL(DegreesNow.IP_QUERY + DegreesNow.IP_API_KEY);
+			URL url = new URL(DegreesNow.IP_QUERY + DegreesNow.confIPAPIKey);
 			URLConnection conn = url.openConnection();
 			HttpURLConnection http = (HttpURLConnection) conn;
 
