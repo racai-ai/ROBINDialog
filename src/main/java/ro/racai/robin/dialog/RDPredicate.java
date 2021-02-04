@@ -255,6 +255,10 @@ public class RDPredicate {
 		return predicate;
 	}
 
+	public boolean isTheActionVerb(String word) {
+		return word.equalsIgnoreCase(actionVerb);
+	}
+
 	/**
 	 * <p>
 	 * Tests if an arbitrary word refers to this predicate (name).
@@ -267,7 +271,7 @@ public class RDPredicate {
 	public boolean isThisPredicate(String word, WordNet wn) {
 		word = word.trim().toLowerCase();
 
-		if (word.equals(actionVerb)) {
+		if (isTheActionVerb(word)) {
 			return true;
 		}
 

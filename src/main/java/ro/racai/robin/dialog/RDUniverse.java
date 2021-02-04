@@ -345,8 +345,16 @@ public class RDUniverse {
 	 * @return a {@link PMatch} object containing match information.
 	 */
 	private PMatch scoreQueryAgainstPredicate(Query query, RDPredicate predicate) {
+		boolean exactPredicateNameMatch;
+
 		// 1. Match the action verb of the query with the one of the predicate
-		if (!predicate.isThisPredicate(query.actionVerb, wordNet)) {
+		if (predicate.isTheActionVerb(query.actionVerb)) {
+			exactPredicateNameMatch = true;
+		}
+		else if (predicate.isThisPredicate(query.actionVerb, wordNet)) {
+			exactPredicateNameMatch = false;
+		}
+		else {
 			return null;
 		}
 
@@ -360,6 +368,8 @@ public class RDUniverse {
 		// Matrix is symmetrical
 		float[][] matchScores = new float[predicateArgs.size()][queryArgs.size()];
 		Set<String> ijPairs = new HashSet<>();
+		// Add this value so that we can pass the matching threshold at return.
+		float scoreDelta = 0.1f;
 
 		for (int i = 0; i < predicateArgs.size(); i++) {
 			RDConcept pArg = predicateArgs.get(i);
@@ -379,13 +389,13 @@ public class RDUniverse {
 
 					if (pArg.hasJavaClassReference()) {
 						// Also a "full" match because this a Java class reference.
-						matchScores[i][j] += 1.0f;
+						matchScores[i][j] += scoreDelta;
 					}
 
 					ijPairs.add(i + "#" + j);
 				} else if (isConceptInstance(qArg, pArg)) {
 					// Else, the argument is fuzzy scored against user's description.
-					matchScores[i][j] = descriptionSimilarity(pArg, qArg);
+					matchScores[i][j] = descriptionSimilarity(pArg, qArg) + scoreDelta;
 					ijPairs.add(i + "#" + j);
 				}
 			}
@@ -419,8 +429,17 @@ public class RDUniverse {
 		}
 
 		// 1.0 for the query variable.
+		// 0.5 for the predicate name or 0.25 for WordNet approximate equals.
 		// Anything extra is reference matching or Java references, the more, the better.
-		result.isValidMatch = (result.matchScore > 1.0f);
+		if (exactPredicateNameMatch) {
+			result.matchScore += 0.5f;
+			result.isValidMatch = (result.matchScore > 1.5f);
+		}
+		else {
+			result.matchScore += 0.25f;
+			result.isValidMatch = (result.matchScore > 1.25f);
+		}
+		
 		return result;
 	}
 
@@ -440,7 +459,8 @@ public class RDUniverse {
 	 *         a percent of similarity.
 	 */
 	private float descriptionSimilarity(RDConcept con, Argument arg) {
-		List<Token> description = textProcessor.noFunctionalWordsFilter(con.assignedReferenceTokens);
+		List<Token> description =
+				textProcessor.noFunctionalWordsFilter(con.assignedReferenceTokens);
 		int dLen = description.size();
 		List<Token> reference = textProcessor.noFunctionalWordsFilter(arg.argTokens);
 		int rLen = reference.size();
@@ -472,6 +492,14 @@ public class RDUniverse {
 
 		int sum = 0;
 		Set<Integer> alreadyPaired = new HashSet<>();
+		int maxValue = 0;
+
+		if (description.size() > reference.size()) {
+			maxValue = description.size() * (maxLD + 1);
+		}
+		else {
+			maxValue = reference.size() * (maxLD + 1);
+		}
 
 		for (int i = 0; i < description.size(); i++) {
 			int minLD = maxLD + 1;
@@ -493,6 +521,10 @@ public class RDUniverse {
 			if (minJ >= 0) {
 				alreadyPaired.add(minJ);
 				sum += (Math.abs(i - minJ) + 1) * (minLD + 1);
+			}
+			else {
+				// Mare sure dScore and rScore are >= 1
+				sum += maxValue;
 			}
 		}
 
