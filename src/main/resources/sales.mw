@@ -3,6 +3,10 @@ DICT desctop desktop
 DICT gheiming gaming
 DICT biznis business
 DICT "a me de" AMD
+DICT raizen Ryzen
+DICT reizen Ryzen
+DICT raizăn Ryzen
+DICT reizăn Ryzen
 DICT intel Intel
 DICT envidia NVIDIA
 DICT radeon Radeon
@@ -10,22 +14,94 @@ DICT "ce pe u" CPU
 DICT "ge pe u" GPU
 DICT ram RAM
 DICT "i trei" i3
+DICT "i 3" i3
 DICT "i cinci" i5
+DICT "i 5" i5
 DICT "i șapte" i7
+DICT "i 7" i7
 DICT "i nouă" i9
+DICT "i 9" i9
 DICT "de de re trei" DDR3
+DICT "de de re 3" DDR3
 DICT "de de re patru" DDR4
+DICT "de de re 4" DDR4
 DICT gigaherți GHz
-DICT megabaiți MB
-DICT gigabaiți GB
-DICT terabaiți TB
+DICT megabaiți MBs
+DICT gigabaiți GBs
+DICT gigabait GB
+DICT terabaiți TBs
+DICT terabait TB
 DICT hardisc HDD
 DICT harddisc HDD
+DICT "hard disc" HDD
+DICT del Dell
+DICT "ai bi em" IBM
+DICT "pi si -uri" PC-uri
+DICT "pi si uri" PC-uri
+DICT uindăus Windows
+DICT uindos Windows
+DICT hăum Home
+DICT hom Home
+DICT linux Linux
+DICT linăx Linux
+DICT "cent o es" CentOS
+DICT "cent ău es" CentOS
+DICT "red het" RedHat
+DICT "red hat" RedHat
+DICT edișăn edition	
+DICT gigabaiți GBs
+DICT "gi fors" GeForce
+DICT "en vidia" NVIDIA
+DICT "ti ai" Ti
+DICT "mec buc" MacBook
+DICT "mac buc" MacBook	
+DICT eir Air
+DICT "ge șapte" G7
+DICT displei display
+DICT pepăr Pepper
+DICT peper Pepper
+DICT "se se de" SSD
+DICT șourum showroom
+DUCT "ve o sută" V100
+DUCT "ve 100" V100
+DICT "pe o sută" P100
+DICT "pe 100" P100
+DICT epăl Apple
+DICT "haș pe" HP
+DICT "ol viu" AllView
+DICT huauei Huawei
+DICT aisăr Acer
+DICT eisăr Acer
+DICT acer Acer
+DICT espaiăr Aspire
+DICT smartuaci smartwatch
+DICT "smart uaci" smartwatch
+DICT "aruba ge te" ArubaGT
+DICT "aruba gi ti" ArubaGT
 
-CONCEPT calculator, desktop -> WORD
-CONCEPT laptop, portabil -> WORD
-CONCEPT CPU -> WORD
+CONCEPT calculator, desktop, model -> WORD
+CONCEPT laptop, portabil, model -> WORD
+CONCEPT telefon, smartwatch -> WORD
+CONCEPT CPU, procesor -> WORD
 CONCEPT GPU -> WORD
-CONCEPT memorie -> WORD
-CONCEPT HDD -> WORD
+CONCEPT memorie, RAM -> WORD
+CONCEPT HDD, harddisc -> WORD
+CONCEPT preț -> NUMBER
+CONCEPT ieftin -> WORD
+CONCEPT scump -> WORD
+CONCEPT categorie -> WORD
+
+# Examples from eMag.ro
+REFERENCE calculator Serioux M457 = C1
+REFERENCE calculator Maximus = C2
+REFERENCE calculator ArubaGT KFG743 = C3
+REFERENCE laptop Asus X515MA = L1
+REFERENCE laptop Apple MacBook Air 13 = L2
+REFERENCE laptop Acer Aspire 5 A515-56 = L3
+
+REFERENCE categorie gaming = E1
+REFERENCE categorie home = E2
+REFERENCE categorie business = E3
+REFERENCE categorie ultraportabil = E4
+
 

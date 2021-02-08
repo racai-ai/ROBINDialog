@@ -669,6 +669,10 @@ public class RoTextProcessor extends TextProcessor {
 					eText = lexicon.sayNumber(entityAtOffset);
 					replacements.put(offset, new Pair<>(length, eText));
 					break;
+				case MODEL:
+					eText = lexicon.sayModel(entityAtOffset);
+					replacements.put(offset, new Pair<>(length, eText));
+					break;
 				default:
 					break;
 			}

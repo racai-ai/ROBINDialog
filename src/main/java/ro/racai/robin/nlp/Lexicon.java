@@ -104,6 +104,15 @@ public interface Lexicon {
 	public String sayDate(String date);
 
 	/**
+	 * Will take a model name, e.g. 'AG45-12' and will transcribe it as 'a ge patruzeci și cinci
+	 * doisprezece'
+	 * 
+	 * @param model the model to transform
+	 * @return the language specific representation of the given model
+	 */
+	public String sayModel(String model);
+
+	/**
 	 * Find and mark, returning a Map from offsets to a {@link Pair} of entity type and entity
 	 * length in text.
 	 * 

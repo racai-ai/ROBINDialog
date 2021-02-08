@@ -41,8 +41,17 @@ public class RoLexiconTest {
 		Lexicon lex = new RoLexicon();
 
 		assertEquals("întâi iunie două mii douăzeci", lex.sayDate("01/06/2020"));
-		assertEquals("zece septembrie o mie nouă sute șaptezeci și șapte", lex.sayDate("10-09-1977"));
+		assertEquals("zece septembrie o mie nouă sute șaptezeci și șapte",
+				lex.sayDate("10-09-1977"));
 		assertEquals("zece martie două mii unu", lex.sayDate("10 mar 2001"));
+	}
+	
+	@Test
+	public void testModelTalk() {
+		Lexicon lex = new RoLexicon();
+	
+		assertEquals("a cinci sute cincisprezece cincizeci și șase", lex.sayModel("A515-56"));
+		assertEquals("ca ef ge șapte sute patruzeci și trei", lex.sayModel("KFG0743"));
 	}
 
 	@Test

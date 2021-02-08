@@ -26,6 +26,7 @@ public class RoLexicon implements Lexicon {
 			+ "dec[.]?|decembrie" + ")\\s([0-9]{4})", Pattern.CASE_INSENSITIVE);
 	private static final Pattern TIME_RX = Pattern.compile("([0-9]{1,2}):([0-9]{1,2})");
 	private static final Pattern NUMBER_RX = Pattern.compile("([0-9]+)");
+	private static final Pattern MODEL_RX = Pattern.compile("([A-Z][0-9A-Z-]+)");
 	private static final Map<Integer, String> NUMBERS = new HashMap<>();
 	private static final List<Pair<EntityType, Pattern>> ENTITIES = new ArrayList<>();
 	private static final Map<Integer, String> MONTHS = new HashMap<>();
@@ -44,10 +45,38 @@ public class RoLexicon implements Lexicon {
 	private static final String DEC_STRCONST = "decembrie";
 	private static final Map<String, Pair<String, String>> POS_TAGS = new HashMap<>();
 	private static final String ASPIRINA_STRCONST = "aspirină";
+	private static final Map<String, String> ALPHABET = new HashMap<>();
 
 	static {
 		POS_TAGS.put(ASPIRINA_STRCONST, new Pair<>("Ncfsrn", ASPIRINA_STRCONST));
 		POS_TAGS.put("aspirina", new Pair<>("Ncfsry", ASPIRINA_STRCONST));
+
+		ALPHABET.put("A", "a");
+		ALPHABET.put("B", "be");
+		ALPHABET.put("C", "ce");
+		ALPHABET.put("D", "de");
+		ALPHABET.put("E", "e");
+		ALPHABET.put("F", "ef");
+		ALPHABET.put("G", "ge");
+		ALPHABET.put("H", "haș");
+		ALPHABET.put("I", "i");
+		ALPHABET.put("J", "je");
+		ALPHABET.put("K", "ca");
+		ALPHABET.put("L", "el");
+		ALPHABET.put("M", "em");
+		ALPHABET.put("N", "en");
+		ALPHABET.put("O", "o");
+		ALPHABET.put("P", "pe");
+		ALPHABET.put("R", "re");
+		ALPHABET.put("Q", "chiu");
+		ALPHABET.put("S", "es");
+		ALPHABET.put("T", "te");
+		ALPHABET.put("U", "u");
+		ALPHABET.put("V", "ve");
+		ALPHABET.put("W", "dublu ve");
+		ALPHABET.put("X", "ix");
+		ALPHABET.put("Y", "igrec");
+		ALPHABET.put("Z", "zet");
 
 		MONTHS.put(1, IAN_STRCONST);
 		MONTHS.put(2, FEB_STRCONST);
@@ -94,6 +123,7 @@ public class RoLexicon implements Lexicon {
 		ENTITIES.add(new Pair<>(EntityType.DATE, DATE_RX2));
 		ENTITIES.add(new Pair<>(EntityType.TIME, TIME_RX));
 		ENTITIES.add(new Pair<>(EntityType.NUMBER, NUMBER_RX));
+		ENTITIES.add(new Pair<>(EntityType.MODEL, MODEL_RX));
 
 		NUMBERS.put(0, "zero");
 		NUMBERS.put(1, "unu");
@@ -790,7 +820,7 @@ public class RoLexicon implements Lexicon {
 								saidNumber.add("o mie");
 							} else if (units == 2) {
 								saidNumber.add("două mii");
-							} else {
+							} else if (units >= 3) {
 								saidNumber.add(RoLexicon.NUMBERS.get(units) + " mii");
 							}
 							break;
@@ -944,6 +974,36 @@ public class RoLexicon implements Lexicon {
 	}
 
 	@Override
+	public String sayModel(String model) {
+		List<String> result = new ArrayList<>();
+		StringBuilder currentNumber = new StringBuilder();
+
+		for (int i = 0; i < model.length(); i++) {
+			String c = Character.toString(model.charAt(i));
+
+			if (ALPHABET.containsKey(c)) {
+				if (currentNumber.length() > 0) {
+					result.add(sayNumber(currentNumber.toString()));
+					currentNumber = new StringBuilder();
+				}
+
+				result.add(ALPHABET.get(c));
+			} else if (c.matches("^[0-9]$")) {
+				currentNumber.append(c);
+			} else if (c.equals("-") && currentNumber.length() > 0) {
+				result.add(sayNumber(currentNumber.toString()));
+				currentNumber = new StringBuilder();
+			}
+		}
+
+		if (currentNumber.length() > 0) {
+			result.add(sayNumber(currentNumber.toString()));
+		}
+		
+		return String.join(" ", result);
+	}
+
+	@Override
 	public String sayDate(String date) {
 		Matcher m = DATE_RX1.matcher(date);
 
@@ -1054,3 +1114,4 @@ public class RoLexicon implements Lexicon {
 		}
 	}
 }
+

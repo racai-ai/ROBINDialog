@@ -6,5 +6,5 @@ package ro.racai.robin.nlp;
  * engine, as in 203 -> 'două sute trei'.
  */
 public enum EntityType {
-    NUMBER, DATE, TIME
+    NUMBER, DATE, TIME, MODEL
 }
