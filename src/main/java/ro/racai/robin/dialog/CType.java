@@ -23,6 +23,8 @@ public enum CType {
 	TIME,
 	// e.g. azi, astăzi IS-A zi
 	ISA,
+	// e.g. 4 GB or 4199 lei
+	AMOUNT,
 	// e.g. sala 209
 	LOCATION;
 

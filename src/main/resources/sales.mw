@@ -84,12 +84,17 @@ CONCEPT laptop, portabil, model -> WORD
 CONCEPT telefon, smartwatch -> WORD
 CONCEPT CPU, procesor -> WORD
 CONCEPT GPU -> WORD
-CONCEPT memorie, RAM -> WORD
-CONCEPT HDD, harddisc -> WORD
-CONCEPT preț -> NUMBER
-CONCEPT ieftin -> WORD
-CONCEPT scump -> WORD
+# For instance, '4 GB'
+CONCEPT memorie, RAM -> AMOUNT
+CONCEPT HDD, harddisc -> AMOUNT
+# For instance, '4199 lei'
+CONCEPT preț -> AMOUNT
+# Introducing attributes: qualifiers of concepts which operate as functions over all references of that type.
+# For instance, 'cel mai ieftin calculator' operates over all instances of 'preț' concept, selecting the lowest 'preț'
+ATTRIBUTE ieftin -> preț
+ATTRIBUTE scump -> preț
 CONCEPT categorie -> WORD
+CONCEPT sistem, SO -> WORD
 
 # Examples from eMag.ro
 REFERENCE calculator Serioux M457 = C1
@@ -98,10 +103,19 @@ REFERENCE calculator ArubaGT KFG743 = C3
 REFERENCE laptop Asus X515MA = L1
 REFERENCE laptop Apple MacBook Air 13 = L2
 REFERENCE laptop Acer Aspire 5 A515-56 = L3
-
 REFERENCE categorie gaming = E1
 REFERENCE categorie home = E2
 REFERENCE categorie business = E3
 REFERENCE categorie ultraportabil = E4
+REFERENCE memorie 4 GB = M1
+REFERENCE memorie 8 GB = M2
+REFERENCE memorie 16 GB = M3
+REFERENCE HDD 256 GB = H1
+REFERENCE HDD 512 GB = H2
+REFERENCE HDD 1 TB = H3
+REFERENCE procesor Intel Core i3 1115G4 = P1
+REFERENCE procesor Intel Dual Core i5 = P2
+
+PREDICATE avea, deține, exista, fi -> SAY_SOMETHING
 
 
