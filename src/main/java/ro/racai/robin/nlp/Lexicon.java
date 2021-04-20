@@ -1,6 +1,7 @@
 package ro.racai.robin.nlp;
 
 import java.util.Map;
+import ro.racai.robin.dialog.CType;
 
 /**
  * @author Radu Ion ({@code radu@racai.ro})
@@ -20,6 +21,10 @@ public interface Lexicon {
 		return new Pair<>("X", word);
 	}
 
+	public default boolean isSubjectOrDirectObject(String drel) {
+		return drel.startsWith("nsubj") || drel.equals("obj");
+	}
+
 	/**
 	 * Checks a verb lemma for a "command" verb.
 	 * 
@@ -27,6 +32,16 @@ public interface Lexicon {
 	 * @return {@code true} if lemma is a command verb
 	 */
 	public boolean isCommandVerb(String verbLemma);
+
+	/**
+	 * Checks a verb lemma for verb that asks for an {@link CType#AMOUNT}, e.g. "costa".
+	 * 
+	 * @param verbLemma the verb lemma to check
+	 * @return {@code true} if lemma is an amount verb
+	 */
+	public boolean isAmountVerb(String verbLemma);
+
+	public boolean isAmountVariableWord(String lemma);
 
 	/**
 	 * Checks if the POS belongs to a functional word.

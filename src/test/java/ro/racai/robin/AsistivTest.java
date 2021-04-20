@@ -45,4 +45,25 @@ public class AsistivTest {
 
 		assertEquals("Da așa este.", dstat.getReply().get(0));
 	}
+
+	@Test
+	public void test5() {
+		DialogueState dstat = getAnswer("În cât suntem astăzi?");
+
+		assertEquals("ro.racai.robin.dialog.generators.DayNow", dstat.getReply().get(0));
+	}
+
+	@Test
+	public void test6() {
+		DialogueState dstat = getAnswer("În ce zi suntem astăzi?");
+
+		assertEquals("ro.racai.robin.dialog.generators.DayNow", dstat.getReply().get(0));
+	}
+
+	@Test
+	public void test7() {
+		DialogueState dstat = getAnswer("Ce zi este astăzi?");
+
+		assertEquals("ro.racai.robin.dialog.generators.DayNow", dstat.getReply().get(0));
+	}
 }

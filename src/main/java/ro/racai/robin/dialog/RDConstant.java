@@ -6,9 +6,9 @@ package ro.racai.robin.dialog;
 /**
  * @author Radu Ion ({@code radu@racai.ro})
  *         <p>
- *         A "constant" is an instance of a concept for which we don't care about the name of the
- *         variable. For instance, <i>8:00</i> is an instance of the "hour" concept but we only keep
- *         the instance. Useful when we want to talk about these constants.
+ *         A "constant" is an instance of a concept defined as such in the micro-world file.
+ *         For instance, <i>8:00</i> is an instance of the "hour" concept.
+ *         Useful when we want to talk about these constants.
  *         </p>
  */
 public class RDConstant extends RDConcept {
@@ -49,7 +49,9 @@ public class RDConstant extends RDConcept {
 				return false;
 			}
 
-			if (rdc.getReference().equals(this.getReference())) {
+			if (rdc.getReference().equals(this.getReference()) || (conceptType == CType.AMOUNT
+					&& Math.abs(numericalValue - rdc.numericalValue) < 1e-5f
+					&& typeOfNumericalValue.equalsIgnoreCase(rdc.typeOfNumericalValue))) {
 				return true;
 			}
 		}

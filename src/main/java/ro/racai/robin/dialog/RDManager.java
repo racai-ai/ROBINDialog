@@ -114,6 +114,8 @@ public class RDManager {
 
 			state.robotReply = lines;
 			state.previousQueryType = qtyp;
+			state.inferredBehaviour =
+					new RDRobotBehaviour(UIntentType.SAY_SOMETHING, String.join("", lines));
 			return state;
 		}
 
@@ -232,18 +234,20 @@ public class RDManager {
 
 		if (pm == null || pm.matchedPredicate == null) {
 			// 4. No predicate found, this means no predicate was found in KB. Return this and say
-			// we
-			// do not know about it.
+			// we do not know about it.
 			currentDState = DialogueState.robotSaysSomething(q.queryType,
 					resourceSayings.robotDontKnowLines());
 
 			return currentDState;
 		}
 
-		if (pm.isFullMatch() && !pm.containsJavaReference() && !pm.hasUnresolvedVariable) {
-			// 5. Some predicate from KB matched fully. Just answer "Yes."
+		if ((q.queryType == QType.YESNO || q.queryType == QType.COMMAND)
+				&& ((pm.isFullMatch() && !pm.containsJavaReference() && !q.hasQueryVariable())
+						|| (pm.isValidMatch && q.hasQueryTopic()))) {
+			// 5. Some predicate from KB matched fully or partially. Just answer "Yes."
 			currentDState =
 					DialogueState.robotSaysSomething(q.queryType, resourceSayings.robotSayYes());
+			currentDState.inferredPredicate = pm.matchedPredicate;
 
 			return currentDState;
 		} else if (pm.saidArgumentIndex >= 0 && pm.isValidMatch) {

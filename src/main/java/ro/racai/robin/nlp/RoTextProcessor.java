@@ -20,7 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
@@ -44,61 +46,63 @@ public class RoTextProcessor extends TextProcessor {
 	private static final String TEPROLIN_QUERY = "http://relate.racai.ro:5000/process";
 	private static final Logger LOGGER = Logger.getLogger(RoTextProcessor.class.getName());
 	private static final String UTF8_STRCONST = "UTF-8";
-	private static final String CLITIC_QUERY = "https://relate.racai.ro/ws/cratima/asr_cratima.php";
+	//private static final String CLITIC_QUERY = "https://relate.racai.ro/ws/cratima/asr_cratima.php";
 	//private static final String UNKWORD_QUERY =
 	//		"https://relate.racai.ro/ws/cratima/asr_correct.php";
+	private static final Pattern PUNCT_RX = Pattern.compile("^\\W+$");
+	//private static final String NLP_CUBE = "nlp-cube-adobe";
 
 	public RoTextProcessor(Lexicon lex, WordNet wn, RDSayings say) {
 		super(lex, wn, say);
 	}
 
-	private String improveASRDetection(String text, String queryUrl) {
+/* 	private String improveASRDetection(String text, String queryUrl) {
 		StringBuilder content = new StringBuilder();
-
+	
 		try {
 			URL url = new URL(queryUrl);
 			URLConnection conn = url.openConnection();
 			HttpURLConnection http = (HttpURLConnection) conn;
-
+	
 			http.setRequestMethod("GET");
 			http.setDoOutput(true);
-
+	
 			Map<String, String> arguments = new HashMap<>();
-
+	
 			arguments.put("text", text);
-
+	
 			StringJoiner sj = new StringJoiner("&");
-
+	
 			for (Map.Entry<String, String> entry : arguments.entrySet()) {
 				sj.add(URLEncoder.encode(entry.getKey(), UTF8_STRCONST) + "="
 						+ URLEncoder.encode(entry.getValue(), UTF8_STRCONST));
 			}
-
+	
 			byte[] out = sj.toString().getBytes(StandardCharsets.UTF_8);
 			int length = out.length;
-
+	
 			http.setFixedLengthStreamingMode(length);
 			http.setRequestProperty("Content-Type",
 					"application/x-www-form-urlencoded; charset=UTF-8");
 			http.connect();
-
+	
 			OutputStream os = http.getOutputStream();
-
+	
 			os.write(out);
 			os.close();
-
+	
 			int status = http.getResponseCode();
-
+	
 			if (status == 200) {
 				BufferedReader in = new BufferedReader(
 						new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
 				String line = in.readLine();
-
+	
 				while (line != null) {
 					content.append(line);
 					line = in.readLine();
 				}
-
+	
 				in.close();
 			} else {
 				LOGGER.error("ASR improvement query error for text '" + text + "'; error code "
@@ -111,26 +115,26 @@ public class RoTextProcessor extends TextProcessor {
 			ioe.printStackTrace();
 			return text;
 		}
-
+	
 		String json = content.toString();
 		JSONParser parser = new JSONParser();
-
+	
 		try {
 			JSONObject root = (JSONObject) parser.parse(json);
 			String textResult = (String) root.get("text");
-
+	
 			textResult = textResult.trim();
-
+	
 			if (!textResult.equalsIgnoreCase(text)) {
 				text = textResult;
 			}
 		} catch (ParseException pe) {
 			pe.printStackTrace();
 		}
-
+	
 		return text;
 	}
-
+ */
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -152,9 +156,12 @@ public class RoTextProcessor extends TextProcessor {
 
 			arguments.put("text", text);
 			arguments.put("exec", "dependency-parsing");
-			// It seems that UD-Pipe is not very good with some parses
-			// that are needed by ROBIN.
-			//arguments.put("dependency-parsing", "nlp-cube-adobe");
+			// It seems that UD-Pipe is not very good with some parses that are needed by ROBIN.
+			//arguments.put("sentence-splitting", NLP_CUBE);
+			//arguments.put("tokenization", NLP_CUBE);
+			//arguments.put("pos-tagging", NLP_CUBE);
+			//arguments.put("lemmatization", NLP_CUBE);
+			//arguments.put("dependency-parsing", NLP_CUBE);
 
 			StringJoiner sj = new StringJoiner("&");
 
@@ -176,6 +183,16 @@ public class RoTextProcessor extends TextProcessor {
 			os.write(out);
 			os.close();
 
+			// For some reason, TEPROLIN will close the connection, even if the processing
+			// is done with no error. When debugging, this does not happen.
+			// So here I temporize the calls, to simulate the debugging timing.
+			try {
+				Thread.sleep(new Random().nextInt(500));
+			}
+			catch (InterruptedException ie) {
+				// Just ignore it.
+			}
+			
 			int status = http.getResponseCode();
 
 			if (status == 200) {
@@ -237,7 +254,7 @@ public class RoTextProcessor extends TextProcessor {
 	protected String textCorrection(String text) {
 		if (!StringUtils.isNullEmptyOrBlank(text)) {
 			// 1. Take care of clitic insertion (done by Vasile Păiș)
-			text = improveASRDetection(text, CLITIC_QUERY);
+			//text = improveASRDetection(text, CLITIC_QUERY);
 			// 1.1 And further unknown word correction (also done by Vasile Păiș)
 			//text = improveASRDetection(text, UNKWORD_QUERY);
 
@@ -291,16 +308,18 @@ public class RoTextProcessor extends TextProcessor {
 				text = text.trim();
 			}
 
-			// 3. Add '?' or '.' depending on the statement.
-			String[] spaceTokens = text.split("\\s+");
+			if (!text.endsWith(".") && !text.endsWith("?")) {
+				// 3. Add '?' or '.' depending on the statement, only if required!
+				String[] spaceTokens = text.split("\\s+");
 
-			if (spaceTokens.length == 1) {
-				text += ".";
-			} else if (lexicon.isQuestionFirstWord(spaceTokens[0])
-					|| lexicon.isQuestionFirstWord(spaceTokens[1])) {
-				text += "?";
-			} else {
-				text += ".";
+				if (spaceTokens.length == 1) {
+					text += ".";
+				} else if (lexicon.isQuestionFirstWord(spaceTokens[0])
+						|| lexicon.isQuestionFirstWord(spaceTokens[1])) {
+					text += "?";
+				} else {
+					text += ".";
+				}
 			}
 
 			// 4. Make first letter upper case.
@@ -310,13 +329,12 @@ public class RoTextProcessor extends TextProcessor {
 		return text;
 	}
 
-
 	/**
-	 * Edit the Romanian dependency parsing to make the copulative verb the root
-	 * of the sentence.
+	 * Edit the Romanian dependency parsing to make the copulative verb the root of the sentence.
+	 * 
 	 * @param query the query to edit.
 	 */
-	private void editRootCopNSubjTriple(List<Token> query) {
+	private void editRootCopSomeTriple(List<Token> query) {
 		// Find root
 		int rootIndex = -1;
 
@@ -337,21 +355,25 @@ public class RoTextProcessor extends TextProcessor {
 
 		// Find nsubj and cop
 		int copIndex = -1;
-		int nsubjIndex = -1;
+		int someIndex = -1;
 
 		for (int i = 0; i < query.size(); i++) {
 			Token t = query.get(i);
 
 			if (t.head == rootIndex + 1) {
-				if (t.drel.equals("nsubj")) {
-					nsubjIndex = i;
-				} else if (t.drel.equals("cop")) {
+				if (t.drel.equals("cop")) {
 					copIndex = i;
+				} else {
+					someIndex = i;
 				}
+			}
+			
+			if (copIndex >= 0 && someIndex >= 0) {
+				break;
 			}
 		}
 
-		if (copIndex >= 0 && nsubjIndex >= 0) {
+		if (copIndex >= 0 && someIndex >= 0) {
 			// If found:
 			query.get(copIndex).drel = "root";
 			query.get(copIndex).head = 0;
@@ -363,7 +385,7 @@ public class RoTextProcessor extends TextProcessor {
 				query.get(copIndex).pos = "Vm";
 			}
 
-			query.get(nsubjIndex).head = copIndex + 1;
+			query.get(someIndex).head = copIndex + 1;
 			query.get(rootIndex).head = copIndex + 1;
 			query.get(rootIndex).drel = "cop";
 
@@ -376,30 +398,7 @@ public class RoTextProcessor extends TextProcessor {
 					t.head = copIndex + 1;
 				}
 			}
-		}
-	}
-
-	private List<Argument> editCatPredicate(List<Argument> arguments) {
-		// Cât e ceasul?
-		// Here we actually need a single argument, i.e. ceasul.
-		// Delete "Cât".
-		List<Argument> result = new ArrayList<>();
-
-		if (arguments.size() == 2) {
-			if (arguments.get(0).argTokens.size() == 1
-					&& arguments.get(0).argTokens.get(0).lemma.equalsIgnoreCase("cât")) {
-				result.add(arguments.get(1));
-				result.get(0).isQueryVariable = true;
-				return result;
-			} else if (arguments.get(1).argTokens.size() == 1
-					&& arguments.get(1).argTokens.get(0).lemma.equalsIgnoreCase("cât")) {
-				result.add(arguments.get(0));
-				result.get(0).isQueryVariable = true;
-				return result;
-			}
-		}
-
-		return arguments;
+		}		
 	}
 	
 	/*
@@ -414,7 +413,7 @@ public class RoTextProcessor extends TextProcessor {
 		}
 
 		// 1. Do query edits.
-		editRootCopNSubjTriple(query);
+		editRootCopSomeTriple(query);
 		// Add more here if needed...
 
 		Query result = new Query();
@@ -453,6 +452,7 @@ public class RoTextProcessor extends TextProcessor {
 
 		// We only have one query variable set.
 		boolean queryVariableFlag = false;
+		boolean queryTopicFlag = false;
 
 		// 5. Find all arguments (first dependents) of the action verb.
 		// We only consider "noun" arguments, e.g. nouns, pronouns, abbreviations, numerals, etc.
@@ -475,22 +475,21 @@ public class RoTextProcessor extends TextProcessor {
 						// .filter((x) -> !lexicon.isFunctionalPOS(query.get(x - 1).POS))
 						.map(x -> query.get(x - 1)).collect(Collectors.toList());
 
-				boolean qvf = isQueryVariable(nounPhrase);
+				Argument predArg = new Argument(nounPhrase);
+
+				result.predicateArguments.add(predArg);
 
 				if (!queryVariableFlag) {
-					result.predicateArguments.add(new Argument(nounPhrase, qvf));
+					queryVariableFlag = isQueryVariable(nounPhrase);
+					predArg.isQueryVariable = queryVariableFlag;
+				}
 
-					if (qvf) {
-						queryVariableFlag = true;
-					}
-				} else {
-					result.predicateArguments.add(new Argument(nounPhrase, false));
+				if (!queryTopicFlag) {
+					queryTopicFlag = isQueryTopic(nounPhrase);
+					predArg.isQueryTopic = queryTopicFlag;
 				}
 			}
 		}
-		
-		// 6. Edit predicate arguments, if necessary.
-		result.predicateArguments = editCatPredicate(result.predicateArguments);
 
 		int fti = 0;
 
@@ -522,10 +521,12 @@ public class RoTextProcessor extends TextProcessor {
 			result.queryType = QType.COMMAND;
 		} else if (firstToken.lemma.equals("cine")) {
 			result.queryType = QType.PERSON;
+		} else if (firstToken.lemma.equals("cât") && lexicon.isAmountVerb(result.actionVerb)) {
+			result.queryType = QType.AMOUNT;
 		} else if (firstToken.lemma.equals("ce") || firstToken.lemma.equals("cât")
 				|| firstToken.lemma.equals("care")) {
 			// Default that's a WHAT type question.
-			// It may be specialized on PERSON, LOCATION or TIME, otherwise it's WORD.
+			// It may be specialized on PERSON, LOCATION, TIME or AMOUNT, otherwise it's WORD.
 			result.queryType = QType.WHAT;
 
 			if (lexicon.isPureNounPOS(secondToken.pos) && concepts != null) {
@@ -544,6 +545,10 @@ public class RoTextProcessor extends TextProcessor {
 								break;
 							case TIME:
 								result.queryType = QType.TIME;
+								wasSet = true;
+								break;
+							case AMOUNT:
+								result.queryType = QType.AMOUNT;
 								wasSet = true;
 								break;
 							default:
@@ -614,7 +619,7 @@ public class RoTextProcessor extends TextProcessor {
 				firstIndex = 1;
 			}
 
-			// Relative pronoun/determiner/adverb
+			// 1. Relative pronoun/determiner/adverb
 			if ((argument.get(firstIndex).pos.length() >= 2
 					&& argument.get(firstIndex).pos.charAt(1) == 'w')
 					|| lexicon.isQuestionFirstWord(argument.get(firstIndex).wform)) {
@@ -624,6 +629,27 @@ public class RoTextProcessor extends TextProcessor {
 
 		return false;
 	}
+
+	@Override
+	public boolean isQueryTopic(List<Token> argument) {
+		if (argument != null && !argument.isEmpty()) {
+			int firstIndex = 0;
+
+			// Subject or object for the first verb.
+			while (firstIndex < argument.size()
+					&& !lexicon.isPureNounPOS(argument.get(firstIndex).pos)) {
+				firstIndex++;
+			}
+
+			if (firstIndex < argument.size()
+					&& lexicon.isSubjectOrDirectObject(argument.get(firstIndex).drel)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 
 	@Override
 	public String expandEntities(String text) {
@@ -728,7 +754,7 @@ public class RoTextProcessor extends TextProcessor {
 	}
 
 	@Override
-	public List<Token> postProcessing(List<Token> tokens) {
+	public List<Token> postProcessing(List<Token> tokens, boolean isFromMW) {
 		// Do POS tagging corrections
 		for (Token t : tokens) {
 			Pair<String, String> pl = lexicon.getPOSAndLemmaForWord(t.wform);
@@ -739,13 +765,19 @@ public class RoTextProcessor extends TextProcessor {
 			}
 		}
 		
-		if (!tokens.isEmpty() && tokens.get(0).pos.startsWith("V")) {
+		if (!isFromMW && !tokens.isEmpty() && tokens.get(0).pos.startsWith("V")) {
 			// This is a question in Romanian, usually.
 			Token last = tokens.get(tokens.size() - 1);
 
-			last.wform = "?";
-			last.lemma = "?";
-			last.pos = "QUEST";
+			if (PUNCT_RX.matcher(last.wform).matches()) {
+				last.wform = "?";
+				last.lemma = "?";
+				last.pos = "QUEST";
+			}
+			else {
+				last = new Token("?", "?", "QUEST", 1, "punct", false);
+				tokens.add(last);
+			}
 		}
 
 		return tokens;

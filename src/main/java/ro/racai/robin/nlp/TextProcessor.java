@@ -113,17 +113,42 @@ public abstract class TextProcessor {
 		public List<Token> argTokens;
 		
 		/**
-		 * <p>{@code true} if this argument represents
-		 * the missing information that the user requires.</p>
-		 * <p>For example:</p>
-		 * <p><i>În ce sală se desfășoară cursul de informatică?</i></p>
-		 * <p>Here, ``În ce sală'' is the query variable.</p>  
+		 * <p>
+		 * {@code true} if this argument represents the missing information that the user requires.
+		 * </p>
+		 * <p>
+		 * For example:
+		 * </p>
+		 * <p>
+		 * <i>În ce sală se desfășoară cursul de informatică?</i>
+		 * </p>
+		 * <p>
+		 * Here, ``În ce sală'' is the query variable.
+		 * </p>
 		 */
 		public boolean isQueryVariable;
+
+		/**
+		 * <p>
+		 * {@code true} if this argument represents the main information about what user wants.
+		 * </p>
+		 * <p>
+		 * For example:
+		 * </p>
+		 * <p>
+		 * <i>Aveți laptop Apple MacBook Air 13?</i>
+		 * </p>
+		 * <p>
+		 * Here, ``laptop Apple MacBook Air 13'' is the topic of the question, even if that laptop
+		 * could have additional properties (e.g. memory or HDD specs).
+		 * </p>
+		 */
+		public boolean isQueryTopic;
 		
-		public Argument(List<Token> toks, boolean isvar) {
+		public Argument(List<Token> toks) {
 			argTokens = toks;
-			isQueryVariable = isvar;
+			isQueryVariable = false;
+			isQueryTopic = false;
 		}
 	}
 	
@@ -161,6 +186,16 @@ public abstract class TextProcessor {
 		public boolean hasQueryVariable() {
 			for (Argument a : predicateArguments) {
 				if (a.isQueryVariable) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public boolean hasQueryTopic() {
+			for (Argument a : predicateArguments) {
+				if (a.isQueryTopic) {
 					return true;
 				}
 			}
@@ -211,18 +246,19 @@ public abstract class TextProcessor {
 		}
 
 		if (!isFromMW) {
-			// This is a piece of text coming from the .mw file
+			// This is a piece of text NOT coming from the .mw file
 			text = normalizeText(text);
 			text = textCorrection(text);
 		}
 
 		if (processedTextCache.containsKey(text)) {
+			// Return from cache
 			return processedTextCache.get(text);
 		}
 
 		List<Token> procText = processText(text);
 
-		procText = postProcessing(procText);
+		procText = postProcessing(procText, isFromMW);
 		processedTextCache.put(text, procText);
 
 		return procText;
@@ -258,12 +294,15 @@ public abstract class TextProcessor {
 	}
 
 	/**
-	 * If more post-processing of the text is needed, put it into this method.
-	 * By default, it does nothing.
+	 * If more post-processing of the text is needed, put it into this method. By default, it does
+	 * nothing.
+	 * 
 	 * @param tokens the list of tokens to modify.
+	 * @param isFromMW if {@code true}, no text normalization and correction is performed (text
+	 *        comes from the .mw file).
 	 * @return the modified token list.
 	 */
-	protected List<Token> postProcessing(List<Token> tokens) {
+	protected List<Token> postProcessing(List<Token> tokens, boolean isFromMW) {
 		return tokens;
 	}
 	
@@ -401,10 +440,24 @@ public abstract class TextProcessor {
 	}
 	
 	/**
-	 * <p>Checks to see if list of tokens could represent
-	 * a ``variable'', e.g. ``cine'', ``unde'', ``ce sală'', etc.</p>
-	 * @param argument      the list of tokens to check for a variable; 
-	 * @return              {@code true} if this list of tokens represents a variable.
+	 * <p>
+	 * Checks to see if list of tokens could represent a ``variable'', e.g. ``cine'', ``unde'', ``ce
+	 * sală'', etc.
+	 * </p>
+	 * 
+	 * @param argument the list of tokens to check for a variable;
+	 * @return {@code true} if this list of tokens represents a variable.
 	 */
 	public abstract boolean isQueryVariable(List<Token> argument);
+
+	/**
+	 * <p>
+	 * Checks to see if a list of tokens is the topic of the question, e.g. what is the question
+	 * about, as in ``Aveți laptop Apple?'' or ``Vine fratele meu la cină?''
+	 * </p>
+	 * 
+	 * @param argument the list of tokens to check for topic;
+	 * @return {@code true} if this list of tokens represents the topic of the question.
+	 */
+	public abstract boolean isQueryTopic(List<Token> argument);
 }

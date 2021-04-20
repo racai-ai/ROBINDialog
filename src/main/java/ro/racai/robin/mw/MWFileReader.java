@@ -177,10 +177,10 @@ public class MWFileReader implements RDMicroworld {
 						boolean conceptFound = false;
 
 						for (RDConcept c : definedConcepts) {
-							if (c.getCanonicalName().equals(canonName)) {
+							if (c.getCanonicalName().equalsIgnoreCase(canonName)) {
 								RDConcept nc = c.deepCopy();
 
-								nc.setReference(refString, proc);
+								nc.setReference(refString, proc, lex);
 
 								if (!referencedConcepts.containsKey(refCode)) {
 									referencedConcepts.put(refCode, nc);
@@ -214,7 +214,7 @@ public class MWFileReader implements RDMicroworld {
 					String constValue = ctm.group(2);
 					RDConstant constant = new RDConstant(constType);
 
-					constant.setReference(constValue, proc);
+					constant.setReference(constValue, proc, lex);
 
 					String constCode = ctm.group(3);
 

@@ -18,6 +18,8 @@ public enum QType {
 	PERSON,
 	// CÂND se ține cursul de fotografie?
 	TIME,
+	// CÂTĂ memorie are laptopul?
+	AMOUNT,
 	// CUM ajung în laboratorul de robotică?
 	HOW,
 	// În ce SALĂ se ține cursul de informatică?

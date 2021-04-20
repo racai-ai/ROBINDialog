@@ -79,27 +79,31 @@ DICT "smart uaci" smartwatch
 DICT "aruba ge te" ArubaGT
 DICT "aruba gi ti" ArubaGT
 
-CONCEPT calculator, desktop, model -> WORD
+CONCEPT calculator, desktop, model, sistem -> WORD
 CONCEPT laptop, portabil, model -> WORD
 CONCEPT telefon, smartwatch -> WORD
-CONCEPT CPU, procesor -> WORD
+CONCEPT procesor, CPU -> WORD
 CONCEPT GPU -> WORD
-# For instance, '4 GB'
+# First word of the reference must be a number!
+# For instance:
+# 4 GB
+# 2600 de lei
+# 11 inch
 CONCEPT memorie, RAM -> AMOUNT
-CONCEPT HDD, harddisc -> AMOUNT
-# For instance, '4199 lei'
-CONCEPT preț -> AMOUNT
+CONCEPT HDD, harddisc, hard -> AMOUNT
+# For instance, '4199 de lei'
+CONCEPT preț, leu, RON -> AMOUNT
 # Introducing attributes: qualifiers of concepts which operate as functions over all references of that type.
 # For instance, 'cel mai ieftin calculator' operates over all instances of 'preț' concept, selecting the lowest 'preț'
 ATTRIBUTE ieftin -> preț
 ATTRIBUTE scump -> preț
 CONCEPT categorie -> WORD
 CONCEPT sistem, SO -> WORD
+CONCEPT placă, grafică, video -> WORD
 
 # Examples from eMag.ro
-REFERENCE calculator Serioux M457 = C1
-REFERENCE calculator Maximus = C2
-REFERENCE calculator ArubaGT KFG743 = C3
+REFERENCE calculator Serioux = C1
+REFERENCE calculator Gaming Pro 377 = C2
 REFERENCE laptop Asus X515MA = L1
 REFERENCE laptop Apple MacBook Air 13 = L2
 REFERENCE laptop Acer Aspire 5 A515-56 = L3
@@ -115,7 +119,53 @@ REFERENCE HDD 512 GB = H2
 REFERENCE HDD 1 TB = H3
 REFERENCE procesor Intel Core i3 1115G4 = P1
 REFERENCE procesor Intel Dual Core i5 = P2
+REFERENCE procesor Intel Dual Core i5 9400F = P3
+REFERENCE procesor Intel Celeron N4020 = P4
+REFERENCE procesor Intel Core i7 = P5
+REFERENCE procesor Apple M1 = P6
+REFERENCE sistem sistem de operare Windows = S1
+REFERENCE sistem sistem de operare Windows 10 = S2
+REFERENCE sistem sistem de operare Windows 8 = S3
+REFERENCE sistem sistem de operare Windows 7 = S4
+REFERENCE sistem sistem de operare Linux = S5
+REFERENCE sistem sistem de operare Ubuntu = S6
+REFERENCE sistem sistem de operare CentOS = S7
+REFERENCE sistem sistem de operare Free DOS = S8
+REFERENCE sistem sistem de operare Mac OS = S9
+REFERENCE placă placă grafică Radeon = V1
+REFERENCE placă placă video Radeon = V2
+REFERENCE placă placă grafică Radeon RX 550 = V3
+REFERENCE placă placă video Radeon RX 550 = V4
+REFERENCE placă placă grafică NVIDIA = V5
+REFERENCE placă placă video NVIDIA = V6
+REFERENCE placă placă grafică Intel UHD Graphics 600 = V7
+REFERENCE placă placă video Intel UHD Graphics 600 = V8
+REFERENCE placă placă grafică Intel UHD Graphics = V9
+REFERENCE placă placă video Intel UHD Graphics = V10
+REFERENCE placă placă grafică NVIDIA GeForce GT710 = V11
+REFERENCE placă placă video NVIDIA GeForce GT710 = V12
+
+# Here you have to specify the type of amount:
+# 200 de lei, 4 GB, 10 kilograme, etc.
+AMOUNT 2700 de lei = A1
+AMOUNT 2400 de lei = A2
+AMOUNT 3999 de lei = A3
+AMOUNT 1399 de lei = A4
+AMOUNT 2499 de lei = A5
 
 PREDICATE avea, deține, exista, fi -> SAY_SOMETHING
+PREDICATE costa, fi -> SAY_SOMETHING
 
-
+TRUE avea C1 P3 M2 V3 A2
+TRUE avea C1 P3 M2 V4 A2
+TRUE costa C1 A2
+TRUE avea C2 P5 M3 V11 A1
+TRUE avea C2 P5 M3 V12 A1
+TRUE costa C2 A1
+TRUE avea L1 P4 M1 V8 S5 A4
+TRUE costa L1 A4
+TRUE avea L2 P6 M2 S9 A3
+TRUE costa L2 A3
+TRUE avea L3 P1 M2 V9 A5
+TRUE avea L3 P1 M2 V10 A5
+TRUE costa L3 A5

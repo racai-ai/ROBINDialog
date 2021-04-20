@@ -93,16 +93,6 @@ public class RDUniverse {
 		asrCorrectionRules = new HashMap<>();
 	}
 
-	/**
-	 * <p>Adds a wrongly recognized source phrase and its correct
-	 * equivalent to the rule map.
-	 * @param wrong   a phrase (space-separated) of lower-cased words
-	 * @param correct the correct corresponding phrase
-	 */
-	public void addASRRule(String wrong, String correct) {
-		asrCorrectionRules.put(wrong, correct);
-	}
-
 	public Map<String, String> getASRRulesMap() {
 		return asrCorrectionRules;
 	}
@@ -217,7 +207,7 @@ public class RDUniverse {
 		List<RDConcept> predArgs = pred.getArguments();
 		// User query tokens making up syntactic arguments of the verb
 		List<Argument> queryArgs = query.predicateArguments;
-		PMatch result = new PMatch(pred, query.hasQueryVariable());
+		PMatch result = new PMatch(pred);
 
 		for (Argument qArg : queryArgs) {
 			if (qArg.isQueryVariable) {
@@ -253,6 +243,17 @@ public class RDUniverse {
 	 * @return {@code true} if description matches the concept.
 	 */
 	private boolean isConceptInstance(Argument argument, RDConcept boundConcept) {
+		if (argument.isQueryVariable) {
+			// Variables cannot be concept instances.
+			return false;
+		}
+
+		for (Token t : argument.argTokens) {
+			if (t.isActionVerbDependent && boundConcept.isThisConcept(t.lemma, wordNet)) {
+				return true;
+			}
+		}
+
 		List<RDConcept> argumentConcepts = findSimilarBoundConcepts(argument);
 
 		for (RDConcept argumentConcept : argumentConcepts) {
@@ -269,6 +270,22 @@ public class RDUniverse {
 		return false;
 	}
 	
+	private boolean checkAmountConstant(String lemma, RDConstant con) {
+		if (lemma.equalsIgnoreCase(con.typeOfNumericalValue)) {
+			return true;
+		}
+
+		for (RDConcept dfc : definedConcepts) {
+			if (dfc.conceptType == CType.AMOUNT
+					&& dfc.isThisConcept(con.typeOfNumericalValue, wordNet)
+					&& dfc.isThisConcept(lemma, wordNet)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * <p>
 	 * Will say {@code true} if this concept is of the same type as the query, that is if query
@@ -277,9 +294,10 @@ public class RDUniverse {
 	 * 
 	 * @param con the concept to be matched against;
 	 * @param arg the argument that was extracted from the user's query;
+	 * @param qtyp the query type.
 	 * @return {@code true} if query is asking for this.
 	 */
-	public boolean isOfSameQueryType(RDConcept con, Argument arg, QType typ) {
+	private boolean isOfSameQueryType(RDConcept con, Argument arg, QType typ) {
 		if (arg.isQueryVariable) {
 			// Go to the top-level, non-ISA concept to do comparisons.
 			while (con.getType() == CType.ISA && con.getSuperClass() != null) {
@@ -294,6 +312,18 @@ public class RDUniverse {
 					}
 				}
 			}
+			else if (typ == QType.AMOUNT && con.getType() == CType.AMOUNT) {
+				// Let's see what type of AMOUNT it is.
+				for (Token t : arg.argTokens) {
+					if (t.isActionVerbDependent && lexicon.isNounPOS(t.pos)
+							&& (con.isThisConcept(t.lemma, wordNet)
+									|| (con instanceof RDConstant
+											&& checkAmountConstant(t.lemma, (RDConstant) con))
+									|| lexicon.isAmountVariableWord(t.lemma))) {
+						return true;
+					}
+				}
+			} 
 			else if ((typ == QType.PERSON && con.getType() == CType.PERSON)
 					|| (typ == QType.LOCATION && con.getType() == CType.LOCATION)
 					|| (typ == QType.TIME && con.getType() == CType.TIME)) {
@@ -316,22 +346,33 @@ public class RDUniverse {
 		// Let's see if we can be a bit more specific than CType.WORD.
 		// We only compare the noun heads of the reference vs. the argument.
 		for (RDConcept c : boundConcepts) {
+			String ccn = c.getCanonicalName();
+			boolean cfnd = false;
+
 			for (Token t1 : c.getTokenizedReference()) {
 				if (t1.drel.equals("root") && lexicon.isNounPOS(t1.pos)) {
 					for (Token t2 : arg.argTokens) {
 						if (t2.isActionVerbDependent && lexicon.isNounPOS(t2.pos)
 								&& (t1.wform.equalsIgnoreCase(t2.wform)
-										|| t1.lemma.equalsIgnoreCase(t2.lemma))) {
+										|| t1.lemma.equalsIgnoreCase(t2.lemma)
+										|| (ccn != null && ccn.equalsIgnoreCase(t2.wform))
+										|| (ccn != null && ccn.equalsIgnoreCase(t2.lemma)))) {
 							// If c has ISA type, get the superclass.
 							while (c.getType() == CType.ISA && c.getSuperClass() != null) {
 								c = c.getSuperClass();
 							}
 
 							result.add(c);
+							cfnd = true;
+							break;
 						}
-					}
+					} // end arg tokens
 				}
-			}
+
+				if (cfnd) {
+					break;
+				}
+			} // end c tokens
 		}
 
 		return result;
@@ -363,11 +404,8 @@ public class RDUniverse {
 		List<RDConcept> predicateArgs = predicate.getArguments();
 		// User query tokens making up syntactic arguments of the verb
 		List<Argument> queryArgs = query.predicateArguments;
-		// Find the maximal sum assignment of query arguments
-		// to predicate arguments
-		// Matrix is symmetrical
+		// Find the maximal sum assignment of query arguments to predicate arguments
 		float[][] matchScores = new float[predicateArgs.size()][queryArgs.size()];
-		Set<String> ijPairs = new HashSet<>();
 		// Add this value so that we can pass the matching threshold at return.
 		float scoreDelta = 0.1f;
 
@@ -379,10 +417,7 @@ public class RDUniverse {
 
 				matchScores[i][j] = 0.0f;
 
-				if (ijPairs.contains(j + "#" + i)) {
-					// Matrix is symmetrical, where it can.
-					matchScores[i][j] = matchScores[j][i];
-				} else if (isOfSameQueryType(pArg, qArg, query.queryType)) {
+				if (isOfSameQueryType(pArg, qArg, query.queryType)) {
 					// A query type that matches argument
 					// is counted as a argument match.
 					matchScores[i][j] = 1.0f;
@@ -391,17 +426,19 @@ public class RDUniverse {
 						// Also a "full" match because this a Java class reference.
 						matchScores[i][j] += scoreDelta;
 					}
-
-					ijPairs.add(i + "#" + j);
 				} else if (isConceptInstance(qArg, pArg)) {
 					// Else, the argument is fuzzy scored against user's description.
 					matchScores[i][j] = descriptionSimilarity(pArg, qArg) + scoreDelta;
-					ijPairs.add(i + "#" + j);
+
+					if (qArg.isQueryTopic) {
+						// If it's the query topic, the query type is YESNO.
+						matchScores[i][j] += 1.0;
+					}
 				}
 			}
 		}
 
-		PMatch result = new PMatch(predicate, query.hasQueryVariable());
+		PMatch result = new PMatch(predicate);
 
 		// Predicate has matched with its name.
 		result.matchScore = 0.0f;
@@ -440,6 +477,13 @@ public class RDUniverse {
 			result.isValidMatch = (result.matchScore > 1.25f);
 		}
 		
+		if (result.isValidMatch && result.saidArgumentIndex == -1
+				&& result.matchedPredicate.getArguments().size() == 1
+				&& query.queryType == QType.WHAT) {
+			// Some underspecified variables such as "cât" cannot match query type.
+			result.saidArgumentIndex = 0;
+		}
+
 		return result;
 	}
 
@@ -459,6 +503,14 @@ public class RDUniverse {
 	 *         a percent of similarity.
 	 */
 	private float descriptionSimilarity(RDConcept con, Argument arg) {
+		if (arg.argTokens.size() == 1) {
+			for (Token t : arg.argTokens) {
+				if (t.isActionVerbDependent && con.isThisConcept(t.lemma, wordNet)) {
+					return 1.0f;
+				}
+			}
+		}
+
 		List<Token> description =
 				textProcessor.noFunctionalWordsFilter(con.assignedReferenceTokens);
 		int dLen = description.size();

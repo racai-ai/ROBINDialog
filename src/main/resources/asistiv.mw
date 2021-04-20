@@ -61,8 +61,12 @@ PREDICATE veni -> SAY_SOMETHING
 PREDICATE fi -> SAY_SOMETHING
 
 # Pepper știe cât e ceasul, câte grade sunt afară și ce zi este.
+# Cât e ceasul?
 TRUE fi G1
+# Câte grade sunt afară?
 TRUE fi G2
+# Ce zi este astăzi?
+# În cât suntem astăzi?
 TRUE fi G3
 
 # Pepper știe când utilizatorul trebuie să ia medicamentele

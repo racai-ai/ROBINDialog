@@ -50,6 +50,10 @@ public class RoLexicon implements Lexicon {
 	static {
 		POS_TAGS.put(ASPIRINA_STRCONST, new Pair<>("Ncfsrn", ASPIRINA_STRCONST));
 		POS_TAGS.put("aspirina", new Pair<>("Ncfsry", ASPIRINA_STRCONST));
+		POS_TAGS.put("Intel", new Pair<>("Np", "Intel"));
+		POS_TAGS.put("lei", new Pair<>("Ncmp-n", "leu"));
+		POS_TAGS.put("RON", new Pair<>("Nc", "RON"));
+		POS_TAGS.put("roni", new Pair<>("Ncmp-n", "RON"));
 
 		ALPHABET.put("A", "a");
 		ALPHABET.put("B", "be");
@@ -730,6 +734,11 @@ public class RoLexicon implements Lexicon {
 	}
 
 	@Override
+	public boolean isAmountVerb(String verbLemma) {
+		return verbLemma.equalsIgnoreCase("costa");
+	}
+
+	@Override
 	public boolean isFunctionalPOS(String pos) {
 		return !pos.matches("^(N|P[^x]|M|R[gw]|Vm|Af|Y).*$");
 	}
@@ -763,8 +772,8 @@ public class RoLexicon implements Lexicon {
 		return word.equals("cine") || word.equals("unde") || word.equals("când")
 				|| word.equals("care") || word.equals("cui") || word.equals("cărui")
 				|| word.equals("cărei") || word.equals("căror") || word.equals("ce")
-				|| word.equals("cât") || word.equals("câte") || word.equals("câți")
-				|| word.equals("câtor");
+				|| word.equals("cât") || word.equals("câtă") || word.equals("câte")
+				|| word.equals("câți") || word.equals("câtor");
 	}
 
 	@Override
@@ -1113,5 +1122,9 @@ public class RoLexicon implements Lexicon {
 			return null;
 		}
 	}
-}
 
+	@Override
+	public boolean isAmountVariableWord(String lemma) {
+		return lemma.equalsIgnoreCase("cât");
+	}
+}

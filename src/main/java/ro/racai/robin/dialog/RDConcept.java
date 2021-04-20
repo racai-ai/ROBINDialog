@@ -5,6 +5,8 @@ package ro.racai.robin.dialog;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.log4j.Logger;
+import ro.racai.robin.nlp.Lexicon;
 import ro.racai.robin.nlp.StringUtils;
 import ro.racai.robin.nlp.TextProcessor;
 import ro.racai.robin.nlp.TextProcessor.Token;
@@ -23,6 +25,8 @@ import ro.racai.robin.nlp.WordNet;
  *         instance, we could speak of <i>sala 209</i> or of <i>laboratorul de robotică</i>.
  */
 public class RDConcept {
+	private static final Logger LOG = Logger.getLogger(RDConcept.class.getName());
+
 	/**
 	 * This is the type of the concept, to be checked and enforced when this concept is a predicate
 	 * argument.
@@ -54,6 +58,28 @@ public class RDConcept {
 	protected String assignedReference;
 
 	/**
+	 * If {@link CType} is {@link CType#AMOUNT}, this holds the numerical value of the concept.
+	 * For instance:
+	 * <ul>
+	 * <li>4GB -> 4</li>
+	 * <li>2700 de lei -> 2700</li>
+	 * <li>11 inch -> 11</li>
+	 * </ul>
+	 */
+	protected Float numericalValue;
+
+	/**
+	 * If {@link CType} is {@link CType#AMOUNT}, this holds the numerical value of the concept. For
+	 * instance:
+	 * <ul>
+	 * <li>4GB -> GB</li>
+	 * <li>2700 de lei -> leu</li>
+	 * <li>11 inch -> inch</li>
+	 * </ul>
+	 */
+	protected String typeOfNumericalValue;
+	
+	/**
 	 * The processed version of the {@link #assignedReferences}. To be filled in at the first
 	 * request.
 	 */
@@ -78,6 +104,8 @@ public class RDConcept {
 		assignedReference = null;
 		assignedReferenceTokens = new ArrayList<>();
 		isJavaClass = false;
+		numericalValue = null;
+		typeOfNumericalValue = null;
 	}
 
 	private RDConcept(CType ctyp, String cform, RDConcept sup) {
@@ -164,15 +192,56 @@ public class RDConcept {
 	 * 
 	 * @param value the reference to be set.
 	 */
-	public void setReference(String value, TextProcessor proc) {
+	public void setReference(String value, TextProcessor proc, Lexicon lex) {
 		if (!StringUtils.isNullEmptyOrBlank(value)) {
 			assignedReference = value.trim();
 
+			// TODO: better generator identification here, using reflection.
 			if (value.startsWith("ro.racai.robin.dialog.generators.")) {
 				isJavaClass = true;
 			}
 
 			assignedReferenceTokens = proc.textProcessor(value, isJavaClass, true);
+
+			if (assignedReference == null || assignedReferenceTokens.isEmpty()) {
+				throw new RuntimeException(String.format(
+						"Unexpected text processing result for reference value '%s'!", value));
+			}
+
+			if (conceptType == CType.AMOUNT) {
+				// Set numerical value if we have an amount
+				String nval = assignedReferenceTokens.get(0).wform;
+
+				if (nval.matches("^[0-9]+([.,][0-9]+)?$")) {
+					if (nval.contains(",")) {
+						nval = nval.replace(',', '.');
+					}
+
+					numericalValue = Float.parseFloat(nval);
+
+					// Set type of numerical value to the root of the expression
+					for (int i = 1; i < assignedReferenceTokens.size(); i++) {
+						Token t = assignedReferenceTokens.get(i);
+
+						if (t.drel.equals("root") && lex.isPureNounPOS(t.pos)) {
+							typeOfNumericalValue = t.lemma;
+							break;
+						}
+					}
+
+					// If root not found, just take the last token
+					if (typeOfNumericalValue == null) {
+						typeOfNumericalValue = assignedReferenceTokens
+								.get(assignedReferenceTokens.size() - 1).lemma;
+						LOG.warn(String.format("Set type of numerical value to '%s' for reference '%s'", 
+								typeOfNumericalValue, value));
+					}
+				}
+				else {
+					throw new RuntimeException(String.format(
+							"Reference value '%s' is of type AMOUNT and it has no numerical value!", value));
+				}
+			} // end AMOUNT specificity
 		}
 	}
 

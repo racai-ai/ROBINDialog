@@ -72,12 +72,6 @@ public class RDPredicate {
 		public RDPredicate matchedPredicate;
 
 		/**
-		 * This is set to {@code true} if the generating {@link Query}
-		 * object had a query variable to be resolved by finding its reference.
-		 */
-		public boolean hasUnresolvedVariable;
-
-		/**
 		 * For a predicate to match, at least one referenced argument must match against what user
 		 * said.
 		 */
@@ -102,7 +96,7 @@ public class RDPredicate {
 		 */
 		public int saidArgumentIndex;
 
-		public PMatch(RDPredicate pred, boolean unres) {
+		public PMatch(RDPredicate pred) {
 			matchedPredicate = pred;
 			argMatchScores = new float[pred.getArguments().size()];
 
@@ -113,7 +107,6 @@ public class RDPredicate {
 			matchScore = 0.0f;
 			saidArgumentIndex = -1;
 			isValidMatch = false;
-			hasUnresolvedVariable = unres;
 		}
 
 		/**
@@ -147,7 +140,7 @@ public class RDPredicate {
 
 			return false;
 		}
-	}
+	} // end PMatch
 
 	private RDPredicate(UIntentType uint, String verb) {
 		if (StringUtils.isNullEmptyOrBlank(verb)) {
